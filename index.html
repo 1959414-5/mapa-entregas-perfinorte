@@ -273,6 +273,8 @@
     border:1px solid var(--line); overflow:hidden;
   }
   .busca-linha{display:flex; gap:8px;}
+  .endereco-linha{display:flex; gap:8px;}
+  .endereco-linha input{flex:1; min-width:0;}
   .busca-linha input{flex:1;}
   .busca-resultado{
     font-size:12.5px; padding:8px 10px; border-radius:4px;
@@ -313,6 +315,13 @@
     cursor:pointer;
   }
   .view-toggle button.active{background:var(--paper); color:var(--ink); border-color:var(--paper);}
+
+  .rota-info{
+    margin-top:8px; padding:9px 12px; border-radius:4px;
+    background:rgba(47,147,163,.14); border:1px solid rgba(47,147,163,.4);
+    font-family:var(--font-mono); font-size:11px; color:var(--tarde);
+    display:flex; justify-content:space-between; gap:8px;
+  }
 
   /* ---------- TABELA (sempre clara, independente do tema escuro do resto) ---------- */
   #tableView{
@@ -386,6 +395,7 @@
         <button onclick="sugerirRota()">🧭 Sugerir rota</button>
         <button id="btnLimparRota" onclick="limparRotaSugerida()" style="display:none;">✕ Limpar rota</button>
       </div>
+      <div id="rotaInfo" class="rota-info" style="display:none;"></div>
     </div>
 
     <div class="controls">
@@ -459,9 +469,17 @@
 
       <div id="camposManuais" style="display:none; flex-direction:column; gap:14px;">
         <div class="field">
-          <label for="novoEndereco">Endereço (padrão: RUA, NÚMERO - BAIRRO - CIDADE/UF)</label>
-          <div class="busca-linha">
-            <input type="text" id="novoEndereco" placeholder="RUA DAS AZALÉIAS, 1952 - JARDIM SANTA ROSA - MARINGÁ/PR">
+          <label>Endereço</label>
+          <div class="endereco-linha">
+            <input type="text" id="novaRua" placeholder="Rua/Avenida">
+            <input type="text" id="novoNumero" placeholder="Nº (ou S/N)" style="max-width:100px;">
+          </div>
+          <div class="endereco-linha" style="margin-top:6px;">
+            <input type="text" id="novoBairro" placeholder="Bairro">
+          </div>
+          <div class="endereco-linha" style="margin-top:6px;">
+            <input type="text" id="novaCidade" placeholder="Cidade">
+            <input type="text" id="novoUf" placeholder="UF" maxlength="2" style="max-width:60px; text-transform:uppercase;">
             <button type="button" class="btn-secondary" onclick="aplicarEndereco()">Aplicar</button>
           </div>
           <div id="enderecoResultado" class="busca-resultado"></div>
@@ -502,6 +520,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 <script>
 /* =====================================================================
  * COLE AQUI A URL DO SEU /exec — copie direto da barra de endereços do
@@ -525,12 +544,14 @@ let rotaGeometria = null; // polyline codificada da rota real (pelas ruas), devo
 let origemMarker = null;  // marcador da Perfinorte no mapa (ícone de fábrica)
 let rotaOrigem = null;   // {lat, lng} da Perfinorte, devolvido junto com a rota
 let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
+let rotaSetas = null;    // camada com as setas de direção sobre a linha
 let todasEntregas = [];   // tudo que veio da planilha, sem filtro nenhum
 let entregasAtuais = [];  // resultado depois de aplicar os filtros da tela
 let filtroPeriodo = "";
 let selecionadoIdx = null;
 let modoAtual = 'mapa';
 let clienteEncontrado = null;
+let enderecoAplicado = ''; // endereço já montado no padrão, depois de clicar "Aplicar"
 let motoristasDisponiveis = [];
 let miniMap = null, miniMapMarker = null;
 
@@ -840,6 +861,7 @@ function render(ajustarZoom){
   // (geometria do OpenRouteService) quando disponível; se não vier por
   // algum motivo, cai pra linha reta entre os pontos como alternativa.
   if (rotaLinha){ map.removeLayer(rotaLinha); rotaLinha = null; }
+  if (rotaSetas){ map.removeLayer(rotaSetas); rotaSetas = null; }
   if (origemMarker){ map.removeLayer(origemMarker); origemMarker = null; }
 
   if (rotaSugerida && rotaOrigem){
@@ -855,6 +877,19 @@ function render(ajustarZoom){
       pontosRota.push([rotaOrigem.lat, rotaOrigem.lng]);
     }
     rotaLinha = L.polyline(pontosRota, { color:'#2f93a3', weight:4, opacity:.85 }).addTo(map);
+
+    // setas de direção ao longo da linha, mostrando o sentido do percurso
+    if (typeof L.polylineDecorator === 'function'){
+      rotaSetas = L.polylineDecorator(rotaLinha, {
+        patterns: [{
+          offset: '4%', repeat: '7%',
+          symbol: L.Symbol.arrowHead({
+            pixelSize: 9, polygon: true,
+            pathOptions: { color: '#1a5a63', fillColor: '#1a5a63', fillOpacity: 1, weight: 0 }
+          })
+        }]
+      }).addTo(map);
+    }
 
     origemMarker = L.marker([rotaOrigem.lat, rotaOrigem.lng], { icon: origemIcon_() })
       .bindPopup('<div class="pop"><h3>🏭 Perfinorte</h3><div class="row">Início e fim da rota</div></div>')
@@ -894,7 +929,10 @@ async function sugerirRota(){
     rotaOrigem = res.origem;
     rotaGeometria = res.geometria || null;
     document.getElementById('btnLimparRota').style.display = 'inline-block';
-    mostrarToast('Rota sugerida: ' + res.distanciaKm + ' km · ~' + res.duracaoMin + ' min');
+    const painel = document.getElementById('rotaInfo');
+    painel.style.display = 'flex';
+    painel.innerHTML = '<span>📏 ' + res.distanciaKm + ' km</span><span>⏱ ~' + res.duracaoMin + ' min</span>';
+    mostrarToast('Rota sugerida!');
     if (modoAtual === 'tabela') renderTabela(); else render(false);
   }catch(err){
     mostrarToast('Erro: ' + err, true);
@@ -906,6 +944,7 @@ function limparRotaSugerida(){
   rotaOrigem = null;
   rotaGeometria = null;
   document.getElementById('btnLimparRota').style.display = 'none';
+  document.getElementById('rotaInfo').style.display = 'none';
   if (modoAtual === 'tabela') renderTabela(); else render(false);
 }
 
@@ -1212,7 +1251,12 @@ function popularSelectMotoristas_(){
 function abrirModal(){
   document.getElementById('modalOverlay').classList.add('show');
   document.getElementById('novoCodigo').value = '';
-  document.getElementById('novoEndereco').value = '';
+  document.getElementById('novaRua').value = '';
+  document.getElementById('novoNumero').value = '';
+  document.getElementById('novoBairro').value = '';
+  document.getElementById('novaCidade').value = '';
+  document.getElementById('novoUf').value = '';
+  enderecoAplicado = '';
   document.getElementById('novoMotorista').value = '';
   document.getElementById('novaObs').value = '';
   document.getElementById('novaData').value = new Date().toISOString().slice(0,10);
@@ -1235,16 +1279,57 @@ function fecharModal(){
 
 /* Botão "Aplicar" no campo Endereço — geocodifica e mostra um mini-mapa de
    confirmação, sem salvar nada ainda. */
+/* Monta o endereço no padrão RUA, NÚMERO - BAIRRO - CIDADE/UF a partir dos
+   campos separados — assim a pessoa não precisa digitar vírgula/hífen na mão. */
+function construirEndereco_(){
+  const rua = document.getElementById('novaRua').value.trim();
+  const numero = document.getElementById('novoNumero').value.trim() || 'S/N';
+  const bairro = document.getElementById('novoBairro').value.trim();
+  const cidade = document.getElementById('novaCidade').value.trim();
+  const uf = document.getElementById('novoUf').value.trim().toUpperCase();
+
+  if (!rua || !bairro || !cidade || !uf) return null;
+
+  return rua.toUpperCase() + ', ' + numero.toUpperCase() + ' - ' + bairro.toUpperCase() + ' - ' + cidade.toUpperCase() + '/' + uf;
+}
+
+/* Tenta separar um endereço já no padrão (ex: vindo da ROTAS_CLIENTES) de
+   volta nos campos Rua/Número/Bairro/Cidade/UF, pra pré-preencher o
+   formulário. Se o texto não estiver no padrão (rotas antigas tipo
+   "PRÓXIMO A PERFINORTE"), devolve null — nesse caso a Rua fica só com o
+   texto original, como dica, e a pessoa completa o resto. */
+function tentarSepararEndereco_(texto){
+  const t = String(texto || '').trim();
+  if (!t) return null;
+  const partesVirgula = t.split(',');
+  if (partesVirgula.length < 2) return null;
+
+  const rua = partesVirgula[0].trim();
+  const resto = partesVirgula.slice(1).join(',').trim();
+  const segmentos = resto.split('-').map(s => s.trim()).filter(Boolean);
+  if (segmentos.length < 2) return null;
+
+  const numero = segmentos[0];
+  const cidadeUf = segmentos[segmentos.length - 1];
+  const bairro = segmentos.length >= 3 ? segmentos.slice(1, -1).join(' - ') : '';
+  const partesCidadeUf = cidadeUf.split('/');
+  if (partesCidadeUf.length !== 2) return null;
+
+  return { rua: rua, numero: numero, bairro: bairro, cidade: partesCidadeUf[0].trim(), uf: partesCidadeUf[1].trim() };
+}
+
 async function aplicarEndereco(){
-  const endereco = document.getElementById('novoEndereco').value.trim();
   const resultado = document.getElementById('enderecoResultado');
+  const endereco = construirEndereco_();
 
   if (!endereco){
     resultado.className = 'busca-resultado erro';
-    resultado.textContent = 'Digite um endereço primeiro.';
+    resultado.textContent = 'Preencha rua, bairro, cidade e UF.';
     document.getElementById('miniMap').style.display = 'none';
     return;
   }
+  enderecoAplicado = endereco;
+
   if (!API_URL){
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Configure a API_URL no início do arquivo.';
@@ -1263,7 +1348,7 @@ async function aplicarEndereco(){
       return;
     }
     resultado.className = 'busca-resultado ok';
-    resultado.textContent = 'Local encontrado ✓';
+    resultado.innerHTML = 'Local encontrado ✓<br><small>' + endereco + '</small>';
     mostrarMiniMap_(res.lat, res.lng);
   }catch(err){
     resultado.className = 'busca-resultado erro';
@@ -1320,7 +1405,20 @@ async function buscarCliente(){
     clienteEncontrado = info;
     resultado.className = 'busca-resultado ok';
     resultado.innerHTML = '<b>' + info.fantasia + '</b>' + (info.vendedor ? ' · ' + info.vendedor : '');
-    document.getElementById('novoEndereco').value = info.rotaSugerida || '';
+
+    // tenta pré-preencher os campos de endereço a partir da rota sugerida
+    const partes = tentarSepararEndereco_(info.rotaSugerida);
+    if (partes){
+      document.getElementById('novaRua').value = partes.rua;
+      document.getElementById('novoNumero').value = partes.numero;
+      document.getElementById('novoBairro').value = partes.bairro;
+      document.getElementById('novaCidade').value = partes.cidade;
+      document.getElementById('novoUf').value = partes.uf;
+    } else if (info.rotaSugerida){
+      // texto antigo fora do padrão — usa só como dica no campo Rua
+      document.getElementById('novaRua').value = info.rotaSugerida;
+    }
+
     document.getElementById('camposManuais').style.display = 'flex';
     document.getElementById('btnSalvarNovo').disabled = false;
   }catch(err){
@@ -1338,10 +1436,17 @@ document.getElementById('novoPeriodoToggle').addEventListener('click', (e) => {
 
 async function salvarNova(){
   if (!clienteEncontrado) return;
+
+  const endereco = enderecoAplicado || construirEndereco_();
+  if (!endereco){
+    mostrarToast('Preencha rua, bairro, cidade e UF, e clique em Aplicar.', true);
+    return;
+  }
+
   const periodoBtn = document.querySelector('#novoPeriodoToggle button.active');
   const dados = {
     codigo: clienteEncontrado.codigo,
-    endereco: document.getElementById('novoEndereco').value.trim(),
+    endereco: endereco,
     motorista: document.getElementById('novoMotorista').value.trim(),
     data: document.getElementById('novaData').value,
     periodo: periodoBtn ? periodoBtn.dataset.p : '',
