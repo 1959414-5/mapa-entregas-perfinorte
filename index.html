@@ -201,6 +201,13 @@
   .pin.MANHÃ{background:var(--manha);}
   .pin.TARDE{background:var(--tarde);}
 
+  .pin-origem{
+    width:36px; height:36px; border-radius:50%;
+    background:#1f2530; border:3px solid #2f93a3;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; box-shadow:0 3px 10px rgba(0,0,0,.5);
+  }
+
   .marker-cluster-manha{background:rgba(232,162,61,.5);}
   .marker-cluster-manha div{background:rgba(232,162,61,.85);color:#1a1305;}
   .marker-cluster-tarde{background:rgba(47,147,163,.5);}
@@ -514,6 +521,8 @@ const DADOS_EXEMPLO = [
 
 let map, clusterManha, clusterTarde, markersById = {};
 let rotaSugerida = null; // array de "linha" na ordem sugerida (ou null se nenhuma rota ativa)
+let rotaGeometria = null; // polyline codificada da rota real (pelas ruas), devolvida pelo OpenRouteService
+let origemMarker = null;  // marcador da Perfinorte no mapa (ícone de fábrica)
 let rotaOrigem = null;   // {lat, lng} da Perfinorte, devolvido junto com a rota
 let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
 let todasEntregas = [];   // tudo que veio da planilha, sem filtro nenhum
@@ -625,6 +634,39 @@ function pinIconNumerado_(numero, periodo){
     iconAnchor:[14,28],
     popupAnchor:[0,-26]
   });
+}
+
+// Ícone da Perfinorte (ponto de partida/chegada da rota sugerida) — um
+// círculo com uma fábrica, bem diferente dos pinos de entrega pra não
+// confundir qual é a origem.
+function origemIcon_(){
+  return L.divIcon({
+    className:'',
+    html:'<div class="pin-origem">🏭</div>',
+    iconSize:[36,36],
+    iconAnchor:[18,18],
+    popupAnchor:[0,-20]
+  });
+}
+
+// Decodifica a polyline que o OpenRouteService devolve (formato padrão de
+// precisão 5) numa lista de pontos [lat,lng] que o Leaflet entende.
+function decodificarPolyline_(str){
+  const precisao = 1e5;
+  let index = 0, lat = 0, lng = 0;
+  const coords = [];
+  while (index < str.length){
+    let shift = 0, result = 0, byte;
+    do { byte = str.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+
+    shift = 0; result = 0;
+    do { byte = str.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+
+    coords.push([lat / precisao, lng / precisao]);
+  }
+  return coords;
 }
 
 function statusClass(status){
@@ -794,16 +836,29 @@ function render(ajustarZoom){
   document.getElementById('statCidades').textContent = cidades.size;
   document.getElementById('statSemGeo').textContent = semGeo;
 
-  // desenha (ou apaga) a linha da rota sugerida
+  // desenha (ou apaga) a rota sugerida: usa o caminho real pelas ruas
+  // (geometria do OpenRouteService) quando disponível; se não vier por
+  // algum motivo, cai pra linha reta entre os pontos como alternativa.
   if (rotaLinha){ map.removeLayer(rotaLinha); rotaLinha = null; }
+  if (origemMarker){ map.removeLayer(origemMarker); origemMarker = null; }
+
   if (rotaSugerida && rotaOrigem){
-    const pontosRota = [[rotaOrigem.lat, rotaOrigem.lng]];
-    rotaSugerida.forEach(linha => {
-      const item = entregasAtuais.find(d => d.linha === linha);
-      if (item) pontosRota.push([item.lat, item.lng]);
-    });
-    pontosRota.push([rotaOrigem.lat, rotaOrigem.lng]);
-    rotaLinha = L.polyline(pontosRota, { color:'#2f93a3', weight:3, opacity:.8, dashArray:'7,7' }).addTo(map);
+    let pontosRota;
+    if (rotaGeometria){
+      pontosRota = decodificarPolyline_(rotaGeometria);
+    } else {
+      pontosRota = [[rotaOrigem.lat, rotaOrigem.lng]];
+      rotaSugerida.forEach(linha => {
+        const item = entregasAtuais.find(d => d.linha === linha);
+        if (item) pontosRota.push([item.lat, item.lng]);
+      });
+      pontosRota.push([rotaOrigem.lat, rotaOrigem.lng]);
+    }
+    rotaLinha = L.polyline(pontosRota, { color:'#2f93a3', weight:4, opacity:.85 }).addTo(map);
+
+    origemMarker = L.marker([rotaOrigem.lat, rotaOrigem.lng], { icon: origemIcon_() })
+      .bindPopup('<div class="pop"><h3>🏭 Perfinorte</h3><div class="row">Início e fim da rota</div></div>')
+      .addTo(map);
   }
 
   if (ajustarZoom && bounds.length){
@@ -837,6 +892,7 @@ async function sugerirRota(){
     }
     rotaSugerida = res.ordem;
     rotaOrigem = res.origem;
+    rotaGeometria = res.geometria || null;
     document.getElementById('btnLimparRota').style.display = 'inline-block';
     mostrarToast('Rota sugerida: ' + res.distanciaKm + ' km · ~' + res.duracaoMin + ' min');
     if (modoAtual === 'tabela') renderTabela(); else render(false);
@@ -848,6 +904,7 @@ async function sugerirRota(){
 function limparRotaSugerida(){
   rotaSugerida = null;
   rotaOrigem = null;
+  rotaGeometria = null;
   document.getElementById('btnLimparRota').style.display = 'none';
   if (modoAtual === 'tabela') renderTabela(); else render(false);
 }
