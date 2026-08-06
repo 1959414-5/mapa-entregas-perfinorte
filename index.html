@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Entregas — Perfinorte</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+<style>
+  :root{
+    --ink:#12161b;
+    --panel:#181d24;
+    --panel-2:#1f2530;
+    --line:#2a313c;
+    --paper:#eef1f4;
+    --paper-dim:#aab3bf;
+    --manha:#e8a23d;
+    --tarde:#2f93a3;
+    --entregue:#5fae72;
+    --fila:#d8622f;
+    --andamento:#c9b23d;
+    --font-ui: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);font-family:var(--font-ui);}
+  #app{display:grid;grid-template-columns:340px 1fr;height:100vh;transition:grid-template-columns .18s ease;}
+  #app.sidebar-colapsado{grid-template-columns:0px 1fr;}
+
+  /* ---------- SIDEBAR ---------- */
+  #sidebar{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    min-width:0;
+  }
+  #app.sidebar-colapsado #sidebar{border-right:none;}
+  #sidebar > *{min-width:340px;}
+
+  #sidebarToggle{
+    position:fixed; top:50%; left:340px; transform:translateY(-50%);
+    width:22px; height:44px; margin-left:-1px;
+    background:var(--panel); border:1px solid var(--line);
+    color:var(--paper-dim); cursor:pointer;
+    border-radius:0 6px 6px 0;
+    display:flex; align-items:center; justify-content:center;
+    z-index:1500; font-size:12px;
+    transition:left .18s ease;
+  }
+  #sidebarToggle:hover{color:var(--paper);}
+  #app.sidebar-colapsado #sidebarToggle{left:0;}
+
+  .brand{
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand .eyebrow{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:.14em;
+    color:var(--paper-dim);
+    text-transform:uppercase;
+  }
+  .brand h1{
+    margin:4px 0 0;
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:-.01em;
+  }
+
+  .controls{
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .field label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-bottom:5px;
+  }
+  .field input[type=date], .field select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    padding:8px 10px;
+    border-radius:4px;
+    font-size:13.5px;
+    font-family:var(--font-ui);
+  }
+  .field input[type=date]:focus, .field select:focus{
+    outline:2px solid var(--manha);outline-offset:1px;
+  }
+
+  .date-range{display:flex; align-items:center; gap:6px;}
+  .date-range input{flex:1; min-width:0;}
+  .date-range-sep{color:var(--paper-dim); font-size:11px; flex-shrink:0;}
+
+  .period-toggle{display:flex;gap:6px;}
+  .period-toggle button{
+    flex:1;
+    padding:8px 6px;
+    border-radius:4px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--paper-dim);
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.06em;
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .period-toggle button.active[data-p="MANHÃ"]{background:var(--manha);color:#1a1305;border-color:var(--manha);}
+  .period-toggle button.active[data-p="TARDE"]{background:var(--tarde);color:#04191c;border-color:var(--tarde);}
+  .period-toggle button.active[data-p=""]{background:var(--paper);color:var(--ink);border-color:var(--paper);}
+
+  .summary{
+    padding:14px 20px;
+    display:flex;gap:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .summary .stat{flex:1;text-align:left;}
+  .summary .stat .n{font-family:var(--font-mono);font-size:22px;font-weight:700;}
+  .summary .stat .l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-dim);margin-top:2px;}
+  .summary .stat.geo-warn .n{color:var(--fila);}
+
+  #list{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 0;
+  }
+  .item{
+    padding:10px 20px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    transition:background .12s;
+  }
+  .item:hover{background:var(--panel-2);}
+  .item.active{background:var(--panel-2);border-left:3px solid var(--manha);padding-left:17px;}
+  .item .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .item .cliente{font-weight:600;font-size:13.5px;}
+  .item .badge{
+    font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;
+    padding:2px 6px;border-radius:3px;white-space:nowrap;
+  }
+  .badge.MANHÃ{background:rgba(232,162,61,.16);color:var(--manha);}
+  .badge.TARDE{background:rgba(47,147,163,.16);color:var(--tarde);}
+  .badge-rota{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; margin-right:6px; border-radius:50%;
+    background:#2f93a3; color:#fff; font-family:var(--font-mono);
+    font-size:9.5px; font-weight:700; vertical-align:middle;
+  }
+  .item .meta{margin-top:3px;font-size:11.5px;color:var(--paper-dim);}
+  .item .meta .dot{margin:0 5px;opacity:.5;}
+  .item .status{
+    display:inline-block;margin-top:5px;font-family:var(--font-mono);font-size:9.5px;
+    letter-spacing:.06em;text-transform:uppercase;
+  }
+  .status.ENTREGUE{color:var(--entregue);}
+  .status.EMFILA{color:var(--fila);}
+  .status.EMANDAMENTO{color:var(--andamento);}
+  .item .noaddr{color:var(--fila);font-size:10.5px;margin-top:4px;font-family:var(--font-mono);}
+
+  .empty, .loading{
+    padding:40px 20px;text-align:center;color:var(--paper-dim);font-size:13px;
+  }
+  .empty .big, .loading .big{font-size:28px;margin-bottom:8px;}
+
+  /* ---------- MAP ---------- */
+  #map{height:100vh;background:#f2efe9;}
+  /* corrige as linhas/emendas finas entre os tiles do mapa (bug conhecido do Leaflet) */
+  .leaflet-tile-container{transform:scale(1.0005);}
+  .leaflet-popup-content-wrapper{
+    background:var(--panel);color:var(--paper);border-radius:6px;
+    border:1px solid var(--line);
+  }
+  .leaflet-popup-tip{background:var(--panel);}
+  .pop h3{margin:0 0 4px;font-size:14px;}
+  .pop .row{font-size:12px;color:var(--paper-dim);margin-top:2px;}
+  .pop .row b{color:var(--paper);font-weight:600;}
+  .pop .status{
+    display:inline-block;margin-top:6px;font-family:var(--font-mono);font-size:10px;
+    letter-spacing:.06em;text-transform:uppercase;
+  }
+
+  .pin{
+    width:26px;height:26px;border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    display:flex;align-items:center;justify-content:center;
+    border:2px solid rgba(0,0,0,.35);
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
+  }
+  .pin span{transform:rotate(45deg);font-family:var(--font-mono);font-size:10px;font-weight:700;color:#12161b;}
+  .pin.MANHÃ{background:var(--manha);}
+  .pin.TARDE{background:var(--tarde);}
+
+  .marker-cluster-manha{background:rgba(232,162,61,.5);}
+  .marker-cluster-manha div{background:rgba(232,162,61,.85);color:#1a1305;}
+  .marker-cluster-tarde{background:rgba(47,147,163,.5);}
+  .marker-cluster-tarde div{background:rgba(47,147,163,.85);color:#04191c;}
+  .marker-cluster-mix{background:rgba(238,241,244,.35);}
+  .marker-cluster-mix div{background:rgba(238,241,244,.85);color:#12161b;}
+
+  #config-banner{
+    position:absolute;top:14px;left:360px;right:14px;z-index:1000;
+    background:var(--fila);color:#fff;padding:10px 14px;border-radius:6px;
+    font-size:12.5px;display:none;box-shadow:0 4px 12px rgba(0,0,0,.35);
+  }
+  #config-banner code{background:rgba(0,0,0,.25);padding:1px 5px;border-radius:3px;}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  /* ---------- NOVA ENTREGA ---------- */
+  .btn-nova{
+    margin-top:10px;
+    width:100%;
+    padding:8px 10px;
+    background:var(--manha);
+    color:#1a1305;
+    border:none;
+    border-radius:4px;
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.04em;
+    cursor:pointer;
+  }
+  .btn-nova:hover{opacity:.9;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55);
+    display:none; align-items:center; justify-content:center;
+    z-index:2000;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    width:400px; max-width:92vw; max-height:88vh; overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 20px; border-bottom:1px solid var(--line);
+  }
+  .modal-header h2{margin:0; font-size:16px;}
+  .modal-close{
+    background:none; border:none; color:var(--paper-dim); font-size:20px;
+    cursor:pointer; line-height:1;
+  }
+  .modal-body{padding:16px 20px; display:flex; flex-direction:column; gap:14px;}
+  .modal-body input[type=text], .modal-body input[type=date], .modal-body select{
+    width:100%; background:var(--panel-2); border:1px solid var(--line);
+    color:var(--paper); padding:8px 10px; border-radius:4px; font-size:13.5px;
+    font-family:var(--font-ui);
+  }
+  #miniMap{
+    display:none; height:170px; border-radius:4px; margin-top:8px;
+    border:1px solid var(--line); overflow:hidden;
+  }
+  .busca-linha{display:flex; gap:8px;}
+  .busca-linha input{flex:1;}
+  .busca-resultado{
+    font-size:12.5px; padding:8px 10px; border-radius:4px;
+    background:var(--panel-2); color:var(--paper-dim); display:none;
+  }
+  .busca-resultado.ok{color:var(--entregue); background:rgba(95,174,114,.12); display:block;}
+  .busca-resultado.erro{color:var(--fila); background:rgba(216,98,47,.12); display:block;}
+  .busca-resultado.carregando{display:block;}
+  .modal-footer{
+    display:flex; justify-content:flex-end; gap:8px;
+    padding:14px 20px; border-top:1px solid var(--line);
+  }
+  .btn-secondary{
+    padding:8px 14px; background:var(--panel-2); color:var(--paper);
+    border:1px solid var(--line); border-radius:4px; font-size:12.5px; cursor:pointer;
+  }
+  .btn-primary{
+    padding:8px 14px; background:var(--manha); color:#1a1305;
+    border:none; border-radius:4px; font-size:12.5px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary:disabled{opacity:.4; cursor:not-allowed;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translate(-50%,20px);
+    background:var(--panel); border:1px solid var(--line); color:var(--paper);
+    padding:10px 18px; border-radius:6px; font-size:13px; opacity:0;
+    transition:all .2s ease; pointer-events:none; z-index:3000;
+  }
+  .toast.show{opacity:1; transform:translate(-50%,0);}
+  .toast.erro{border-color:var(--fila); color:var(--fila);}
+
+  /* ---------- ALTERNAR MAPA / TABELA ---------- */
+  .view-toggle{display:flex; gap:6px; margin-top:8px;}
+  .view-toggle button{
+    flex:1; padding:7px 6px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--paper-dim);
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:.05em;
+    cursor:pointer;
+  }
+  .view-toggle button.active{background:var(--paper); color:var(--ink); border-color:var(--paper);}
+
+  /* ---------- TABELA (sempre clara, independente do tema escuro do resto) ---------- */
+  #tableView{
+    display:none; height:100vh; overflow:auto; padding:20px;
+    background:#ffffff; color:#1f2430;
+  }
+  .tabela-toolbar{
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:10px;
+    margin-bottom:12px;
+  }
+  .tabela-toolbar .contagem{
+    font-family:var(--font-mono); font-size:11px; color:#4b5563;
+  }
+  .legenda{display:flex; gap:12px; flex-wrap:wrap;}
+  .legenda span{
+    display:flex; align-items:center; gap:5px;
+    font-size:10.5px; color:#374151;
+  }
+  .legenda i{
+    display:inline-block; width:10px; height:10px; border-radius:2px;
+    border:1px solid rgba(0,0,0,.25);
+  }
+  .tabela-entregas{
+    width:100%; border-collapse:collapse; font-size:11px;
+    background:#ffffff; border:1px solid #000;
+  }
+  .tabela-entregas th{
+    text-align:left; padding:7px 8px; border:1px solid #000;
+    font-family:var(--font-mono); font-size:9px; letter-spacing:.06em;
+    text-transform:uppercase; color:#1f2430; position:sticky; top:0;
+    background:#f0f0f0;
+  }
+  .tabela-entregas td{
+    padding:3px 6px; border:1px solid #000; vertical-align:middle;
+  }
+  .tabela-entregas .td-cliente{font-weight:600; white-space:nowrap; color:#1f2430;}
+  .tabela-entregas .td-check{text-align:center; width:34px;}
+  .tabela-entregas .td-remover{text-align:center; width:30px;}
+  .td-input{
+    width:100%; background:transparent; border:1px solid transparent;
+    color:#1f2430; padding:4px 6px; border-radius:4px; font-size:11px;
+    font-family:var(--font-ui);
+  }
+  .td-input:hover{border-color:#c7ccd3; background:#ffffff;}
+  .td-input:focus{outline:none; border-color:var(--manha); background:#ffffff;}
+  .td-input.salvando{opacity:.5;}
+  .td-input.erro-salvar{border-color:var(--fila); background:#fdecea;}
+  .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:pointer;}
+  .btn-remover{
+    background:none; border:none; color:#c2c7cf; cursor:pointer;
+    font-size:14px; padding:4px; border-radius:4px; line-height:1;
+  }
+  .btn-remover:hover{color:var(--fila); background:#fdecea;}
+  #tableView .empty{color:#8b93a1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="eyebrow">Perfinorte · Expedição · <span id="ultimaAtualizacao"></span></div>
+      <h1>Mapa de Entregas</h1>
+      <button class="btn-nova" onclick="abrirModal()">+ Nova entrega</button>
+      <div class="view-toggle">
+        <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
+        <button id="btnVerTabela" onclick="mostrarView('tabela')">📋 Tabela</button>
+      </div>
+      <div class="view-toggle" id="rotaToolbar">
+        <button onclick="sugerirRota()">🧭 Sugerir rota</button>
+        <button id="btnLimparRota" onclick="limparRotaSugerida()" style="display:none;">✕ Limpar rota</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="field">
+        <label>Data (previsão)</label>
+        <div class="date-range">
+          <input type="date" id="dataDeInput">
+          <span class="date-range-sep">→</span>
+          <input type="date" id="dataAteInput">
+        </div>
+      </div>
+      <div class="field">
+        <label>Período</label>
+        <div class="period-toggle" id="periodoToggle">
+          <button data-p="" class="active">TODOS</button>
+          <button data-p="MANHÃ">MANHÃ</button>
+          <button data-p="TARDE">TARDE</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="motoristaSelect">Motorista</label>
+        <select id="motoristaSelect">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="statusSelect">Status</label>
+        <select id="statusSelect">
+          <option value="">Todos</option>
+          <option value="ENTREGUE">Entregue</option>
+          <option value="EM FILA">Em fila</option>
+          <option value="EM ANDAMENTO">Em andamento</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="stat"><div class="n" id="statTotal">–</div><div class="l">Entregas</div></div>
+      <div class="stat"><div class="n" id="statCidades">–</div><div class="l">Cidades</div></div>
+      <div class="stat geo-warn"><div class="n" id="statSemGeo">–</div><div class="l">Sem endereço</div></div>
+    </div>
+
+    <div id="list"><div class="loading"><div class="big">⏳</div>Carregando entregas…</div></div>
+  </aside>
+
+  <main style="position:relative;">
+    <div id="config-banner">
+      Configure a URL da API no início do arquivo (constante <code>API_URL</code>) para carregar dados reais.
+    </div>
+    <div id="map"></div>
+    <div id="tableView"><div id="tabelaContainer"></div></div>
+  </main>
+</div>
+
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nova entrega</h2>
+      <button class="modal-close" onclick="fecharModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label for="novoCodigo">Código do cliente</label>
+        <div class="busca-linha">
+          <input type="text" id="novoCodigo" placeholder="Ex: 2347" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCliente();}">
+          <button class="btn-secondary" onclick="buscarCliente()">Buscar</button>
+        </div>
+        <div id="buscaResultado" class="busca-resultado"></div>
+      </div>
+
+      <div id="camposManuais" style="display:none; flex-direction:column; gap:14px;">
+        <div class="field">
+          <label for="novoEndereco">Endereço (padrão: RUA, NÚMERO - BAIRRO - CIDADE/UF)</label>
+          <div class="busca-linha">
+            <input type="text" id="novoEndereco" placeholder="RUA DAS AZALÉIAS, 1952 - JARDIM SANTA ROSA - MARINGÁ/PR">
+            <button type="button" class="btn-secondary" onclick="aplicarEndereco()">Aplicar</button>
+          </div>
+          <div id="enderecoResultado" class="busca-resultado"></div>
+          <div id="miniMap"></div>
+        </div>
+        <div class="field">
+          <label for="novoMotorista">Motorista</label>
+          <select id="novoMotorista">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="novaData">Data prevista</label>
+          <input type="date" id="novaData">
+        </div>
+        <div class="field">
+          <label>Período</label>
+          <div class="period-toggle" id="novoPeriodoToggle">
+            <button type="button" data-p="MANHÃ">MANHÃ</button>
+            <button type="button" data-p="TARDE">TARDE</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="novaObs">Observações</label>
+          <input type="text" id="novaObs" placeholder="Opcional">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" id="btnSalvarNovo" onclick="salvarNova()" disabled>Salvar entrega</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+/* =====================================================================
+ * COLE AQUI A URL DO SEU /exec — copie direto da barra de endereços do
+ * navegador (não digite/transcreva, pra não errar nenhum caractere).
+ * Exemplo: "https://script.google.com/macros/s/AKfycb.../exec"
+ * ===================================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbxq2r5WwP_DxFUpO7jV7XthtIGbTLlie8Od799ehwYANEabahf5TitwIt9RqVhXyft6/exec";
+
+/* Dados de exemplo usados só se a API_URL acima ficar vazia. */
+const DADOS_EXEMPLO = [
+  {cliente:"BECKHAUSER", motorista:"GENTIL", data:new Date().toISOString().slice(0,10), periodo:"MANHÃ", status:"ENTREGUE", cidade:"MARINGA", endereco:"Av. Colombo, 5790 - Maringá/PR", observacoes:"", lat:-23.4205, lng:-51.9331},
+  {cliente:"PIU MOBILE ESTOFADOS", motorista:"GENTIL", data:new Date().toISOString().slice(0,10), periodo:"MANHÃ", status:"ENTREGUE", cidade:"MARINGA", endereco:"Contorno Sul, 1200 - Maringá/PR", observacoes:"", lat:-23.4395, lng:-51.9270},
+  {cliente:"RECUPERA", motorista:"JOÃO", data:new Date().toISOString().slice(0,10), periodo:"TARDE", status:"EM FILA", cidade:"CIANORTE", endereco:"Rua Minas Gerais, 500 - Cianorte/PR", observacoes:"", lat:-23.6633, lng:-52.6053},
+  {cliente:"KONSTRUA IMPLEMENTOS", motorista:"GENTIL", data:new Date().toISOString().slice(0,10), periodo:"TARDE", status:"ENTREGUE", cidade:"MARINGA", endereco:"Contorno Norte, 800 - Maringá/PR", observacoes:"Entregar na Metalúrgica Metalpaz", lat:-23.3850, lng:-51.9450},
+  {cliente:"SAUTEC", motorista:"JOÃO", data:new Date().toISOString().slice(0,10), periodo:"MANHÃ", status:"EM ANDAMENTO", cidade:"ARARUNA", endereco:"Rua Paraná, 120 - Ararununa/PR", observacoes:"", lat:-23.9500, lng:-52.4900},
+];
+
+let map, clusterManha, clusterTarde, markersById = {};
+let rotaSugerida = null; // array de "linha" na ordem sugerida (ou null se nenhuma rota ativa)
+let rotaOrigem = null;   // {lat, lng} da Perfinorte, devolvido junto com a rota
+let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
+let todasEntregas = [];   // tudo que veio da planilha, sem filtro nenhum
+let entregasAtuais = [];  // resultado depois de aplicar os filtros da tela
+let filtroPeriodo = "";
+let selecionadoIdx = null;
+let modoAtual = 'mapa';
+let clienteEncontrado = null;
+let motoristasDisponiveis = [];
+let miniMap = null, miniMapMarker = null;
+
+/* ----- preferências salvas no navegador (sobrevivem a atualizar a página) ----- */
+const PREF_CHAVE = 'mapaEntregasPerfinorte';
+function salvarPreferencias(){
+  try{
+    localStorage.setItem(PREF_CHAVE, JSON.stringify({
+      dataDe: document.getElementById('dataDeInput').value,
+      dataAte: document.getElementById('dataAteInput').value,
+      periodo: filtroPeriodo,
+      motorista: document.getElementById('motoristaSelect').value,
+      status: document.getElementById('statusSelect').value
+    }));
+  }catch(e){ /* localStorage indisponível — segue sem salvar */ }
+}
+function carregarPreferencias(){
+  const hoje = new Date().toISOString().slice(0,10);
+  let salvo = {};
+  try{ salvo = JSON.parse(localStorage.getItem(PREF_CHAVE) || '{}'); }catch(e){ salvo = {}; }
+
+  // Data: usa o que ficou salvo da última vez; na primeira visita, hoje até hoje.
+  document.getElementById('dataDeInput').value = salvo.dataDe || hoje;
+  document.getElementById('dataAteInput').value = salvo.dataAte || hoje;
+
+  if (salvo.periodo){
+    filtroPeriodo = salvo.periodo;
+    document.querySelectorAll('#periodoToggle button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.p === salvo.periodo);
+    });
+  }
+  window.__motoristaSalvo = salvo.motorista || '';
+  if (salvo.status) document.getElementById('statusSelect').value = salvo.status;
+}
+
+/* ----- painel lateral minimizado/maximizado (salvo separado, não expira) ----- */
+const SIDEBAR_CHAVE = 'mapaEntregasSidebarColapsado';
+
+function restaurarSidebar_(){
+  let colapsado = false;
+  try{ colapsado = localStorage.getItem(SIDEBAR_CHAVE) === '1'; }catch(e){ colapsado = false; }
+  document.getElementById('app').classList.toggle('sidebar-colapsado', colapsado);
+  document.getElementById('sidebarToggle').textContent = colapsado ? '›' : '‹';
+}
+
+function alternarSidebar(){
+  const app = document.getElementById('app');
+  app.classList.toggle('sidebar-colapsado');
+  const colapsado = app.classList.contains('sidebar-colapsado');
+  document.getElementById('sidebarToggle').textContent = colapsado ? '›' : '‹';
+  try{ localStorage.setItem(SIDEBAR_CHAVE, colapsado ? '1' : '0'); }catch(e){}
+  // o mapa precisa recalcular o tamanho depois que a transição de largura terminar
+  setTimeout(function(){ if (map) map.invalidateSize(); }, 200);
+}
+
+function initMap(){
+  map = L.map('map', { zoomControl:true }).setView([-23.42, -52.0], 8);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(map);
+
+  clusterManha = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('manha') });
+  clusterTarde = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('tarde') });
+  map.addLayer(clusterManha);
+  map.addLayer(clusterTarde);
+}
+
+function makeClusterIcon(kind){
+  return function(cluster){
+    const count = cluster.getChildCount();
+    return L.divIcon({
+      html: `<div>${count}</div>`,
+      className: 'marker-cluster marker-cluster-' + kind,
+      iconSize: L.point(38,38)
+    });
+  };
+}
+
+function pinIcon(periodo){
+  const cls = periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
+  const letra = periodo === 'TARDE' ? 'T' : 'M';
+  return L.divIcon({
+    className:'',
+    html:`<div class="pin ${cls}"><span>${letra}</span></div>`,
+    iconSize:[26,26],
+    iconAnchor:[13,26],
+    popupAnchor:[0,-24]
+  });
+}
+
+// Pino numerado — usado quando tem uma rota sugerida ativa, mostra a ordem
+// de visita (1, 2, 3...) em vez da letra de período.
+function pinIconNumerado_(numero, periodo){
+  const cls = periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
+  return L.divIcon({
+    className:'',
+    html:`<div class="pin ${cls}"><span>${numero}</span></div>`,
+    iconSize:[28,28],
+    iconAnchor:[14,28],
+    popupAnchor:[0,-26]
+  });
+}
+
+function statusClass(status){
+  return String(status||'').toUpperCase().replace(/\s+/g,'');
+}
+
+// Converte "2026-08-07" (formato usado internamente pros filtros) em
+// "07/08/2026" (formato brasileiro) só pra exibição.
+function formatarDataBR_(iso){
+  if (!iso) return '';
+  const partes = iso.split('-');
+  if (partes.length !== 3) return iso;
+  return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
+/* ===== COMUNICAÇÃO COM A API (esta página é externa ao Apps Script agora —
+   GitHub Pages — então TUDO passa por fetch(), nunca google.script.run). ===== */
+async function chamarAPI_GET_(params){
+  const qs = new URLSearchParams(params).toString();
+  const resp = await fetch(API_URL + '?' + qs);
+  return await resp.json();
+}
+async function chamarAPI_POST_(corpo){
+  // Content-Type "text/plain" de propósito — evita o preflight de CORS
+  // (OPTIONS) que o Apps Script Web App não sabe responder; o Apps Script
+  // lê e interpreta o corpo como JSON normalmente do mesmo jeito.
+  const resp = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(corpo)
+  });
+  return await resp.json();
+}
+
+/* Busca TUDO na planilha, sem filtro nenhum — chamada só no carregamento
+   inicial e pela atualização automática. Trocar data/período/motorista/status
+   NÃO chama isso; só reaplica o filtro em cima do que já foi carregado. */
+async function carregarEntregas(){
+  // Só mostra "Carregando..." na primeiríssima vez (lista ainda vazia).
+  // Nas atualizações automáticas seguintes, a lista atual continua visível
+  // até os dados novos chegarem — sem esse "piscar" a cada 20s.
+  const primeiraCarga = todasEntregas.length === 0;
+  if (primeiraCarga){
+    document.getElementById('list').innerHTML = '<div class="loading"><div class="big">⏳</div>Carregando entregas…</div>';
+  }
+
+  if (!API_URL){
+    document.getElementById('config-banner').style.display = 'block';
+    todasEntregas = DADOS_EXEMPLO;
+    populaMotoristas();
+    aplicarFiltros();
+    return;
+  }
+
+  try{
+    const resp = await fetch(API_URL + '?formato=dados');
+    const dados = await resp.json();
+    todasEntregas = Array.isArray(dados) ? dados : [];
+    document.getElementById('ultimaAtualizacao').textContent =
+      'atualizado ' + new Date().toLocaleTimeString('pt-BR');
+    populaMotoristas();
+    // só ajusta o zoom/enquadramento na primeiríssima carga — nas
+    // atualizações automáticas seguintes, mantém o zoom/posição que a
+    // pessoa deixou no mapa
+    aplicarFiltros(primeiraCarga);
+  }catch(err){
+    if (primeiraCarga){
+      document.getElementById('list').innerHTML =
+        '<div class="empty"><div class="big">⚠</div>Não foi possível carregar os dados.<br><small>' + err + '</small></div>';
+    } else {
+      // atualização automática falhou — não interrompe a visualização atual,
+      // só registra no console pra depuração se precisar
+      console.error('Atualização automática falhou:', err);
+    }
+  }
+}
+
+/* Filtra o que já está em memória (todasEntregas) — instantâneo, sem ir na
+   planilha de novo. Chamada toda vez que a pessoa muda data/período/
+   motorista/status (nesses casos ajustarZoom fica true, o padrão — faz
+   sentido reenquadrar o mapa quando o conjunto visível muda de verdade). */
+function aplicarFiltros(ajustarZoom){
+  if (ajustarZoom === undefined) ajustarZoom = true;
+
+  const dataDe = document.getElementById('dataDeInput').value;
+  const dataAte = document.getElementById('dataAteInput').value;
+  const motorista = document.getElementById('motoristaSelect').value;
+  const status = document.getElementById('statusSelect').value;
+
+  entregasAtuais = todasEntregas.filter(d => {
+    if (dataDe && d.data && d.data < dataDe) return false;
+    if (dataAte && d.data && d.data > dataAte) return false;
+    if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
+    if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
+    if (status && String(d.status||'').toUpperCase() !== status.toUpperCase()) return false;
+    return true;
+  });
+
+  salvarPreferencias();
+  if (modoAtual === 'tabela') renderTabela(); else render(ajustarZoom);
+}
+
+function populaMotoristas(){
+  const sel = document.getElementById('motoristaSelect');
+  const atual = sel.value || window.__motoristaSalvo || '';
+  const nomes = [...new Set(todasEntregas.map(d=>d.motorista).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos</option>' + nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
+  sel.value = atual;
+  window.__motoristaSalvo = ''; // só usa a preferência salva na primeira vez
+}
+
+function render(ajustarZoom){
+  if (ajustarZoom === undefined) ajustarZoom = true;
+  clusterManha.clearLayers();
+  clusterTarde.clearLayers();
+  markersById = {};
+
+  const list = document.getElementById('list');
+  const cidades = new Set();
+  let semGeo = 0;
+  const bounds = [];
+
+  if (!entregasAtuais.length){
+    list.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>para esses filtros.</div>';
+  } else {
+    list.innerHTML = entregasAtuais.map((d, i) => {
+      const badgeClass = d.periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
+      const semEndereco = (d.lat == null || d.lng == null);
+      const numeroRota = rotaSugerida ? rotaSugerida.indexOf(d.linha) + 1 : 0;
+      const badgeRota = numeroRota > 0 ? `<span class="badge-rota">${numeroRota}</span>` : '';
+      return `
+        <div class="item" data-idx="${i}" onclick="focarEntrega(${i})">
+          <div class="top">
+            <span class="cliente">${badgeRota}${d.cliente}</span>
+            <span class="badge ${badgeClass}">${d.periodo || '—'}</span>
+          </div>
+          <div class="meta">${d.cidade || '—'}<span class="dot">·</span>${d.motorista || '—'}</div>
+          <span class="status ${statusClass(d.status)}">${d.status || '—'}</span>
+          ${semEndereco ? '<div class="noaddr">Sem coordenadas — geocodifique o endereço</div>' : ''}
+        </div>`;
+    }).join('');
+  }
+
+  entregasAtuais.forEach((d, i) => {
+    if (d.cidade) cidades.add(d.cidade);
+    if (d.lat == null || d.lng == null){ semGeo++; return; }
+
+    const numeroRota = rotaSugerida ? rotaSugerida.indexOf(d.linha) + 1 : 0;
+    const icone = numeroRota > 0 ? pinIconNumerado_(numeroRota, d.periodo) : pinIcon(d.periodo);
+    const marker = L.marker([d.lat, d.lng], { icon: icone });
+    marker.bindPopup(`
+      <div class="pop">
+        <h3>${numeroRota > 0 ? '#' + numeroRota + ' · ' : ''}${d.cliente}</h3>
+        <div class="row"><b>Endereço:</b> ${d.endereco}</div>
+        <div class="row"><b>Motorista:</b> ${d.motorista || '—'}</div>
+        <div class="row"><b>Data:</b> ${formatarDataBR_(d.data) || '—'} · ${d.periodo || '—'}</div>
+        ${d.observacoes ? `<div class="row"><b>Obs:</b> ${d.observacoes}</div>` : ''}
+        <span class="status ${statusClass(d.status)}">${d.status || '—'}</span>
+      </div>
+    `);
+    (d.periodo === 'TARDE' ? clusterTarde : clusterManha).addLayer(marker);
+    markersById[i] = marker;
+    bounds.push([d.lat, d.lng]);
+  });
+
+  document.getElementById('statTotal').textContent = entregasAtuais.length;
+  document.getElementById('statCidades').textContent = cidades.size;
+  document.getElementById('statSemGeo').textContent = semGeo;
+
+  // desenha (ou apaga) a linha da rota sugerida
+  if (rotaLinha){ map.removeLayer(rotaLinha); rotaLinha = null; }
+  if (rotaSugerida && rotaOrigem){
+    const pontosRota = [[rotaOrigem.lat, rotaOrigem.lng]];
+    rotaSugerida.forEach(linha => {
+      const item = entregasAtuais.find(d => d.linha === linha);
+      if (item) pontosRota.push([item.lat, item.lng]);
+    });
+    pontosRota.push([rotaOrigem.lat, rotaOrigem.lng]);
+    rotaLinha = L.polyline(pontosRota, { color:'#2f93a3', weight:3, opacity:.8, dashArray:'7,7' }).addTo(map);
+  }
+
+  if (ajustarZoom && bounds.length){
+    map.fitBounds(bounds, { padding:[40,40], maxZoom:13 });
+  }
+}
+
+/* ===== SUGESTÃO DE ROTA (OpenRouteService) ===== */
+
+async function sugerirRota(){
+  const pontos = entregasAtuais
+    .filter(d => d.ok === true && d.lat != null && d.lng != null)
+    .map(d => ({ linha: d.linha, lat: d.lat, lng: d.lng }));
+
+  if (!pontos.length){
+    mostrarToast('Nenhuma entrega com "OK" marcado nesse filtro.', true);
+    return;
+  }
+  if (!API_URL){
+    mostrarToast('Configure a API_URL no início do arquivo.', true);
+    return;
+  }
+
+  mostrarToast('Calculando a melhor rota…');
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'sugerirRota', pontos: pontos });
+    if (!res.ok){
+      mostrarToast('Erro: ' + res.erro, true);
+      return;
+    }
+    rotaSugerida = res.ordem;
+    rotaOrigem = res.origem;
+    document.getElementById('btnLimparRota').style.display = 'inline-block';
+    mostrarToast('Rota sugerida: ' + res.distanciaKm + ' km · ~' + res.duracaoMin + ' min');
+    if (modoAtual === 'tabela') renderTabela(); else render(false);
+  }catch(err){
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
+function limparRotaSugerida(){
+  rotaSugerida = null;
+  rotaOrigem = null;
+  document.getElementById('btnLimparRota').style.display = 'none';
+  if (modoAtual === 'tabela') renderTabela(); else render(false);
+}
+
+/* ===== VISÃO EM TABELA (editar direto, sem precisar abrir a planilha) ===== */
+
+function mostrarView(modo){
+  modoAtual = modo;
+  document.getElementById('btnVerMapa').classList.toggle('active', modo === 'mapa');
+  document.getElementById('btnVerTabela').classList.toggle('active', modo === 'tabela');
+  document.getElementById('map').style.display = (modo === 'mapa') ? 'block' : 'none';
+  document.getElementById('tableView').style.display = (modo === 'tabela') ? 'block' : 'none';
+
+  if (modo === 'mapa'){
+    setTimeout(function(){ map.invalidateSize(); }, 50);
+    render();
+  } else {
+    renderTabela();
+  }
+}
+
+function escapeAttr_(s){
+  return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+/* Mesma lógica das regras de formatação condicional da HISTORICO_ENTREGAS,
+   na mesma ordem de prioridade (a primeira que bater "ganha"). */
+function corLinhaEntrega_(d){
+  const status = String(d.status || '').toUpperCase();
+  if (status === 'CANCELAR') return '#f4cccc';
+  if (status === 'ENTREGUE') return '#d9ead3';
+  if (d.ok === true) return '#cfe2f3';
+  if (status === 'EM ANDAMENTO') return '#fce5cd';
+  if (status === 'EM FILA') return '#fde0d9';
+  if (d.data) return '#ea9999'; // tem data prevista mas status incomum — precisa de atenção
+  return '';
+}
+
+function renderTabela(){
+  const container = document.getElementById('tabelaContainer');
+
+  if (!entregasAtuais.length){
+    container.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>para esses filtros.</div>';
+    return;
+  }
+
+  // com rota sugerida ativa, mostra na ordem de visita (quem não está na
+  // rota fica no final, na ordem original)
+  let lista = entregasAtuais;
+  if (rotaSugerida){
+    lista = entregasAtuais.slice().sort((a, b) => {
+      const ia = rotaSugerida.indexOf(a.linha);
+      const ib = rotaSugerida.indexOf(b.linha);
+      return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
+    });
+  }
+
+  const opcoesMotorista = motoristasDisponiveis.map(m => `<option value="${escapeAttr_(m)}">${m}</option>`).join('');
+
+  let html = '<div class="tabela-toolbar">' +
+      '<span class="contagem">' + entregasAtuais.length + ' entrega(s)</span>' +
+      '<div class="legenda">' +
+        '<span><i style="background:#f4cccc"></i>Cancelar</span>' +
+        '<span><i style="background:#d9ead3"></i>Entregue</span>' +
+        '<span><i style="background:#cfe2f3"></i>Pedido pronto</span>' +
+        '<span><i style="background:#fce5cd"></i>Em andamento</span>' +
+        '<span><i style="background:#fde0d9"></i>Em fila</span>' +
+        '<span><i style="background:#ea9999"></i>Atenção</span>' +
+      '</div>' +
+    '</div>' +
+    '<table class="tabela-entregas"><thead><tr>' +
+    (rotaSugerida ? '<th>#</th>' : '') +
+    '<th>Código</th><th>Cliente</th><th>Repr.</th><th>Endereço</th><th>Motorista</th><th>Data</th>' +
+    '<th>Período</th><th>Status</th><th>OK</th><th>Observações</th><th></th>' +
+    '</tr></thead><tbody>';
+
+  lista.forEach(d => {
+    const corLinha = corLinhaEntrega_(d);
+    const estiloLinha = corLinha ? ' style="background:' + corLinha + ';"' : '';
+    const numeroRota = rotaSugerida ? rotaSugerida.indexOf(d.linha) + 1 : 0;
+    html += '<tr data-linha="' + d.linha + '"' + estiloLinha + '>' +
+      (rotaSugerida ? '<td style="text-align:center;font-weight:700;">' + (numeroRota > 0 ? numeroRota : '—') + '</td>' : '') +
+      '<td><input type="text" class="td-input" data-campo="codigo" value="' + escapeAttr_(d.codigo) + '" style="width:70px;"></td>' +
+      '<td class="td-cliente">' + d.cliente + '</td>' +
+      '<td><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px;"></td>' +
+      '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
+      '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
+      '<td><input type="date" class="td-input" data-campo="data" value="' + (d.data || '') + '"></td>' +
+      '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
+      '<td><select class="td-input" data-campo="status"><option value="EM FILA">EM FILA</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="ENTREGUE">ENTREGUE</option></select></td>' +
+      '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
+      '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
+      '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" onclick="removerLinha_(this)">🗑</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // seleciona o valor atual nos <select> (não dá pra fazer isso via string HTML)
+  const linhasDom = container.querySelectorAll('tbody tr');
+  linhasDom.forEach((tr, i) => {
+    const d = lista[i];
+    tr.querySelector('[data-campo="motorista"]').value = d.motorista || '';
+    tr.querySelector('[data-campo="periodo"]').value = d.periodo || '';
+    tr.querySelector('[data-campo="status"]').value = d.status || '';
+  });
+
+  container.querySelectorAll('[data-campo="codigo"]').forEach(el => {
+    el.addEventListener('change', onEditarCodigo_);
+  });
+  container.querySelectorAll('.td-input:not([data-campo="codigo"])').forEach(el => {
+    el.addEventListener('change', onEditarCelula_);
+  });
+  container.querySelectorAll('.td-checkbox').forEach(el => {
+    el.addEventListener('change', onEditarCelula_);
+  });
+}
+
+async function onEditarCelula_(e){
+  const el = e.target;
+  const tr = el.closest('tr');
+  const linha = tr.getAttribute('data-linha');
+  const campo = el.getAttribute('data-campo');
+  const valor = (el.type === 'checkbox') ? el.checked : el.value;
+
+  if (!API_URL){
+    mostrarToast('Configure a API_URL no início do arquivo.', true);
+    return;
+  }
+
+  el.classList.add('salvando');
+  el.classList.remove('erro-salvar');
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'atualizarCampo', linha: linha, campo: campo, valor: valor });
+    el.classList.remove('salvando');
+    if (!res.ok){
+      el.classList.add('erro-salvar');
+      mostrarToast('Erro ao salvar: ' + res.erro, true);
+      return;
+    }
+    // atualiza em memória (nos dois arrays) sem precisar recarregar tudo
+    const item = todasEntregas.find(d => String(d.linha) === String(linha));
+    if (item) item[campo] = valor;
+    const item2 = entregasAtuais.find(d => String(d.linha) === String(linha));
+    if (item2) item2[campo] = valor;
+    mostrarToast('Salvo!');
+  }catch(err){
+    el.classList.remove('salvando');
+    el.classList.add('erro-salvar');
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
+/* Editar o CÓDIGO do cliente é diferente: busca de novo o cliente (mesma
+   lógica do "+ Nova entrega") e já atualiza Cliente/Repr. na tela. */
+async function onEditarCodigo_(e){
+  const el = e.target;
+  const tr = el.closest('tr');
+  const linha = tr.getAttribute('data-linha');
+  const novoCodigo = el.value.trim();
+
+  if (!API_URL){
+    mostrarToast('Configure a API_URL no início do arquivo.', true);
+    return;
+  }
+
+  el.classList.add('salvando');
+  el.classList.remove('erro-salvar');
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'atualizarCodigo', linha: linha, novoCodigo: novoCodigo });
+    el.classList.remove('salvando');
+    if (!res.ok){
+      el.classList.add('erro-salvar');
+      mostrarToast('Erro: ' + res.erro, true);
+      return;
+    }
+    // atualiza cliente + representante na tela e em memória, sem recarregar tudo
+    tr.querySelector('.td-cliente').textContent = res.fantasia;
+    tr.querySelector('[data-campo="representante"]').value = res.representante || '';
+
+    [todasEntregas, entregasAtuais].forEach(arr => {
+      const item = arr.find(d => String(d.linha) === String(linha));
+      if (item){
+        item.codigo = res.codigo;
+        item.cliente = res.fantasia;
+        item.representante = res.representante || '';
+      }
+    });
+    mostrarToast('Cliente atualizado: ' + res.fantasia);
+  }catch(err){
+    el.classList.remove('salvando');
+    el.classList.add('erro-salvar');
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
+/* Remove a entrega inteira. Como apagar uma linha muda o número de linha de
+   tudo que vem depois dela na planilha, recarrega os dados do zero em
+   seguida — mais simples e seguro que tentar corrigir os números na mão. */
+async function removerLinha_(botao){
+  const tr = botao.closest('tr');
+  const linha = tr.getAttribute('data-linha');
+  const nomeCliente = tr.querySelector('.td-cliente').textContent;
+
+  if (!confirm('Remover a entrega de "' + nomeCliente + '"? Essa ação não pode ser desfeita.')) return;
+
+  if (!API_URL){
+    mostrarToast('Configure a API_URL no início do arquivo.', true);
+    return;
+  }
+
+  botao.disabled = true;
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'removerEntrega', linha: linha });
+    if (!res.ok){
+      botao.disabled = false;
+      mostrarToast('Erro ao remover: ' + res.erro, true);
+      return;
+    }
+    mostrarToast('Entrega removida.');
+    todasEntregas = []; // força recarregar do zero (os números de linha mudaram)
+    carregarEntregas();
+  }catch(err){
+    botao.disabled = false;
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
+function focarEntrega(i){
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.item[data-idx="${i}"]`);
+  if (el) el.classList.add('active');
+
+  const marker = markersById[i];
+  if (!marker) return;
+  const ll = marker.getLatLng();
+  map.setView(ll, 15, { animate:true });
+  // abre o popup mesmo estando dentro de um cluster
+  const parent = clusterManha.getVisibleParent(marker) || clusterTarde.getVisibleParent(marker);
+  if (parent && parent !== marker){
+    clusterManha.zoomToShowLayer(marker, () => marker.openPopup());
+    clusterTarde.zoomToShowLayer(marker, () => marker.openPopup());
+  } else {
+    marker.openPopup();
+  }
+}
+
+document.getElementById('periodoToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#periodoToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filtroPeriodo = btn.dataset.p;
+  aplicarFiltros();
+});
+
+document.getElementById('dataDeInput').addEventListener('change', aplicarFiltros);
+document.getElementById('dataAteInput').addEventListener('change', aplicarFiltros);
+document.getElementById('motoristaSelect').addEventListener('change', aplicarFiltros);
+document.getElementById('statusSelect').addEventListener('change', aplicarFiltros);
+
+// Restaura data/período/motorista/status da última visita (ou "hoje" na
+// primeira vez), ANTES de carregar
+carregarPreferencias();
+
+// Restaura o painel lateral minimizado/maximizado ANTES de iniciar o mapa,
+// pra ele já nascer com o tamanho certo (sem "pular" na tela)
+restaurarSidebar_();
+
+initMap();
+carregarEntregas();
+carregarMotoristas();
+
+// ===== ATUALIZAÇÃO AUTOMÁTICA =====
+// A cada 20s o mapa busca os dados de novo sozinho. 20s é um equilíbrio entre
+// "quase em tempo real" e não pesar demais na planilha (que tem +12 mil linhas
+// no histórico) — pode ajustar o número abaixo se quiser mais ou menos frequente.
+const INTERVALO_ATUALIZACAO_MS = 20000;
+setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
+
+// ===== NOVA ENTREGA (modal) =====
+
+async function carregarMotoristas(){
+  if (!API_URL) return;
+  try{
+    const lista = await chamarAPI_GET_({ formato: 'motoristas' });
+    motoristasDisponiveis = Array.isArray(lista) ? lista : [];
+    popularSelectMotoristas_();
+  }catch(err){
+    // segue sem a lista, campo fica só com "Selecione..."
+  }
+}
+
+function popularSelectMotoristas_(){
+  const sel = document.getElementById('novoMotorista');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    motoristasDisponiveis.map(m => `<option value="${m}">${m}</option>`).join('');
+  sel.value = atual;
+}
+
+function abrirModal(){
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('novoCodigo').value = '';
+  document.getElementById('novoEndereco').value = '';
+  document.getElementById('novoMotorista').value = '';
+  document.getElementById('novaObs').value = '';
+  document.getElementById('novaData').value = new Date().toISOString().slice(0,10);
+  document.getElementById('buscaResultado').className = 'busca-resultado';
+  document.getElementById('buscaResultado').textContent = '';
+  document.getElementById('enderecoResultado').className = 'busca-resultado';
+  document.getElementById('enderecoResultado').textContent = '';
+  document.getElementById('miniMap').style.display = 'none';
+  document.getElementById('camposManuais').style.display = 'none';
+  document.getElementById('btnSalvarNovo').disabled = true;
+  document.querySelectorAll('#novoPeriodoToggle button').forEach(b=>b.classList.remove('active'));
+  clienteEncontrado = null;
+  if (!motoristasDisponiveis.length) carregarMotoristas();
+  document.getElementById('novoCodigo').focus();
+}
+
+function fecharModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+/* Botão "Aplicar" no campo Endereço — geocodifica e mostra um mini-mapa de
+   confirmação, sem salvar nada ainda. */
+async function aplicarEndereco(){
+  const endereco = document.getElementById('novoEndereco').value.trim();
+  const resultado = document.getElementById('enderecoResultado');
+
+  if (!endereco){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Digite um endereço primeiro.';
+    document.getElementById('miniMap').style.display = 'none';
+    return;
+  }
+  if (!API_URL){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Configure a API_URL no início do arquivo.';
+    return;
+  }
+
+  resultado.className = 'busca-resultado carregando';
+  resultado.textContent = 'Localizando…';
+
+  try{
+    const res = await chamarAPI_GET_({ formato: 'geocodificarPreview', endereco: endereco });
+    if (!res.ok){
+      resultado.className = 'busca-resultado erro';
+      resultado.textContent = res.erro;
+      document.getElementById('miniMap').style.display = 'none';
+      return;
+    }
+    resultado.className = 'busca-resultado ok';
+    resultado.textContent = 'Local encontrado ✓';
+    mostrarMiniMap_(res.lat, res.lng);
+  }catch(err){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Erro: ' + err;
+  }
+}
+
+function mostrarMiniMap_(lat, lng){
+  const container = document.getElementById('miniMap');
+  container.style.display = 'block';
+  if (!miniMap){
+    miniMap = L.map('miniMap', { zoomControl:false, attributionControl:false }).setView([lat, lng], 16);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 20
+    }).addTo(miniMap);
+    miniMapMarker = L.marker([lat, lng]).addTo(miniMap);
+  } else {
+    miniMap.setView([lat, lng], 16);
+    miniMapMarker.setLatLng([lat, lng]);
+  }
+  // o container só passou a ficar visível agora — Leaflet precisa recalcular o tamanho
+  setTimeout(function(){ miniMap.invalidateSize(); }, 80);
+}
+
+async function buscarCliente(){
+  const codigo = document.getElementById('novoCodigo').value.trim();
+  const resultado = document.getElementById('buscaResultado');
+  document.getElementById('camposManuais').style.display = 'none';
+  document.getElementById('btnSalvarNovo').disabled = true;
+  clienteEncontrado = null;
+
+  if (!codigo){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Digite um código de cliente.';
+    return;
+  }
+
+  if (!API_URL){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Configure a API_URL no início do arquivo.';
+    return;
+  }
+
+  resultado.className = 'busca-resultado carregando';
+  resultado.textContent = 'Buscando…';
+
+  try{
+    const info = await chamarAPI_GET_({ formato: 'buscarCliente', codigo: codigo });
+    if (!info.encontrado){
+      resultado.className = 'busca-resultado erro';
+      resultado.textContent = info.erro || 'Cliente não encontrado.';
+      return;
+    }
+    clienteEncontrado = info;
+    resultado.className = 'busca-resultado ok';
+    resultado.innerHTML = '<b>' + info.fantasia + '</b>' + (info.vendedor ? ' · ' + info.vendedor : '');
+    document.getElementById('novoEndereco').value = info.rotaSugerida || '';
+    document.getElementById('camposManuais').style.display = 'flex';
+    document.getElementById('btnSalvarNovo').disabled = false;
+  }catch(err){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Erro: ' + err;
+  }
+}
+
+document.getElementById('novoPeriodoToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#novoPeriodoToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+});
+
+async function salvarNova(){
+  if (!clienteEncontrado) return;
+  const periodoBtn = document.querySelector('#novoPeriodoToggle button.active');
+  const dados = {
+    codigo: clienteEncontrado.codigo,
+    endereco: document.getElementById('novoEndereco').value.trim(),
+    motorista: document.getElementById('novoMotorista').value.trim(),
+    data: document.getElementById('novaData').value,
+    periodo: periodoBtn ? periodoBtn.dataset.p : '',
+    observacoes: document.getElementById('novaObs').value.trim()
+  };
+
+  const btn = document.getElementById('btnSalvarNovo');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'salvarNovaEntrega', dados: dados });
+    btn.textContent = 'Salvar entrega';
+    if (!res.ok){
+      mostrarToast('Erro: ' + res.erro, true);
+      btn.disabled = false;
+      return;
+    }
+    mostrarToast('Entrega de ' + res.fantasia + ' salva!');
+    fecharModal();
+    carregarEntregas();
+  }catch(err){
+    btn.textContent = 'Salvar entrega';
+    btn.disabled = false;
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
+function mostrarToast(msg, erro){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (erro ? ' erro' : '');
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+</script>
+</body>
+</html>
