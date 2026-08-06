@@ -471,15 +471,15 @@
         <div class="field">
           <label>Endereço</label>
           <div class="endereco-linha">
-            <input type="text" id="novaRua" placeholder="Rua/Avenida">
-            <input type="text" id="novoNumero" placeholder="Nº (ou S/N)" style="max-width:100px;">
+            <input type="text" id="novaRua" placeholder="Rua/Avenida" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+            <input type="text" id="novoNumero" placeholder="Nº (ou S/N)" oninput="forcarMaiusculo_(event)" style="max-width:100px; text-transform:uppercase;">
           </div>
           <div class="endereco-linha" style="margin-top:6px;">
-            <input type="text" id="novoBairro" placeholder="Bairro">
+            <input type="text" id="novoBairro" placeholder="Bairro" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
           </div>
           <div class="endereco-linha" style="margin-top:6px;">
-            <input type="text" id="novaCidade" placeholder="Cidade">
-            <input type="text" id="novoUf" placeholder="UF" maxlength="2" style="max-width:60px; text-transform:uppercase;">
+            <input type="text" id="novaCidade" placeholder="Cidade" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+            <input type="text" id="novoUf" placeholder="UF" maxlength="2" oninput="forcarMaiusculo_(event)" style="max-width:60px; text-transform:uppercase;">
             <button type="button" class="btn-secondary" onclick="aplicarEndereco()">Aplicar</button>
           </div>
           <div id="enderecoResultado" class="busca-resultado"></div>
@@ -1279,6 +1279,15 @@ function fecharModal(){
 
 /* Botão "Aplicar" no campo Endereço — geocodifica e mostra um mini-mapa de
    confirmação, sem salvar nada ainda. */
+// Converte o campo pra caixa alta enquanto a pessoa digita, sem o cursor
+// pular pro final (problema clássico de forçar .toUpperCase() direto).
+function forcarMaiusculo_(e){
+  const el = e.target;
+  const posicao = el.selectionStart;
+  el.value = el.value.toUpperCase();
+  el.setSelectionRange(posicao, posicao);
+}
+
 /* Monta o endereço no padrão RUA, NÚMERO - BAIRRO - CIDADE/UF a partir dos
    campos separados — assim a pessoa não precisa digitar vírgula/hífen na mão. */
 function construirEndereco_(){
@@ -1298,6 +1307,24 @@ function construirEndereco_(){
    formulário. Se o texto não estiver no padrão (rotas antigas tipo
    "PRÓXIMO A PERFINORTE"), devolve null — nesse caso a Rua fica só com o
    texto original, como dica, e a pessoa completa o resto. */
+/* Mesma validação de padrão do backend (enderecoNoPadrao_), pro navegador
+   já saber se um endereço vindo da ROTAS_CLIENTES é confiável sem precisar
+   perguntar pro servidor. */
+function enderecoNoPadraoJS_(texto){
+  const t = String(texto || '').trim();
+  if (!t) return false;
+  const partesVirgula = t.split(',');
+  if (partesVirgula.length < 2) return false;
+  const resto = partesVirgula.slice(1).join(',').trim();
+  const segmentos = resto.split('-').map(s => s.trim()).filter(Boolean);
+  if (segmentos.length < 2) return false;
+  const numero = segmentos[0];
+  const cidadeUf = segmentos[segmentos.length - 1];
+  const numeroOk = /^(\d+[A-Za-z]?|S\/?N)$/i.test(numero);
+  const cidadeUfOk = /^.+\/[A-Za-z]{2}$/.test(cidadeUf);
+  return numeroOk && cidadeUfOk;
+}
+
 function tentarSepararEndereco_(texto){
   const t = String(texto || '').trim();
   if (!t) return null;
@@ -1318,16 +1345,12 @@ function tentarSepararEndereco_(texto){
   return { rua: rua, numero: numero, bairro: bairro, cidade: partesCidadeUf[0].trim(), uf: partesCidadeUf[1].trim() };
 }
 
-async function aplicarEndereco(){
+/* Confirma um endereço já pronto (geocodifica + mostra o mini-mapa) — usada
+   tanto pelo botão "Aplicar" (endereço montado dos campos) quanto quando a
+   rota já vem certa da ROTAS_CLIENTES (usa o texto original direto, sem
+   passar pelos campos). */
+async function confirmarEndereco_(endereco){
   const resultado = document.getElementById('enderecoResultado');
-  const endereco = construirEndereco_();
-
-  if (!endereco){
-    resultado.className = 'busca-resultado erro';
-    resultado.textContent = 'Preencha rua, bairro, cidade e UF.';
-    document.getElementById('miniMap').style.display = 'none';
-    return;
-  }
   enderecoAplicado = endereco;
 
   if (!API_URL){
@@ -1354,6 +1377,19 @@ async function aplicarEndereco(){
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Erro: ' + err;
   }
+}
+
+async function aplicarEndereco(){
+  const resultado = document.getElementById('enderecoResultado');
+  const endereco = construirEndereco_();
+
+  if (!endereco){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Preencha rua, bairro, cidade e UF.';
+    document.getElementById('miniMap').style.display = 'none';
+    return;
+  }
+  await confirmarEndereco_(endereco);
 }
 
 function mostrarMiniMap_(lat, lng){
@@ -1406,7 +1442,9 @@ async function buscarCliente(){
     resultado.className = 'busca-resultado ok';
     resultado.innerHTML = '<b>' + info.fantasia + '</b>' + (info.vendedor ? ' · ' + info.vendedor : '');
 
-    // tenta pré-preencher os campos de endereço a partir da rota sugerida
+    // se a rota sugerida já vier pronta e no padrão, confia nela e aplica
+    // direto — não precisa a pessoa preencher/clicar em nada
+    const jaNoPadrao = enderecoNoPadraoJS_(info.rotaSugerida);
     const partes = tentarSepararEndereco_(info.rotaSugerida);
     if (partes){
       document.getElementById('novaRua').value = partes.rua;
@@ -1421,6 +1459,10 @@ async function buscarCliente(){
 
     document.getElementById('camposManuais').style.display = 'flex';
     document.getElementById('btnSalvarNovo').disabled = false;
+
+    if (jaNoPadrao){
+      await confirmarEndereco_(info.rotaSugerida.trim()); // usa o texto original direto, já é confiável
+    }
   }catch(err){
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Erro: ' + err;
