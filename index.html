@@ -323,6 +323,26 @@
     display:flex; justify-content:space-between; gap:8px;
   }
 
+  .btn-confirmacoes{
+    margin-top:10px; width:100%; padding:8px 10px;
+    background:var(--panel-2); color:var(--paper-dim);
+    border:1px solid var(--line); border-radius:4px;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.04em;
+    cursor:pointer;
+  }
+  .btn-confirmacoes.tem-pendentes{
+    background:rgba(216,98,47,.16); color:var(--fila); border-color:var(--fila);
+    font-weight:700;
+  }
+
+  .confirmacao-item{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:10px 0; border-bottom:1px solid var(--line);
+  }
+  .confirmacao-item:last-child{border-bottom:none;}
+  .confirmacao-item .info b{font-size:13.5px;}
+  .confirmacao-item .info small{display:block; margin-top:2px; font-size:11px;}
+
   /* ---------- TABELA (sempre clara, independente do tema escuro do resto) ---------- */
   #tableView{
     display:none; height:100vh; overflow:auto; padding:20px;
@@ -396,6 +416,7 @@
         <button id="btnLimparRota" onclick="limparRotaSugerida()" style="display:none;">✕ Limpar rota</button>
       </div>
       <div id="rotaInfo" class="rota-info" style="display:none;"></div>
+      <button class="btn-confirmacoes" id="btnConfirmacoes" onclick="abrirModalConfirmacoes()">🚚 Confirmações do motorista</button>
     </div>
 
     <div class="controls">
@@ -471,6 +492,10 @@
         <div class="field">
           <label>Endereço</label>
           <div class="endereco-linha">
+            <input type="text" id="novoCep" placeholder="CEP (opcional)" maxlength="9" style="max-width:120px;" oninput="formatarCep_(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCep();}">
+            <button type="button" class="btn-secondary" onclick="buscarCep()">Buscar CEP</button>
+          </div>
+          <div class="endereco-linha" style="margin-top:6px;">
             <input type="text" id="novaRua" placeholder="Rua/Avenida" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
             <input type="text" id="novoNumero" placeholder="Nº (ou S/N)" oninput="forcarMaiusculo_(event)" style="max-width:100px; text-transform:uppercase;">
           </div>
@@ -512,6 +537,20 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
       <button class="btn-primary" id="btnSalvarNovo" onclick="salvarNova()" disabled>Salvar entrega</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalConfirmacoes" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Confirmações do motorista</h2>
+      <button class="modal-close" onclick="fecharModalConfirmacoes()">&times;</button>
+    </div>
+    <div class="modal-body" id="listaConfirmacoes"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalConfirmacoes()">Fechar</button>
+      <button class="btn-primary" id="btnConfirmarTodas" onclick="confirmarTodasPendentes()">Confirmar todas</button>
     </div>
   </div>
 </div>
@@ -948,6 +987,92 @@ function limparRotaSugerida(){
   if (modoAtual === 'tabela') renderTabela(); else render(false);
 }
 
+/* ===== CONFIRMAÇÕES DO MOTORISTA =====
+   O motorista marca "entregue"/"não entregue" no celular dele
+   (Motorista.html), mas isso só fica registrado numa aba separada — o
+   status de verdade na HISTORICO_ENTREGAS só muda quando a Bárbara revisa
+   e confirma aqui, individualmente ou tudo de uma vez. */
+let confirmacoesPendentes = [];
+
+async function carregarConfirmacoesPendentes(){
+  if (!API_URL) return;
+  try{
+    const lista = await chamarAPI_GET_({ formato: 'confirmacoesPendentes' });
+    confirmacoesPendentes = Array.isArray(lista) ? lista : [];
+    atualizarBadgeConfirmacoes_();
+  }catch(err){
+    // segue sem atualizar — não interrompe o resto do mapa
+  }
+}
+
+function atualizarBadgeConfirmacoes_(){
+  const btn = document.getElementById('btnConfirmacoes');
+  const n = confirmacoesPendentes.length;
+  btn.textContent = '🚚 Confirmações do motorista' + (n > 0 ? ' (' + n + ')' : '');
+  btn.classList.toggle('tem-pendentes', n > 0);
+}
+
+function abrirModalConfirmacoes(){
+  renderListaConfirmacoes_();
+  document.getElementById('modalConfirmacoes').classList.add('show');
+}
+
+function fecharModalConfirmacoes(){
+  document.getElementById('modalConfirmacoes').classList.remove('show');
+}
+
+function renderListaConfirmacoes_(){
+  const container = document.getElementById('listaConfirmacoes');
+  const btnTodas = document.getElementById('btnConfirmarTodas');
+
+  if (!confirmacoesPendentes.length){
+    container.innerHTML = '<div class="busca-resultado" style="display:block;">Nenhuma confirmação pendente no momento.</div>';
+    btnTodas.disabled = true;
+    return;
+  }
+  btnTodas.disabled = false;
+
+  container.innerHTML = confirmacoesPendentes.map(function(c){
+    const marcadoEntregue = c.statusMarcado === 'ENTREGUE';
+    const rotulo = marcadoEntregue ? '✅ Entregue' : '❌ Não entregue';
+    const cor = marcadoEntregue ? 'var(--entregue)' : 'var(--fila)';
+    return '<div class="confirmacao-item">' +
+      '<div class="info"><b>' + c.cliente + '</b>' +
+      '<small style="color:' + cor + ';">' + rotulo + ' · ' + (c.motorista || '') + '</small></div>' +
+      '<button class="btn-secondary" onclick="confirmarUma(' + c.linha + ')">✓ Confirmar</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function confirmarUma(linha){
+  try{
+    const res = await chamarAPI_POST_({ acao: 'confirmarEntrega', linha: linha });
+    if (!res.ok){ mostrarToast('Erro: ' + res.erro, true); return; }
+    mostrarToast('Confirmado!');
+    await carregarConfirmacoesPendentes();
+    renderListaConfirmacoes_();
+    carregarEntregas();
+  }catch(err){
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
+async function confirmarTodasPendentes(){
+  if (!confirmacoesPendentes.length) return;
+  if (!confirm('Confirmar todas as ' + confirmacoesPendentes.length + ' entrega(s) marcadas pelo motorista?')) return;
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'confirmarTodas' });
+    if (!res.ok){ mostrarToast('Erro: ' + res.erro, true); return; }
+    mostrarToast((res.total || 0) + ' confirmada(s)!');
+    fecharModalConfirmacoes();
+    await carregarConfirmacoesPendentes();
+    carregarEntregas();
+  }catch(err){
+    mostrarToast('Erro: ' + err, true);
+  }
+}
+
 /* ===== VISÃO EM TABELA (editar direto, sem precisar abrir a planilha) ===== */
 
 function mostrarView(modo){
@@ -1219,6 +1344,7 @@ restaurarSidebar_();
 initMap();
 carregarEntregas();
 carregarMotoristas();
+carregarConfirmacoesPendentes();
 
 // ===== ATUALIZAÇÃO AUTOMÁTICA =====
 // A cada 20s o mapa busca os dados de novo sozinho. 20s é um equilíbrio entre
@@ -1226,6 +1352,7 @@ carregarMotoristas();
 // no histórico) — pode ajustar o número abaixo se quiser mais ou menos frequente.
 const INTERVALO_ATUALIZACAO_MS = 20000;
 setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
+setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
 
 // ===== NOVA ENTREGA (modal) =====
 
@@ -1251,6 +1378,7 @@ function popularSelectMotoristas_(){
 function abrirModal(){
   document.getElementById('modalOverlay').classList.add('show');
   document.getElementById('novoCodigo').value = '';
+  document.getElementById('novoCep').value = '';
   document.getElementById('novaRua').value = '';
   document.getElementById('novoNumero').value = '';
   document.getElementById('novoBairro').value = '';
@@ -1286,6 +1414,48 @@ function forcarMaiusculo_(e){
   const posicao = el.selectionStart;
   el.value = el.value.toUpperCase();
   el.setSelectionRange(posicao, posicao);
+}
+
+function formatarCep_(e){
+  let v = e.target.value.replace(/\D/g,'').slice(0,8);
+  if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5);
+  e.target.value = v;
+}
+
+/* Busca o CEP na ViaCEP (Correios, gratuito, sem chave) e preenche Rua/
+   Bairro/Cidade/UF sozinho. Número não vem do CEP — a pessoa completa. */
+async function buscarCep(){
+  const cep = document.getElementById('novoCep').value.replace(/\D/g,'');
+  const resultado = document.getElementById('enderecoResultado');
+
+  if (cep.length !== 8){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'CEP inválido — precisa ter 8 dígitos.';
+    return;
+  }
+
+  resultado.className = 'busca-resultado carregando';
+  resultado.textContent = 'Buscando CEP…';
+
+  try{
+    const resp = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+    const dados = await resp.json();
+    if (dados.erro){
+      resultado.className = 'busca-resultado erro';
+      resultado.textContent = 'CEP não encontrado.';
+      return;
+    }
+    document.getElementById('novaRua').value = (dados.logradouro || '').toUpperCase();
+    document.getElementById('novoBairro').value = (dados.bairro || '').toUpperCase();
+    document.getElementById('novaCidade').value = (dados.localidade || '').toUpperCase();
+    document.getElementById('novoUf').value = (dados.uf || '').toUpperCase();
+    resultado.className = 'busca-resultado ok';
+    resultado.textContent = 'Endereço encontrado — confira o número e clique em Aplicar.';
+    document.getElementById('novoNumero').focus();
+  }catch(err){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Erro ao buscar CEP: ' + err;
+  }
 }
 
 /* Monta o endereço no padrão RUA, NÚMERO - BAIRRO - CIDADE/UF a partir dos
