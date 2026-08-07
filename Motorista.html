@@ -107,7 +107,11 @@
     padding:10px 14px; background:#eef7f8; color:var(--azul);
     font-size:13px; font-weight:700; text-align:center;
   }
-  #mapaNavegacao{flex:1;}
+  #mapaNavWrap{flex:1; position:relative; overflow:hidden; background:#e5e3df;}
+  #mapaNavegacao{
+    position:absolute; top:-30%; left:-30%; width:160%; height:160%;
+    transition:transform .3s ease-out;
+  }
   .pin-eu-wrap{
     width:30px; height:30px; display:flex; align-items:center; justify-content:center;
   }
@@ -224,7 +228,7 @@
     <button onclick="atualizarRotaNavegacao_()">🔄</button>
   </div>
   <div id="navInfo" class="nav-info">Calculando rota…</div>
-  <div id="mapaNavegacao"></div>
+  <div id="mapaNavWrap"><div id="mapaNavegacao"></div></div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -613,6 +617,7 @@ function pararSeguir_(){
     clearInterval(intervalRecalculoRota);
     intervalRecalculoRota = null;
   }
+  girarMapaNavegacao_(0); // volta o mapa pro norte-pra-cima normal
 }
 
 function atualizarRotaNavegacao_(){
@@ -651,13 +656,25 @@ function atualizarRotaNavegacao_(){
 }
 
 function iconeNavEu_(rotacao){
-  const graus = (typeof rotacao === 'number' && !isNaN(rotacao)) ? rotacao : 0;
+  // no modo "seguindo" é o MAPA que gira (a seta fica sempre pra cima,
+  // como no Google Maps) — parado, é a seta que gira mostrando a direção
+  const graus = (!modoSeguindo && typeof rotacao === 'number' && !isNaN(rotacao)) ? rotacao : 0;
   return L.divIcon({
     className: '',
     html: '<div class="pin-eu-wrap"><div class="pin-eu" style="transform:rotate(' + graus + 'deg);"></div></div>',
     iconSize: [30, 30],
     iconAnchor: [15, 15]
   });
+}
+
+// Gira o mapa inteiro pra "câmera em primeira pessoa" — a direção que ele
+// está seguindo fica sempre voltada pra cima na tela, igual navegação de
+// verdade (não é a seta que gira, é o mundo em volta dela).
+function girarMapaNavegacao_(heading){
+  const el = document.getElementById('mapaNavegacao');
+  if (!el) return;
+  const graus = (typeof heading === 'number' && !isNaN(heading)) ? -heading : 0;
+  el.style.transform = 'rotate(' + graus + 'deg)';
 }
 
 function atualizarPosicaoNav_(lat, lng, heading){
@@ -676,9 +693,14 @@ function atualizarPosicaoNav_(lat, lng, heading){
       marcadorNavEu.setIcon(iconeNavEu_(heading));
     }
   }
-  // seguindo ativo: a câmera acompanha ele de perto, igual navegação de verdade
+  // seguindo ativo: câmera em primeira pessoa — acompanha de perto E gira
+  // o mapa conforme a direção dele (só gira quando o GPS manda uma direção
+  // de verdade — parado, sem heading, o mapa fica como estava)
   if (modoSeguindo && mapaNav){
     mapaNav.setView([lat, lng], mapaNav.getZoom() < 15 ? 17 : mapaNav.getZoom());
+    if (typeof heading === 'number' && !isNaN(heading)){
+      girarMapaNavegacao_(heading);
+    }
   }
 }
 
