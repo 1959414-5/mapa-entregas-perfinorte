@@ -108,9 +108,16 @@
     font-size:13px; font-weight:700; text-align:center;
   }
   #mapaNavegacao{flex:1;}
+  .pin-eu-wrap{
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+  }
   .pin-eu{
-    width:18px; height:18px; border-radius:50%; background:var(--azul);
-    border:3px solid #fff; box-shadow:0 0 0 3px var(--azul), 0 2px 8px rgba(0,0,0,.4);
+    width:0; height:0;
+    border-left:9px solid transparent;
+    border-right:9px solid transparent;
+    border-bottom:22px solid var(--azul);
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));
+    transition:transform .25s ease;
   }
 
   .entrega{
@@ -614,7 +621,7 @@ function atualizarRotaNavegacao_(){
 
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const origemLat = pos.coords.latitude, origemLng = pos.coords.longitude;
-    atualizarPosicaoNav_(origemLat, origemLng);
+    atualizarPosicaoNav_(origemLat, origemLng, pos.coords.heading);
 
     try{
       const res = await chamarAPI_GET_({
@@ -643,15 +650,31 @@ function atualizarRotaNavegacao_(){
   }, { enableHighAccuracy:true, maximumAge:15000, timeout:15000 });
 }
 
-function atualizarPosicaoNav_(lat, lng){
+function iconeNavEu_(rotacao){
+  const graus = (typeof rotacao === 'number' && !isNaN(rotacao)) ? rotacao : 0;
+  return L.divIcon({
+    className: '',
+    html: '<div class="pin-eu-wrap"><div class="pin-eu" style="transform:rotate(' + graus + 'deg);"></div></div>',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+}
+
+function atualizarPosicaoNav_(lat, lng, heading){
   if (!mapaNav) return;
   if (!marcadorNavEu){
     marcadorNavEu = L.marker([lat, lng], {
-      icon: L.divIcon({ className:'', html:'<div class="pin-eu"></div>', iconSize:[18,18] }),
+      icon: iconeNavEu_(heading),
       zIndexOffset: 1000
     }).addTo(mapaNav);
   } else {
     marcadorNavEu.setLatLng([lat, lng]);
+    // só troca o ícone se a direção veio de verdade (o GPS às vezes manda
+    // heading nulo quando ele está parado) — assim a seta não "reseta"
+    // pra cima toda hora sem necessidade
+    if (typeof heading === 'number' && !isNaN(heading)){
+      marcadorNavEu.setIcon(iconeNavEu_(heading));
+    }
   }
   // seguindo ativo: a câmera acompanha ele de perto, igual navegação de verdade
   if (modoSeguindo && mapaNav){
@@ -701,7 +724,7 @@ function ativarWatch_(){
       // se estiver no modo navegação, atualiza o pontinho dele no mapa a
       // cada posição nova (mais frequente que o envio pra Viviane, que é
       // limitado a 1x/45s pra economizar bateria/dados)
-      if (destinoNavAtual) atualizarPosicaoNav_(pos.coords.latitude, pos.coords.longitude);
+      if (destinoNavAtual) atualizarPosicaoNav_(pos.coords.latitude, pos.coords.longitude, pos.coords.heading);
     },
     (err) => { console.error('Erro de localização:', err.message); },
     { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
