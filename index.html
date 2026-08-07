@@ -726,7 +726,7 @@ const DADOS_EXEMPLO = [
 let map, clusterManha, clusterTarde, markersById = {};
 let rotaSugerida = null; // array de "linha" na ordem sugerida (ou null se nenhuma rota ativa)
 let rotaGeometria = null; // polyline codificada da rota real (pelas ruas), devolvida pelo OpenRouteService
-let origemMarker = null;  // marcador da Perfinorte no mapa (ícone de fábrica)
+let marcadorPerfinorteFixo = null;  // ícone da fábrica, sempre visível no mapa (não depende de rota ativa)
 let rotaOrigem = null;   // {lat, lng} da Perfinorte, devolvido junto com a rota
 let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
 let rotaSetas = null;    // camada com as setas de direção sobre a linha
@@ -908,6 +908,22 @@ function origemIcon_(){
     iconAnchor:[18,18],
     popupAnchor:[0,-20]
   });
+}
+
+/* Carrega uma vez o ícone fixo da Perfinorte no mapa — sempre visível,
+   independente de ter rota sugerida ativa ou não, só pra qualquer um se
+   localizar em relação à empresa. */
+async function carregarMarcadorPerfinorte_(){
+  if (!API_URL || marcadorPerfinorteFixo) return;
+  try{
+    const res = await chamarAPI_GET_({ formato: 'origemPerfinorte' });
+    if (!res.ok) return;
+    marcadorPerfinorteFixo = L.marker([res.lat, res.lng], { icon: origemIcon_(), zIndexOffset: 500 })
+      .bindPopup('<div class="pop"><h3>🏭 Perfinorte</h3><div class="row">' + (res.endereco || '') + '</div></div>')
+      .addTo(map);
+  }catch(err){
+    // silencioso — não interrompe o resto do mapa
+  }
 }
 
 function motoristaIcon_(){
@@ -1196,7 +1212,6 @@ function render(ajustarZoom){
   // algum motivo, cai pra linha reta entre os pontos como alternativa.
   if (rotaLinha){ map.removeLayer(rotaLinha); rotaLinha = null; }
   if (rotaSetas){ map.removeLayer(rotaSetas); rotaSetas = null; }
-  if (origemMarker){ map.removeLayer(origemMarker); origemMarker = null; }
 
   if (rotaSugerida && rotaOrigem){
     let pontosRota;
@@ -1224,10 +1239,6 @@ function render(ajustarZoom){
         }]
       }).addTo(map);
     }
-
-    origemMarker = L.marker([rotaOrigem.lat, rotaOrigem.lng], { icon: origemIcon_() })
-      .bindPopup('<div class="pop"><h3>🏭 Perfinorte</h3><div class="row">Início e fim da rota</div></div>')
-      .addTo(map);
   }
 
   if (ajustarZoom && bounds.length){
@@ -1866,6 +1877,7 @@ carregarMotoristas();
 carregarConfirmacoesPendentes();
 carregarCoresStatus_();
 carregarLocalizacoesMotoristas();
+carregarMarcadorPerfinorte_();
 
 // ===== ATUALIZAÇÃO AUTOMÁTICA =====
 // A cada 10s o mapa e a tabela buscam os dados de novo sozinhos — não
