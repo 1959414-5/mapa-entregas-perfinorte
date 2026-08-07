@@ -1152,9 +1152,9 @@ function corLinhaEntrega_(d){
   if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
   if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
   if (d.ok === true) return cor('OK', '#cfe2f3');
-  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fce5cd');
-  if (status === 'EM FILA') return cor('EM FILA', '#fde0d9');
-  if (d.data) return cor('ATENCAO', '#ea9999'); // tem data prevista mas status incomum — precisa de atenção
+  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc'); // amarelinho
+  if (status === 'EM FILA') return cor('EM FILA', '#e0c3e8'); // rosa puxado pro roxo
+  if (!status && d.data) return cor('ATENCAO', '#ea9999'); // sem status mas com data prevista — precisa de atenção
   return '';
 }
 
@@ -1231,8 +1231,8 @@ function renderTabela(){
         '<span><i style="background:' + (coresStatus['CANCELAR']||'#f4cccc') + '"></i>Cancelar</span>' +
         '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
         '<span><i style="background:' + (coresStatus['OK']||'#cfe2f3') + '"></i>Pedido pronto</span>' +
-        '<span><i style="background:' + (coresStatus['EM ANDAMENTO']||'#fce5cd') + '"></i>Em andamento</span>' +
-        '<span><i style="background:' + (coresStatus['EM FILA']||'#fde0d9') + '"></i>Em fila</span>' +
+        '<span><i style="background:' + (coresStatus['EM ANDAMENTO']||'#fff2cc') + '"></i>Em andamento</span>' +
+        '<span><i style="background:' + (coresStatus['EM FILA']||'#e0c3e8') + '"></i>Em fila</span>' +
         '<span><i style="background:' + (coresStatus['ATENCAO']||'#ea9999') + '"></i>Atenção</span>' +
       '</div>' +
     '</div>' +
