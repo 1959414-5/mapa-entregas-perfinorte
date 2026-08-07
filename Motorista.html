@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Minhas Entregas — Perfinorte</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <style>
   :root{
     --azul:#2f93a3;
@@ -25,7 +26,7 @@
   }
   header .eyebrow{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#9aa4b0;}
   header h1{margin:3px 0 0; font-size:19px; font-weight:700;}
-  header .sub{margin-top:6px; font-size:12.5px; color:#c7ccd3; display:flex; gap:10px; align-items:center;}
+  header .sub{margin-top:6px; font-size:12.5px; color:#c7ccd3; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
   header .sub button{
     background:none; border:1px solid #3a4250; color:#c7ccd3;
     padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;
@@ -33,11 +34,12 @@
   .tag-localizacao{
     font-size:10.5px; color:var(--verde); display:flex; align-items:center; gap:4px;
   }
+  .tag-localizacao.parada{color:var(--dim);}
 
   #tela-selecao{padding:24px 18px; max-width:420px; margin:0 auto;}
   #tela-selecao h2{font-size:16px; margin-bottom:14px;}
   #tela-selecao label{display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); margin:14px 0 5px;}
-  #tela-selecao select, #tela-selecao input{
+  #tela-selecao select{
     width:100%; padding:12px; border-radius:8px; border:1px solid var(--linha);
     background:#fff; font-size:16px; color:var(--texto);
   }
@@ -47,6 +49,21 @@
   }
 
   #lista{padding:14px; max-width:560px; margin:0 auto; display:none;}
+
+  .abas{display:flex; gap:8px; margin-bottom:12px;}
+  .abas button{
+    flex:1; padding:11px; border-radius:8px; border:1px solid var(--linha);
+    background:#fff; color:var(--dim); font-size:13.5px; font-weight:700; cursor:pointer;
+  }
+  .abas button.ativa{background:var(--azul); border-color:var(--azul); color:#fff;}
+
+  .modo-visao{display:flex; gap:8px; margin-bottom:12px;}
+  .modo-visao button{
+    flex:1; padding:9px; border-radius:8px; border:1px solid var(--linha);
+    background:#fff; color:var(--dim); font-size:12.5px; font-weight:700; cursor:pointer;
+  }
+  .modo-visao button.ativa{background:#12161b; border-color:#12161b; color:#fff;}
+
   .btn-atualizar{
     display:block; width:100%; margin-bottom:12px; padding:12px;
     border:none; border-radius:10px; background:var(--azul); color:#fff;
@@ -64,6 +81,17 @@
   .resumo .card .n{font-size:22px; font-weight:700;}
   .resumo .card .l{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); margin-top:2px;}
 
+  #mapaMotorista{
+    display:none; height:340px; border-radius:12px; border:1px solid var(--linha);
+    margin-bottom:14px; overflow:hidden;
+  }
+  .pin-num{
+    width:26px; height:26px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
+    background:var(--amber); border:2px solid rgba(0,0,0,.3); box-shadow:0 2px 6px rgba(0,0,0,.35);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pin-num span{transform:rotate(45deg); font-size:11px; font-weight:700; color:#1a1305;}
+
   .entrega{
     background:#fff; border:1px solid var(--linha); border-radius:12px;
     padding:16px; margin-bottom:12px;
@@ -78,6 +106,10 @@
   }
   .entrega .periodo.MANHÃ{background:rgba(232,162,61,.18); color:#8a5c14;}
   .entrega .periodo.TARDE{background:rgba(47,147,163,.18); color:#175661;}
+  .entrega .status-tag{
+    display:inline-block; margin-top:6px; font-size:10.5px; font-weight:700;
+    padding:2px 8px; border-radius:20px; background:#eef0f2; color:var(--dim);
+  }
   .entrega .endereco{margin-top:6px; font-size:13.5px; color:var(--dim); line-height:1.4;}
   .entrega .acoes{display:flex; gap:8px; margin-top:14px;}
   .entrega .acoes a{
@@ -118,7 +150,7 @@
   <h1>Minhas Entregas</h1>
   <div class="sub" id="headerSub" style="display:none;">
     <span id="headerInfo"></span>
-    <span class="tag-localizacao">📍 compartilhando localização</span>
+    <span class="tag-localizacao" id="tagLocalizacao">📍 compartilhando localização</span>
     <button onclick="trocarMotorista()">Trocar</button>
   </div>
 </header>
@@ -129,35 +161,51 @@
   <select id="selMotorista">
     <option value="">Carregando...</option>
   </select>
-  <label for="selData">Data</label>
-  <input type="date" id="selData">
   <button onclick="iniciarSessao()">Ver minhas entregas</button>
 </div>
 
 <div id="lista">
+  <div class="abas">
+    <button id="btnAbaHoje" class="ativa" onclick="mudarAba_('hoje')">Hoje</button>
+    <button id="btnAbaAmanha" onclick="mudarAba_('amanha')">Amanhã</button>
+  </div>
+
+  <div class="modo-visao">
+    <button id="btnVerLista" class="ativa" onclick="mudarModoVisao_('lista')">📋 Lista</button>
+    <button id="btnVerMapaMot" onclick="mudarModoVisao_('mapa')">🗺 Mapa</button>
+  </div>
+
   <button id="btnAtualizar" class="btn-atualizar" onclick="atualizarManual_()">🔄 Atualizar entregas</button>
+
   <div class="resumo">
     <div class="card"><div class="n" id="totCount">–</div><div class="l">Entregas</div></div>
     <div class="card"><div class="n" id="totFeitas">–</div><div class="l">Marcadas</div></div>
   </div>
+
+  <div id="mapaMotorista"></div>
   <div id="cards"></div>
 </div>
 
 <div id="toast" class="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 /* =====================================================================
  * COLE AQUI A MESMA URL DO /exec usada no Mapa.html.
  * ===================================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbxq2r5WwP_DxFUpO7jV7XthtIGbTLlie8Od799ehwYANEabahf5TitwIt9RqVhXyft6/exec";
 
-let entregas = [];
-let marcacoes = {}; // linha -> 'ENTREGUE' | 'NAO_ENTREGUE' (o que já foi marcado nesta sessão)
+let entregasHoje = [];
+let entregasAmanha = [];
+let marcacoes = {}; // linha -> 'ENTREGUE' | 'NAO_ENTREGUE' (marcações pendentes, de qualquer dia)
+let abaAtual = 'hoje';       // 'hoje' | 'amanha'
+let modoVisao = 'lista';     // 'lista' | 'mapa'
+let mapaMot = null, marcadoresMot = [];
 
 async function chamarAPI_GET_(params){
   // "_t" no final força o navegador a nunca reaproveitar uma resposta em
-  // cache — sem isso, às vezes ele mostra dados antigos mesmo já tendo
-  // mudado na planilha de verdade.
+  // cache — sem isso, às vezes mostra dados antigos mesmo já tendo mudado
+  // na planilha de verdade.
   const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
   const qs = new URLSearchParams(comCacheBusting).toString();
   const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
@@ -177,6 +225,18 @@ function mostrarToast(msg, erro){
   t.textContent = msg;
   t.className = 'toast show' + (erro ? ' erro' : '');
   setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+function dataIsoHoje_(){ return new Date().toISOString().slice(0,10); }
+function dataIsoAmanha_(){
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0,10);
+}
+function formatarDataBR_(iso){
+  if (!iso) return '';
+  const p = iso.split('-');
+  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
 }
 
 async function carregarMotoristasSelecao(){
@@ -204,84 +264,58 @@ function trocarMotorista(){
 
 async function iniciarSessao(){
   const motorista = document.getElementById('selMotorista').value;
-  const data = document.getElementById('selData').value;
   if (!motorista){
     mostrarToast('Selecione seu nome.', true);
     return;
   }
   localStorage.setItem('motoristaAtual', motorista);
-  localStorage.setItem('dataAtual', data);
 
   document.getElementById('tela-selecao').style.display = 'none';
   document.getElementById('lista').style.display = 'block';
   document.getElementById('headerSub').style.display = 'flex';
-  document.getElementById('headerInfo').textContent = motorista + ' · ' + formatarDataBR_(data);
+  document.getElementById('headerInfo').textContent = motorista;
 
   await carregarEntregasDoMotorista();
   iniciarRastreamento_();
 }
 
-/* ===== LOCALIZAÇÃO EM TEMPO REAL =====
-   Manda a posição do GPS pra Viviane conseguir acompanhar no mapa. Só
-   funciona com a permissão do motorista (o navegador pede sozinho na
-   primeira vez) e só enquanto essa página estiver aberta. */
-let watchIdLocalizacao = null;
-let ultimoEnvioLocalizacao = 0;
-
-function iniciarRastreamento_(){
-  if (!navigator.geolocation || watchIdLocalizacao !== null) return;
-
-  watchIdLocalizacao = navigator.geolocation.watchPosition(
-    (pos) => { enviarLocalizacao_(pos.coords.latitude, pos.coords.longitude); },
-    (err) => { console.error('Erro de localização:', err.message); },
-    { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
-  );
+function mudarAba_(aba){
+  abaAtual = aba;
+  document.getElementById('btnAbaHoje').classList.toggle('ativa', aba === 'hoje');
+  document.getElementById('btnAbaAmanha').classList.toggle('ativa', aba === 'amanha');
+  renderTudo_();
 }
 
-async function enviarLocalizacao_(lat, lng){
-  const agora = Date.now();
-  if (agora - ultimoEnvioLocalizacao < 45000) return; // no máximo a cada 45s, pra não gastar bateria/dados à toa
-  ultimoEnvioLocalizacao = agora;
-
-  const motorista = localStorage.getItem('motoristaAtual');
-  if (!motorista) return;
-  try{
-    await chamarAPI_POST_({ acao: 'atualizarLocalizacao', motorista: motorista, lat: lat, lng: lng });
-  }catch(err){
-    // silencioso — não vale a pena incomodar o motorista com erro de GPS
+function mudarModoVisao_(modo){
+  modoVisao = modo;
+  document.getElementById('btnVerLista').classList.toggle('ativa', modo === 'lista');
+  document.getElementById('btnVerMapaMot').classList.toggle('ativa', modo === 'mapa');
+  document.getElementById('cards').style.display = modo === 'lista' ? 'block' : 'none';
+  document.getElementById('mapaMotorista').style.display = modo === 'mapa' ? 'block' : 'none';
+  if (modo === 'mapa'){
+    setTimeout(() => { if (mapaMot) mapaMot.invalidateSize(); renderMapaMotorista_(); }, 50);
   }
 }
 
-function formatarDataBR_(iso){
-  if (!iso) return '';
-  const p = iso.split('-');
-  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
+function listaAtual_(){
+  return abaAtual === 'hoje' ? entregasHoje : entregasAmanha;
 }
 
 async function carregarEntregasDoMotorista(mostrarCarregando){
   const motorista = localStorage.getItem('motoristaAtual');
-  const data = localStorage.getItem('dataAtual');
   const container = document.getElementById('cards');
   if (mostrarCarregando !== false){
     container.innerHTML = '<div class="vazio"><div class="big">⏳</div>Carregando…</div>';
   }
 
   try{
-    // filtra já no servidor (só pede as entregas desse motorista/data) —
-    // bem mais rápido que baixar as de todo mundo e filtrar aqui
-    const params = { formato: 'dados', motorista: motorista };
-    if (data) params.data = data;
-
-    const [filtradas, pendentes] = await Promise.all([
-      chamarAPI_GET_(params),
+    const [brutasHoje, brutasAmanha, pendentes] = await Promise.all([
+      chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataIsoHoje_() }),
+      chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataIsoAmanha_() }),
       chamarAPI_GET_({ formato: 'confirmacoesPendentes' })
     ]);
 
-    const todasBrutas = Array.isArray(filtradas) ? filtradas : [];
     const pendentesLista = Array.isArray(pendentes) ? pendentes : [];
-
-    // reconstrói o que ele já marcou (mesmo se foi em outra sessão/aparelho,
-    // não depende só da memória do navegador)
     marcacoes = {};
     pendentesLista.forEach(p => {
       if (String(p.motorista || '').toUpperCase() === motorista.toUpperCase()){
@@ -289,17 +323,19 @@ async function carregarEntregasDoMotorista(mostrarCarregando){
       }
     });
 
-    // regra de visibilidade:
-    //  - status já ENTREGUE (confirmado pela Viviane) -> some da lista
-    //  - ele já marcou como ENTREGUE (ainda pendente) -> mostra só informativo
-    //  - "OK" marcado (pedido pronto) e ainda não entregue -> mostra pra ele agir
-    entregas = todasBrutas.filter(d => {
+    // HOJE: só o que já está pronto (OK marcado) e ainda não entregue — ou
+    // já marcado por ele mesmo (informativo, aguardando confirmação).
+    entregasHoje = (Array.isArray(brutasHoje) ? brutasHoje : []).filter(d => {
       if (String(d.status || '').toUpperCase() === 'ENTREGUE') return false;
       if (marcacoes[d.linha] === 'ENTREGUE') return true;
       return d.ok === true;
     });
 
-    renderCards();
+    // AMANHÃ: mostra tudo, de qualquer status — só pra ele se programar,
+    // não precisa estar com pedido pronto ainda.
+    entregasAmanha = Array.isArray(brutasAmanha) ? brutasAmanha : [];
+
+    renderTudo_();
   }catch(err){
     container.innerHTML = '<div class="vazio"><div class="big">⚠</div>Não foi possível carregar.</div>';
   }
@@ -316,17 +352,26 @@ async function atualizarManual_(){
   mostrarToast('Atualizado!');
 }
 
-function renderCards(){
-  const container = document.getElementById('cards');
-  document.getElementById('totCount').textContent = entregas.length;
-  document.getElementById('totFeitas').textContent = Object.keys(marcacoes).length;
+function renderTudo_(){
+  renderCards();
+  if (modoVisao === 'mapa') renderMapaMotorista_();
+}
 
-  if (!entregas.length){
-    container.innerHTML = '<div class="vazio"><div class="big">📭</div>Nenhuma entrega pendente pra você nessa data.</div>';
+function renderCards(){
+  const lista = listaAtual_();
+  const container = document.getElementById('cards');
+  document.getElementById('totCount').textContent = lista.length;
+  document.getElementById('totFeitas').textContent = lista.filter(d => marcacoes[d.linha]).length;
+
+  if (!lista.length){
+    const msg = abaAtual === 'hoje'
+      ? 'Nenhuma entrega pendente pra você hoje.'
+      : 'Nenhuma entrega prevista pra amanhã ainda.';
+    container.innerHTML = '<div class="vazio"><div class="big">📭</div>' + msg + '</div>';
     return;
   }
 
-  container.innerHTML = entregas.map(d => {
+  container.innerHTML = lista.map(d => {
     const marcado = marcacoes[d.linha];
     const jaEntregue = marcado === 'ENTREGUE';
     const classeCard = jaEntregue ? 'marcada-entregue' : (marcado === 'NAO_ENTREGUE' ? 'marcada-nao' : '');
@@ -334,15 +379,25 @@ function renderCards(){
       ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}&travelmode=driving" target="_blank" title="Traçar rota até aqui">🧭</a>`
       : '';
 
-    const acoes = jaEntregue
-      ? `<div class="acoes">${linkMapa}</div>
-         <div class="ja-marcado-banner">✅ Você já marcou como entregue — aguardando confirmação da Viviane</div>`
-      : `<div class="acoes">
-          ${linkMapa}
-          <button class="entregue-btn ${marcado === 'ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'ENTREGUE', this)">✅ Entregue</button>
-          <button class="nao-btn ${marcado === 'NAO_ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'NAO_ENTREGUE', this)">❌ Não entregue</button>
-        </div>
-        ${marcado === 'NAO_ENTREGUE' ? '<div class="marcado-em">Marcado como não entregue — aguardando revisão da Viviane</div>' : ''}`;
+    // amanhã mostra tudo, então mostra o status atual pra ele saber a situação
+    const statusTag = (abaAtual === 'amanha' && d.status)
+      ? '<span class="status-tag">' + d.status + (d.ok ? ' · pronto' : '') + '</span>'
+      : '';
+
+    const acoes = (abaAtual !== 'hoje')
+      ? '' // amanhã é só consulta, ele ainda não vai marcar nada
+      : (jaEntregue
+        ? `<div class="acoes">${linkMapa}</div>
+           <div class="ja-marcado-banner">✅ Você já marcou como entregue — aguardando confirmação da Viviane</div>`
+        : `<div class="acoes">
+            ${linkMapa}
+            <button class="entregue-btn ${marcado === 'ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'ENTREGUE', this)">✅ Entregue</button>
+            <button class="nao-btn ${marcado === 'NAO_ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'NAO_ENTREGUE', this)">❌ Não entregue</button>
+          </div>
+          ${marcado === 'NAO_ENTREGUE' ? '<div class="marcado-em">Marcado como não entregue — aguardando revisão da Viviane</div>' : ''}`);
+
+    const linkMapaSemAcao = (abaAtual !== 'hoje' && linkMapa)
+      ? `<div class="acoes">${linkMapa}</div>` : '';
 
     return `
       <div class="entrega ${classeCard}" data-linha="${d.linha}">
@@ -350,16 +405,55 @@ function renderCards(){
           <div class="cliente">${d.cliente}</div>
           <div class="periodo ${d.periodo === 'TARDE' ? 'TARDE' : 'MANHÃ'}">${d.periodo || '—'}</div>
         </div>
+        ${statusTag}
         <div class="endereco">${d.endereco}</div>
         ${d.observacoes ? '<div class="endereco">📝 ' + d.observacoes + '</div>' : ''}
-        ${acoes}
+        ${acoes}${linkMapaSemAcao}
       </div>`;
   }).join('');
 }
 
+/* Mapa geral das paradas do dia selecionado — só pra dar noção de onde é
+   cada entrega, não é navegação turno a turno (isso já é o botão 🧭). */
+function renderMapaMotorista_(){
+  const lista = listaAtual_().filter(d => d.lat != null && d.lng != null);
+  const container = document.getElementById('mapaMotorista');
+  if (!container || container.style.display === 'none') return;
+
+  if (!mapaMot){
+    mapaMot = L.map('mapaMotorista', { zoomControl:true });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 20
+    }).addTo(mapaMot);
+  }
+
+  marcadoresMot.forEach(m => mapaMot.removeLayer(m));
+  marcadoresMot = [];
+
+  if (!lista.length){
+    mapaMot.setView([-23.42, -52.0], 8);
+    return;
+  }
+
+  const bounds = [];
+  lista.forEach((d, i) => {
+    const icone = L.divIcon({
+      className:'',
+      html:'<div class="pin-num"><span>' + (i+1) + '</span></div>',
+      iconSize:[26,26], iconAnchor:[13,26], popupAnchor:[0,-24]
+    });
+    const marker = L.marker([d.lat, d.lng], { icon: icone })
+      .bindPopup('<b>' + (i+1) + '. ' + d.cliente + '</b><br>' + d.endereco)
+      .addTo(mapaMot);
+    marcadoresMot.push(marker);
+    bounds.push([d.lat, d.lng]);
+  });
+
+  mapaMot.fitBounds(bounds, { padding:[30,30], maxZoom:14 });
+}
+
 async function marcar(linha, status, botao){
   const motorista = localStorage.getItem('motoristaAtual');
-  const card = botao.closest('.entrega');
   botao.disabled = true;
 
   try{
@@ -378,8 +472,93 @@ async function marcar(linha, status, botao){
   }
 }
 
+/* ===== LOCALIZAÇÃO EM TEMPO REAL =====
+   Manda a posição do GPS pra Viviane conseguir acompanhar no mapa, por até
+   10 horas seguidas (uma viagem longa) enquanto essa aba estiver aberta —
+   mesmo que ele não toque no celular (não dá, tá dirigindo). Depois de 10h
+   o compartilhamento para sozinho, por segurança/bateria. */
+const RASTREAMENTO_LIMITE_MS = 10 * 60 * 60 * 1000; // 10 horas
+let watchIdLocalizacao = null;
+let ultimoEnvioLocalizacao = 0;
+
+function iniciarRastreamento_(){
+  if (!navigator.geolocation) return;
+
+  // guarda quando a sessão de rastreamento começou, sobrevive a recarregar
+  // a página (ex: ele fechou e abriu de novo no meio da viagem)
+  let inicio = parseInt(localStorage.getItem('rastreamentoInicio') || '0', 10);
+  const agora = Date.now();
+  if (!inicio || (agora - inicio) > RASTREAMENTO_LIMITE_MS){
+    inicio = agora;
+    localStorage.setItem('rastreamentoInicio', String(inicio));
+  }
+
+  ativarWatch_();
+
+  // se a aba voltar a ficar visível (ele desbloqueou o celular de novo),
+  // manda a posição na hora e garante que o rastreamento ainda está de pé —
+  // isso ajuda a "recuperar o atraso" de quando o navegador pausa o GPS
+  // com a tela bloqueada/em segundo plano por muito tempo.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible'){
+      verificarLimiteRastreamento_();
+      if (watchIdLocalizacao === null) ativarWatch_();
+      navigator.geolocation.getCurrentPosition(
+        (pos) => enviarLocalizacao_(pos.coords.latitude, pos.coords.longitude, true),
+        () => {},
+        { enableHighAccuracy:true, maximumAge:15000, timeout:15000 }
+      );
+    }
+  });
+
+  // confere o limite de 10h periodicamente também (não só quando reabre a aba)
+  setInterval(verificarLimiteRastreamento_, 5 * 60 * 1000);
+}
+
+function ativarWatch_(){
+  if (watchIdLocalizacao !== null) return;
+  watchIdLocalizacao = navigator.geolocation.watchPosition(
+    (pos) => { enviarLocalizacao_(pos.coords.latitude, pos.coords.longitude); },
+    (err) => { console.error('Erro de localização:', err.message); },
+    { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
+  );
+}
+
+function pararRastreamento_(){
+  if (watchIdLocalizacao !== null){
+    navigator.geolocation.clearWatch(watchIdLocalizacao);
+    watchIdLocalizacao = null;
+  }
+  const tag = document.getElementById('tagLocalizacao');
+  if (tag){
+    tag.textContent = '📍 compartilhamento encerrado (10h)';
+    tag.classList.add('parada');
+  }
+}
+
+function verificarLimiteRastreamento_(){
+  const inicio = parseInt(localStorage.getItem('rastreamentoInicio') || '0', 10);
+  if (!inicio) return;
+  if (Date.now() - inicio > RASTREAMENTO_LIMITE_MS){
+    pararRastreamento_();
+  }
+}
+
+async function enviarLocalizacao_(lat, lng, forcar){
+  const agora = Date.now();
+  if (!forcar && (agora - ultimoEnvioLocalizacao < 45000)) return; // no máximo a cada 45s, pra não gastar bateria/dados à toa
+  ultimoEnvioLocalizacao = agora;
+
+  const motorista = localStorage.getItem('motoristaAtual');
+  if (!motorista) return;
+  try{
+    await chamarAPI_POST_({ acao: 'atualizarLocalizacao', motorista: motorista, lat: lat, lng: lng });
+  }catch(err){
+    // silencioso — não vale a pena incomodar o motorista com erro de GPS
+  }
+}
+
 // ===== INÍCIO =====
-document.getElementById('selData').value = new Date().toISOString().slice(0,10);
 carregarMotoristasSelecao();
 
 const motoristaSalvo = localStorage.getItem('motoristaAtual');
