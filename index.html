@@ -860,7 +860,7 @@ function aplicarFiltros(ajustarZoom){
   });
 
   salvarPreferencias();
-  if (modoAtual === 'tabela') renderTabela(); else render(ajustarZoom);
+  if (modoAtual === 'tabela') renderTabela(ajustarZoom === false); else render(ajustarZoom);
 }
 
 function populaMotoristas(){
@@ -1024,7 +1024,7 @@ function limparRotaSugerida(){
 /* ===== CONFIRMAÇÕES DO MOTORISTA =====
    O motorista marca "entregue"/"não entregue" no celular dele
    (Motorista.html), mas isso só fica registrado numa aba separada — o
-   status de verdade na HISTORICO_ENTREGAS só muda quando a Bárbara revisa
+   status de verdade na HISTORICO_ENTREGAS só muda quando a Viviane revisa
    e confirma aqui, individualmente ou tudo de uma vez. */
 let confirmacoesPendentes = [];
 
@@ -1188,8 +1188,15 @@ function alternarOrdenacaoData_(){
   renderTabela();
 }
 
-function renderTabela(){
+function renderTabela(ehAtualizacaoAutomatica){
   const container = document.getElementById('tabelaContainer');
+
+  // se for uma atualização automática (a cada 20s) e a pessoa estiver com
+  // o cursor em algum campo da tabela editando, pula essa rodada — evita
+  // apagar/resetar o que ela está digitando no meio da edição
+  if (ehAtualizacaoAutomatica && container && document.activeElement && container.contains(document.activeElement)){
+    return;
+  }
 
   // filtro da coluna Status (independente do filtro global da barra lateral)
   let lista = entregasAtuais.filter(d => {
@@ -1468,10 +1475,11 @@ carregarConfirmacoesPendentes();
 carregarCoresStatus_();
 
 // ===== ATUALIZAÇÃO AUTOMÁTICA =====
-// A cada 20s o mapa busca os dados de novo sozinho. 20s é um equilíbrio entre
-// "quase em tempo real" e não pesar demais na planilha (que tem +12 mil linhas
-// no histórico) — pode ajustar o número abaixo se quiser mais ou menos frequente.
-const INTERVALO_ATUALIZACAO_MS = 20000;
+// A cada 10s o mapa e a tabela buscam os dados de novo sozinhos — não
+// interrompe se você estiver editando um campo da tabela na hora (só pula
+// aquela rodada e tenta de novo em 10s). Pode ajustar o número abaixo se
+// quiser mais ou menos frequente.
+const INTERVALO_ATUALIZACAO_MS = 10000;
 setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
 setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
 
