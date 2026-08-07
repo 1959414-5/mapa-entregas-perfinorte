@@ -212,11 +212,12 @@ async function carregarEntregasDoMotorista(){
   container.innerHTML = '<div class="vazio"><div class="big">⏳</div>Carregando…</div>';
 
   try{
-    const todas = await chamarAPI_GET_({ formato: 'dados' });
-    entregas = (Array.isArray(todas) ? todas : []).filter(d =>
-      String(d.motorista || '').toUpperCase() === motorista.toUpperCase() &&
-      (!data || d.data === data)
-    );
+    // filtra já no servidor (só pede as entregas desse motorista/data) —
+    // bem mais rápido que baixar as de todo mundo e filtrar aqui
+    const params = { formato: 'dados', motorista: motorista };
+    if (data) params.data = data;
+    const filtradas = await chamarAPI_GET_(params);
+    entregas = Array.isArray(filtradas) ? filtradas : [];
     renderCards();
   }catch(err){
     container.innerHTML = '<div class="vazio"><div class="big">⚠</div>Não foi possível carregar.</div>';
@@ -252,7 +253,7 @@ function renderCards(){
           <button class="entregue-btn ${marcado === 'ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'ENTREGUE', this)">✅ Entregue</button>
           <button class="nao-btn ${marcado === 'NAO_ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'NAO_ENTREGUE', this)">❌ Não entregue</button>
         </div>
-        ${marcado ? '<div class="marcado-em">Marcado — aguardando confirmação da Bárbara</div>' : ''}
+        ${marcado ? '<div class="marcado-em">Marcado — aguardando confirmação da Viviane</div>' : ''}
       </div>`;
   }).join('');
 }
