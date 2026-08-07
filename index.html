@@ -140,6 +140,13 @@
   .date-range{display:flex; align-items:center; gap:6px;}
   .date-range input{flex:1; min-width:0;}
   .date-range-sep{color:var(--paper-dim); font-size:11px; flex-shrink:0;}
+  .date-atalhos{display:flex; gap:6px; margin-top:6px;}
+  .date-atalhos button{
+    flex:1; padding:5px 6px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--paper-dim);
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.04em; cursor:pointer;
+  }
+  .date-atalhos button:hover{color:var(--paper); border-color:var(--paper-dim);}
 
   .period-toggle{display:flex;gap:6px;}
   .period-toggle button{
@@ -357,6 +364,15 @@
   .btn-aplicar:hover{background:#f0ac4d;}
   .btn-aplicar:active{transform:translateY(1px); box-shadow:0 1px 4px rgba(232,162,61,.3);}
 
+  .btn-cep{
+    flex-shrink:0; padding:0 16px; border:none; border-radius:6px;
+    background:var(--tarde); color:#fff; font-size:12.5px; font-weight:700;
+    letter-spacing:.02em; cursor:pointer;
+    box-shadow:0 2px 8px rgba(47,147,163,.35);
+  }
+  .btn-cep:hover{background:#39a8b9;}
+  .btn-cep:active{transform:translateY(1px); box-shadow:0 1px 4px rgba(47,147,163,.3);}
+
   .toast{
     position:fixed; bottom:20px; left:50%; transform:translate(-50%,20px);
     background:var(--panel); border:1px solid var(--line); color:var(--paper);
@@ -426,18 +442,24 @@
     border:1px solid rgba(0,0,0,.25);
   }
   .tabela-entregas{
-    width:100%; border-collapse:collapse; font-size:11px;
-    background:#ffffff; border:1px solid #000;
+    width:100%; min-width:1100px; border-collapse:collapse; font-size:11px;
+    background:#ffffff; border:1px solid #000; table-layout:fixed;
   }
   .tabela-entregas th{
     text-align:left; padding:7px 8px; border:1px solid #000;
     font-family:var(--font-mono); font-size:9px; letter-spacing:.06em;
     text-transform:uppercase; color:#1f2430; position:sticky; top:0;
-    background:#f0f0f0;
+    background:#f0f0f0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
   .tabela-entregas td{
     padding:3px 6px; border:1px solid #000; vertical-align:middle;
+    overflow:hidden; text-overflow:ellipsis;
   }
+  .col-resize-handle{
+    position:absolute; top:0; right:-3px; width:7px; height:100%;
+    cursor:col-resize; user-select:none; z-index:5; touch-action:none;
+  }
+  .col-resize-handle:hover, .col-resize-handle.resizando{background:rgba(47,147,163,.35);}
   .tabela-entregas .td-cliente{font-weight:600; white-space:nowrap; color:#1f2430;}
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .tabela-entregas .td-remover{text-align:center; width:30px;}
@@ -512,6 +534,10 @@
           <span class="date-range-sep">→</span>
           <input type="date" id="dataAteInput">
         </div>
+        <div class="date-atalhos">
+          <button type="button" onclick="definirDataAtalho_('hoje')">Hoje</button>
+          <button type="button" onclick="definirDataAtalho_('amanha')">Amanhã</button>
+        </div>
       </div>
       <div class="field">
         <label>Período</label>
@@ -528,13 +554,11 @@
         </select>
       </div>
       <div class="field">
-        <label>Status</label>
+        <label>Status <small style="text-transform:none; opacity:.6;">(só afeta o mapa)</small></label>
         <div class="status-filtro-sidebar" id="statusFiltroSidebar">
           <label><input type="checkbox" value="ENTREGUE" checked onchange="alternarStatusSidebar_(this)"> Entregue</label>
           <label><input type="checkbox" value="EM ANDAMENTO" checked onchange="alternarStatusSidebar_(this)"> Em andamento</label>
           <label><input type="checkbox" value="EM FILA" checked onchange="alternarStatusSidebar_(this)"> Em fila</label>
-          <label><input type="checkbox" value="CANCELAR" checked onchange="alternarStatusSidebar_(this)"> Cancelar</label>
-          <label><input type="checkbox" value="VAZIO" checked onchange="alternarStatusSidebar_(this)"> (vazio)</label>
         </div>
       </div>
     </div>
@@ -581,7 +605,7 @@
           <label>Endereço</label>
           <div class="endereco-linha">
             <input type="text" id="novoCep" placeholder="CEP (opcional)" maxlength="9" style="max-width:120px;" oninput="formatarCep_(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCep();}">
-            <button type="button" class="btn-secondary" onclick="buscarCep()">Buscar CEP</button>
+            <button type="button" class="btn-cep" onclick="buscarCep()">🔍 Buscar CEP</button>
           </div>
           <div class="endereco-linha" style="margin-top:6px;">
             <input type="text" id="novaRua" placeholder="Rua/Avenida" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
@@ -674,7 +698,8 @@ let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
 let rotaSetas = null;    // camada com as setas de direção sobre a linha
 let markersMotoristas = {}; // motorista -> marcador no mapa
 let todasEntregas = [];   // tudo que veio da planilha, sem filtro nenhum
-let entregasAtuais = [];  // resultado depois de aplicar os filtros da tela
+let entregasAtuais = [];  // resultado filtrado pro MAPA (inclui o status do sidebar)
+let entregasParaTabela = []; // resultado filtrado pra TABELA (sem o status do sidebar — ela tem o filtro próprio)
 let filtroPeriodo = "";
 let selecionadoIdx = null;
 let modoAtual = 'mapa';
@@ -682,11 +707,33 @@ let clienteEncontrado = null;
 let enderecoAplicado = ''; // endereço já montado no padrão, depois de clicar "Aplicar"
 let motoristasDisponiveis = [];
 let miniMap = null, miniMapMarker = null;
-let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','CANCELAR','VAZIO']); // todos marcados por padrão
+let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
 
 function alternarStatusSidebar_(chk){
   if (chk.checked) filtroStatusSidebar.add(chk.value); else filtroStatusSidebar.delete(chk.value);
   aplicarFiltros();
+}
+
+function definirDataAtalho_(qual){
+  const hoje = new Date().toISOString().slice(0,10);
+  if (qual === 'hoje'){
+    document.getElementById('dataDeInput').value = hoje;
+    document.getElementById('dataAteInput').value = hoje;
+    aplicarFiltros();
+  } else if (qual === 'amanha'){
+    // usa o próximo dia útil de verdade (pula fim de semana/feriado),
+    // igual o app do motorista
+    chamarAPI_GET_({ formato: 'proximoDiaUtil' }).then(res => {
+      const data = (res && res.data) || hoje;
+      document.getElementById('dataDeInput').value = data;
+      document.getElementById('dataAteInput').value = data;
+      aplicarFiltros();
+    }).catch(() => {
+      document.getElementById('dataDeInput').value = hoje;
+      document.getElementById('dataAteInput').value = hoje;
+      aplicarFiltros();
+    });
+  }
 }
 
 /* ----- preferências salvas no navegador (sobrevivem a atualizar a página) ----- */
@@ -1021,15 +1068,23 @@ function aplicarFiltros(ajustarZoom){
   const dataAte = document.getElementById('dataAteInput').value;
   const motorista = document.getElementById('motoristaSelect').value;
 
-  entregasAtuais = todasEntregas.filter(d => {
+  // filtros de data/período/motorista valem pros dois (mapa e tabela);
+  // o filtro de STATUS é separado — o do sidebar só afeta o mapa, a
+  // tabela tem o filtro de status próprio (na coluna dela).
+  const baseSemStatus = todasEntregas.filter(d => {
     if (dataDe && d.data && d.data < dataDe) return false;
     if (dataAte && d.data && d.data > dataAte) return false;
     if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
     if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
-    const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
-    if (!filtroStatusSidebar.has(chaveStatus)) return false;
     return true;
   });
+
+  entregasAtuais = baseSemStatus.filter(d => {
+    const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
+    return filtroStatusSidebar.has(chaveStatus);
+  });
+
+  entregasParaTabela = baseSemStatus;
 
   salvarPreferencias();
   if (modoAtual === 'tabela') renderTabela(ajustarZoom === false); else render(ajustarZoom);
@@ -1330,7 +1385,54 @@ function corLinhaEntrega_(d){
   return '';
 }
 
-let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','CANCELAR','VAZIO']); // todos marcados por padrão
+let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão
+
+/* ----- larguras das colunas da tabela (arrastar pra redimensionar, igual Sheets) ----- */
+const LARGURA_COLUNAS_CHAVE = 'mapaTabelaLarguraColunas';
+let larguraColunas = {};
+try{ larguraColunas = JSON.parse(localStorage.getItem(LARGURA_COLUNAS_CHAVE) || '{}'); }catch(e){ larguraColunas = {}; }
+
+function estiloLarguraCol_(chave, padrao){
+  const largura = larguraColunas[chave] || padrao;
+  return largura ? ' style="width:' + largura + 'px;"' : '';
+}
+
+function handleResize_(chave){
+  return '<span class="col-resize-handle" onmousedown="iniciarResizeColuna_(event,\'' + chave + '\')" ' +
+    'ontouchstart="iniciarResizeColuna_(event,\'' + chave + '\')" onclick="event.stopPropagation()"></span>';
+}
+
+function iniciarResizeColuna_(e, chave){
+  e.preventDefault();
+  e.stopPropagation();
+  const th = e.target.closest('th');
+  const handle = e.target;
+  handle.classList.add('resizando');
+
+  const pontoInicial = (e.touches && e.touches[0]) ? e.touches[0] : e;
+  const startX = pontoInicial.clientX;
+  const startWidth = th.offsetWidth;
+
+  function mover(ev){
+    const ponto = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+    const novaLargura = Math.max(36, startWidth + (ponto.clientX - startX));
+    th.style.width = novaLargura + 'px';
+    larguraColunas[chave] = novaLargura;
+  }
+  function soltar(){
+    handle.classList.remove('resizando');
+    document.removeEventListener('mousemove', mover);
+    document.removeEventListener('mouseup', soltar);
+    document.removeEventListener('touchmove', mover);
+    document.removeEventListener('touchend', soltar);
+    try{ localStorage.setItem(LARGURA_COLUNAS_CHAVE, JSON.stringify(larguraColunas)); }catch(err){}
+  }
+  document.addEventListener('mousemove', mover);
+  document.addEventListener('mouseup', soltar);
+  document.addEventListener('touchmove', mover, { passive:false });
+  document.addEventListener('touchend', soltar);
+}
+
 let ordenacaoData = null; // null | 'asc' | 'desc'
 let filtroPopupAberto = false;
 
@@ -1371,7 +1473,7 @@ function renderTabela(ehAtualizacaoAutomatica){
   }
 
   // filtro da coluna Status (independente do filtro global da barra lateral)
-  let lista = entregasAtuais.filter(d => {
+  let lista = entregasParaTabela.filter(d => {
     const chave = String(d.status || '').trim().toUpperCase() || 'VAZIO';
     return filtroStatusTabela.has(chave);
   });
@@ -1405,9 +1507,8 @@ function renderTabela(ehAtualizacaoAutomatica){
   const checkStatus = (valor) => filtroStatusTabela.has(valor) ? ' checked' : '';
 
   let html = '<div class="tabela-toolbar">' +
-      '<span class="contagem">' + lista.length + ' de ' + entregasAtuais.length + ' entrega(s)</span>' +
+      '<span class="contagem">' + lista.length + ' de ' + entregasParaTabela.length + ' entrega(s)</span>' +
       '<div class="legenda">' +
-        '<span><i style="background:' + (coresStatus['CANCELAR']||'#f4cccc') + '"></i>Cancelar</span>' +
         '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
         '<span><i style="background:' + (coresStatus['OK']||'#cfe2f3') + '"></i>Pedido pronto</span>' +
         '<span><i style="background:' + (coresStatus['EM ANDAMENTO']||'#fff2cc') + '"></i>Em andamento</span>' +
@@ -1416,11 +1517,15 @@ function renderTabela(ehAtualizacaoAutomatica){
       '</div>' +
     '</div>' +
     '<table class="tabela-entregas"><thead><tr>' +
-    (rotaSugerida ? '<th>#</th>' : '') +
-    '<th>Código</th><th>Cliente</th><th>Repr.</th><th>Endereço</th><th>Motorista</th>' +
-    '<th class="th-ordenavel" onclick="alternarOrdenacaoData_()">Data <span>' + setaData + '</span></th>' +
-    '<th>Período</th>' +
-    '<th class="th-status">' +
+    (rotaSugerida ? '<th' + estiloLarguraCol_('numero', 40) + '>#' + handleResize_('numero') + '</th>' : '') +
+    '<th' + estiloLarguraCol_('codigo', 70) + '>Código' + handleResize_('codigo') + '</th>' +
+    '<th' + estiloLarguraCol_('cliente', 150) + '>Cliente' + handleResize_('cliente') + '</th>' +
+    '<th' + estiloLarguraCol_('repr', 70) + '>Repr.' + handleResize_('repr') + '</th>' +
+    '<th' + estiloLarguraCol_('endereco', 240) + '>Endereço' + handleResize_('endereco') + '</th>' +
+    '<th' + estiloLarguraCol_('motorista', 110) + '>Motorista' + handleResize_('motorista') + '</th>' +
+    '<th class="th-ordenavel"' + estiloLarguraCol_('data', 110) + ' onclick="alternarOrdenacaoData_()">Data <span>' + setaData + '</span>' + handleResize_('data') + '</th>' +
+    '<th' + estiloLarguraCol_('periodo', 90) + '>Período' + handleResize_('periodo') + '</th>' +
+    '<th class="th-status"' + estiloLarguraCol_('status', 120) + '>' +
       '<span class="th-status-linha">Status' +
         '<button type="button" class="th-filtro-btn" onclick="alternarFiltroStatusPopup_(event)">▾</button>' +
       '</span>' +
@@ -1428,11 +1533,12 @@ function renderTabela(ehAtualizacaoAutomatica){
         '<label><input type="checkbox"' + checkStatus('ENTREGUE') + ' onchange="alternarStatusNoFiltro_(\'ENTREGUE\', this.checked)"> Entregue</label>' +
         '<label><input type="checkbox"' + checkStatus('EM ANDAMENTO') + ' onchange="alternarStatusNoFiltro_(\'EM ANDAMENTO\', this.checked)"> Em andamento</label>' +
         '<label><input type="checkbox"' + checkStatus('EM FILA') + ' onchange="alternarStatusNoFiltro_(\'EM FILA\', this.checked)"> Em fila</label>' +
-        '<label><input type="checkbox"' + checkStatus('CANCELAR') + ' onchange="alternarStatusNoFiltro_(\'CANCELAR\', this.checked)"> Cancelar</label>' +
-        '<label><input type="checkbox"' + checkStatus('VAZIO') + ' onchange="alternarStatusNoFiltro_(\'VAZIO\', this.checked)"> (vazio)</label>' +
       '</div>' +
+      handleResize_('status') +
     '</th>' +
-    '<th>OK</th><th>Observações</th><th></th>' +
+    '<th' + estiloLarguraCol_('ok', 46) + '>OK</th>' +
+    '<th' + estiloLarguraCol_('obs', 170) + '>Observações' + handleResize_('obs') + '</th>' +
+    '<th style="width:32px;"></th>' +
     '</tr></thead><tbody>';
 
   lista.forEach(d => {
@@ -1944,6 +2050,12 @@ async function buscarCliente(){
     }
     if (info.numero && !document.getElementById('novoNumero').value){
       document.getElementById('novoNumero').value = String(info.numero).toUpperCase();
+    }
+
+    // data sugerida: olha os pedidos desse cliente na ENTREGAS e evita
+    // repetir uma data que ele já tem agendada
+    if (info.dataSugerida){
+      document.getElementById('novaData').value = info.dataSugerida;
     }
 
     document.getElementById('camposManuais').style.display = 'flex';
