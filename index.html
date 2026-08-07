@@ -208,6 +208,18 @@
     font-size:18px; box-shadow:0 3px 10px rgba(0,0,0,.5);
   }
 
+  .pin-motorista{
+    width:34px; height:34px; border-radius:50%;
+    background:#fff; border:3px solid var(--manha);
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; box-shadow:0 3px 10px rgba(0,0,0,.4);
+    animation:pulso-motorista 2s infinite;
+  }
+  @keyframes pulso-motorista{
+    0%, 100%{box-shadow:0 3px 10px rgba(0,0,0,.4);}
+    50%{box-shadow:0 3px 10px rgba(0,0,0,.4), 0 0 0 6px rgba(232,162,61,.25);}
+  }
+
   .marker-cluster-manha{background:rgba(232,162,61,.5);}
   .marker-cluster-manha div{background:rgba(232,162,61,.85);color:#1a1305;}
   .marker-cluster-tarde{background:rgba(47,147,163,.5);}
@@ -618,6 +630,7 @@ let origemMarker = null;  // marcador da Perfinorte no mapa (ícone de fábrica)
 let rotaOrigem = null;   // {lat, lng} da Perfinorte, devolvido junto com a rota
 let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
 let rotaSetas = null;    // camada com as setas de direção sobre a linha
+let markersMotoristas = {}; // motorista -> marcador no mapa
 let todasEntregas = [];   // tudo que veio da planilha, sem filtro nenhum
 let entregasAtuais = [];  // resultado depois de aplicar os filtros da tela
 let filtroPeriodo = "";
@@ -743,6 +756,88 @@ function origemIcon_(){
   });
 }
 
+function motoristaIcon_(){
+  return L.divIcon({
+    className:'',
+    html:'<div class="pin-motorista">🚚</div>',
+    iconSize:[34,34],
+    iconAnchor:[17,17],
+    popupAnchor:[0,-18]
+  });
+}
+
+// Texto tipo "há 3 min" a partir de um timestamp ISO.
+function tempoRelativo_(isoTexto){
+  if (!isoTexto) return '';
+  const diffMs = Date.now() - new Date(isoTexto).getTime();
+  const min = Math.round(diffMs / 60000);
+  if (min < 1) return 'agora mesmo';
+  if (min === 1) return 'há 1 min';
+  if (min < 60) return 'há ' + min + ' min';
+  const h = Math.round(min / 60);
+  return 'há ' + h + (h === 1 ? ' hora' : ' horas');
+}
+
+/* Busca as localizações mais recentes de cada motorista e desenha (ou
+   atualiza) o marcador dele no mapa. Some sozinho da tela se não vier
+   atualização nova há mais de 20 minutos (motorista fechou o app). */
+async function carregarLocalizacoesMotoristas(){
+  if (!API_URL) return;
+  try{
+    const lista = await chamarAPI_GET_({ formato: 'localizacoesMotoristas' });
+    const agora = Date.now();
+    const vistos = new Set();
+
+    (Array.isArray(lista) ? lista : []).forEach(loc => {
+      const idadeMin = (agora - new Date(loc.atualizadoEm).getTime()) / 60000;
+      if (idadeMin > 20) return; // muito antigo, provavelmente offline — não mostra
+
+      vistos.add(loc.motorista);
+      const popupHtml = '<div class="pop"><h3>🚚 ' + loc.motorista + '</h3>' +
+        '<div class="row">Atualizado ' + tempoRelativo_(loc.atualizadoEm) + '</div>' +
+        '<button class="btn-secondary" style="margin-top:8px;" onclick="calcularEtaMotorista_(' + loc.lat + ',' + loc.lng + ', this)">📍 Tempo até a base</button>' +
+        '<div class="eta-resultado" style="margin-top:6px; font-size:12px;"></div>' +
+        '</div>';
+
+      if (markersMotoristas[loc.motorista]){
+        markersMotoristas[loc.motorista].setLatLng([loc.lat, loc.lng]);
+        markersMotoristas[loc.motorista].setPopupContent(popupHtml);
+      } else {
+        markersMotoristas[loc.motorista] = L.marker([loc.lat, loc.lng], { icon: motoristaIcon_() })
+          .bindPopup(popupHtml)
+          .addTo(map);
+      }
+    });
+
+    // remove do mapa quem não apareceu dessa vez (ficou offline/antigo)
+    Object.keys(markersMotoristas).forEach(nome => {
+      if (!vistos.has(nome)){
+        map.removeLayer(markersMotoristas[nome]);
+        delete markersMotoristas[nome];
+      }
+    });
+  }catch(err){
+    // silencioso — não interrompe o resto do mapa
+  }
+}
+
+/* Chamada pelo botão dentro do popup do motorista — calcula sob demanda
+   (não a cada atualização) pra não gastar a cota gratuita da API à toa. */
+async function calcularEtaMotorista_(lat, lng, botao){
+  const resultado = botao.nextElementSibling;
+  resultado.textContent = 'Calculando…';
+  try{
+    const res = await chamarAPI_GET_({ formato: 'etaBase', lat: lat, lng: lng });
+    if (!res.ok){
+      resultado.textContent = 'Erro: ' + res.erro;
+      return;
+    }
+    resultado.textContent = '📏 ' + res.distanciaKm + ' km · ⏱ ~' + res.duracaoMin + ' min até a Perfinorte';
+  }catch(err){
+    resultado.textContent = 'Erro: ' + err;
+  }
+}
+
 // Decodifica a polyline que o OpenRouteService devolve (formato padrão de
 // precisão 5) numa lista de pontos [lat,lng] que o Leaflet entende.
 function decodificarPolyline_(str){
@@ -779,8 +874,12 @@ function formatarDataBR_(iso){
 /* ===== COMUNICAÇÃO COM A API (esta página é externa ao Apps Script agora —
    GitHub Pages — então TUDO passa por fetch(), nunca google.script.run). ===== */
 async function chamarAPI_GET_(params){
-  const qs = new URLSearchParams(params).toString();
-  const resp = await fetch(API_URL + '?' + qs);
+  // "_t" no final força o navegador a nunca reaproveitar uma resposta em
+  // cache — sem isso, às vezes ele mostra dados antigos mesmo já tendo
+  // mudado na planilha de verdade.
+  const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
+  const qs = new URLSearchParams(comCacheBusting).toString();
+  const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
   return await resp.json();
 }
 async function chamarAPI_POST_(corpo){
@@ -1473,6 +1572,7 @@ carregarEntregas();
 carregarMotoristas();
 carregarConfirmacoesPendentes();
 carregarCoresStatus_();
+carregarLocalizacoesMotoristas();
 
 // ===== ATUALIZAÇÃO AUTOMÁTICA =====
 // A cada 10s o mapa e a tabela buscam os dados de novo sozinhos — não
@@ -1482,6 +1582,7 @@ carregarCoresStatus_();
 const INTERVALO_ATUALIZACAO_MS = 10000;
 setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
 setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
+setInterval(carregarLocalizacoesMotoristas, 15000); // localização atualiza a cada 15s
 
 // ===== NOVA ENTREGA (modal) =====
 
