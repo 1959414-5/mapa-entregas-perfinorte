@@ -390,6 +390,31 @@
   .tabela-entregas .td-cliente{font-weight:600; white-space:nowrap; color:#1f2430;}
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .tabela-entregas .td-remover{text-align:center; width:30px;}
+
+  .th-ordenavel{cursor:pointer; user-select:none;}
+  .th-ordenavel:hover{background:#e6e6e6;}
+
+  .th-status{position:relative;}
+  .th-status-linha{display:flex; align-items:center; gap:4px;}
+  .th-filtro-btn{
+    background:none; border:none; cursor:pointer; padding:0 2px;
+    font-size:9px; color:#1f2430; line-height:1;
+  }
+  .th-filtro-popup{
+    display:none; position:absolute; top:100%; left:0; margin-top:4px;
+    background:#fff; border:1px solid #000; border-radius:4px;
+    padding:8px 10px; z-index:50; box-shadow:0 4px 14px rgba(0,0,0,.2);
+    min-width:140px;
+  }
+  .th-filtro-popup.aberto{display:block;}
+  .th-filtro-popup label{
+    display:flex; align-items:center; gap:6px; padding:4px 0;
+    font-family:var(--font-ui); font-size:11.5px; text-transform:none;
+    letter-spacing:normal; font-weight:400; color:#1f2430; white-space:nowrap;
+    cursor:pointer;
+  }
+  .td-status-select{text-align:center; text-align-last:center;}
+
   .td-input{
     width:100%; background:transparent; border:1px solid transparent;
     color:#1f2430; padding:4px 6px; border-radius:4px; font-size:11px;
@@ -1105,53 +1130,130 @@ function escapeAttr_(s){
 
 /* Mesma lógica das regras de formatação condicional da HISTORICO_ENTREGAS,
    na mesma ordem de prioridade (a primeira que bater "ganha"). */
+// Cores reais lidas da formatação condicional da sua planilha (via
+// carregarCoresStatus_) — os hex abaixo só entram como reserva, se por
+// algum motivo a leitura falhar.
+let coresStatus = {};
+
+async function carregarCoresStatus_(){
+  if (!API_URL) return;
+  try{
+    const cores = await chamarAPI_GET_({ formato: 'coresStatus' });
+    coresStatus = (cores && typeof cores === 'object') ? cores : {};
+  }catch(err){
+    // segue com as cores de reserva
+  }
+}
+
 function corLinhaEntrega_(d){
-  const status = String(d.status || '').toUpperCase();
-  if (status === 'CANCELAR') return '#f4cccc';
-  if (status === 'ENTREGUE') return '#d9ead3';
-  if (d.ok === true) return '#cfe2f3';
-  if (status === 'EM ANDAMENTO') return '#fce5cd';
-  if (status === 'EM FILA') return '#fde0d9';
-  if (d.data) return '#ea9999'; // tem data prevista mas status incomum — precisa de atenção
+  const status = String(d.status || '').trim().toUpperCase();
+  const cor = function(chave, reserva){ return coresStatus[chave] || reserva; };
+
+  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
+  if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
+  if (d.ok === true) return cor('OK', '#cfe2f3');
+  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fce5cd');
+  if (status === 'EM FILA') return cor('EM FILA', '#fde0d9');
+  if (d.data) return cor('ATENCAO', '#ea9999'); // tem data prevista mas status incomum — precisa de atenção
   return '';
+}
+
+let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','CANCELAR','VAZIO']); // todos marcados por padrão
+let ordenacaoData = null; // null | 'asc' | 'desc'
+let filtroPopupAberto = false;
+
+function prioridadeStatus_(status){
+  const s = String(status || '').trim().toUpperCase();
+  if (s === 'ENTREGUE') return 0;
+  if (s === 'EM ANDAMENTO') return 1;
+  if (s === 'EM FILA') return 2;
+  if (s === 'CANCELAR') return 3;
+  return 99; // vazio ou outros valores — sempre por último
+}
+
+function alternarFiltroStatusPopup_(e){
+  e.stopPropagation();
+  filtroPopupAberto = !filtroPopupAberto;
+  const popup = document.getElementById('filtroStatusPopup');
+  if (popup) popup.classList.toggle('aberto', filtroPopupAberto);
+}
+
+function alternarStatusNoFiltro_(valor, marcado){
+  if (marcado) filtroStatusTabela.add(valor); else filtroStatusTabela.delete(valor);
+  renderTabela();
+}
+
+function alternarOrdenacaoData_(){
+  ordenacaoData = ordenacaoData === null ? 'asc' : (ordenacaoData === 'asc' ? 'desc' : null);
+  renderTabela();
 }
 
 function renderTabela(){
   const container = document.getElementById('tabelaContainer');
 
-  if (!entregasAtuais.length){
-    container.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>para esses filtros.</div>';
+  // filtro da coluna Status (independente do filtro global da barra lateral)
+  let lista = entregasAtuais.filter(d => {
+    const chave = String(d.status || '').trim().toUpperCase() || 'VAZIO';
+    return filtroStatusTabela.has(chave);
+  });
+
+  if (!lista.length){
+    container.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>pra esses filtros.</div>';
     return;
   }
 
-  // com rota sugerida ativa, mostra na ordem de visita (quem não está na
-  // rota fica no final, na ordem original)
-  let lista = entregasAtuais;
+  // ordem: rota sugerida (se tiver) > ordenação manual de data (se ativada)
+  // > padrão: Entregue, depois Em andamento, depois Em fila, vazio por último
   if (rotaSugerida){
-    lista = entregasAtuais.slice().sort((a, b) => {
+    lista = lista.slice().sort((a, b) => {
       const ia = rotaSugerida.indexOf(a.linha);
       const ib = rotaSugerida.indexOf(b.linha);
       return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
     });
+  } else if (ordenacaoData){
+    lista = lista.slice().sort((a, b) => {
+      const da = a.data || '';
+      const db = b.data || '';
+      return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+    });
+  } else {
+    lista = lista.slice().sort((a, b) => prioridadeStatus_(a.status) - prioridadeStatus_(b.status));
   }
 
   const opcoesMotorista = motoristasDisponiveis.map(m => `<option value="${escapeAttr_(m)}">${m}</option>`).join('');
+  const setaData = ordenacaoData === 'asc' ? '▲' : (ordenacaoData === 'desc' ? '▼' : '↕');
+
+  const checkStatus = (valor) => filtroStatusTabela.has(valor) ? ' checked' : '';
 
   let html = '<div class="tabela-toolbar">' +
-      '<span class="contagem">' + entregasAtuais.length + ' entrega(s)</span>' +
+      '<span class="contagem">' + lista.length + ' de ' + entregasAtuais.length + ' entrega(s)</span>' +
       '<div class="legenda">' +
-        '<span><i style="background:#f4cccc"></i>Cancelar</span>' +
-        '<span><i style="background:#d9ead3"></i>Entregue</span>' +
-        '<span><i style="background:#cfe2f3"></i>Pedido pronto</span>' +
-        '<span><i style="background:#fce5cd"></i>Em andamento</span>' +
-        '<span><i style="background:#fde0d9"></i>Em fila</span>' +
-        '<span><i style="background:#ea9999"></i>Atenção</span>' +
+        '<span><i style="background:' + (coresStatus['CANCELAR']||'#f4cccc') + '"></i>Cancelar</span>' +
+        '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
+        '<span><i style="background:' + (coresStatus['OK']||'#cfe2f3') + '"></i>Pedido pronto</span>' +
+        '<span><i style="background:' + (coresStatus['EM ANDAMENTO']||'#fce5cd') + '"></i>Em andamento</span>' +
+        '<span><i style="background:' + (coresStatus['EM FILA']||'#fde0d9') + '"></i>Em fila</span>' +
+        '<span><i style="background:' + (coresStatus['ATENCAO']||'#ea9999') + '"></i>Atenção</span>' +
       '</div>' +
     '</div>' +
     '<table class="tabela-entregas"><thead><tr>' +
     (rotaSugerida ? '<th>#</th>' : '') +
-    '<th>Código</th><th>Cliente</th><th>Repr.</th><th>Endereço</th><th>Motorista</th><th>Data</th>' +
-    '<th>Período</th><th>Status</th><th>OK</th><th>Observações</th><th></th>' +
+    '<th>Código</th><th>Cliente</th><th>Repr.</th><th>Endereço</th><th>Motorista</th>' +
+    '<th class="th-ordenavel" onclick="alternarOrdenacaoData_()">Data <span>' + setaData + '</span></th>' +
+    '<th>Período</th>' +
+    '<th class="th-status">' +
+      '<span class="th-status-linha">Status' +
+        '<button type="button" class="th-filtro-btn" onclick="alternarFiltroStatusPopup_(event)">▾</button>' +
+      '</span>' +
+      '<div class="th-filtro-popup' + (filtroPopupAberto ? ' aberto' : '') + '" id="filtroStatusPopup">' +
+        '<label><input type="checkbox"' + checkStatus('ENTREGUE') + ' onchange="alternarStatusNoFiltro_(\'ENTREGUE\', this.checked)"> Entregue</label>' +
+        '<label><input type="checkbox"' + checkStatus('EM ANDAMENTO') + ' onchange="alternarStatusNoFiltro_(\'EM ANDAMENTO\', this.checked)"> Em andamento</label>' +
+        '<label><input type="checkbox"' + checkStatus('EM FILA') + ' onchange="alternarStatusNoFiltro_(\'EM FILA\', this.checked)"> Em fila</label>' +
+        '<label><input type="checkbox"' + checkStatus('CANCELAR') + ' onchange="alternarStatusNoFiltro_(\'CANCELAR\', this.checked)"> Cancelar</label>' +
+        '<label><input type="checkbox"' + checkStatus('VAZIO') + ' onchange="alternarStatusNoFiltro_(\'VAZIO\', this.checked)"> (vazio)</label>' +
+      '</div>' +
+    '</th>' +
+    '<th>OK</th><th>Observações</th><th></th>' +
     '</tr></thead><tbody>';
 
   lista.forEach(d => {
@@ -1167,7 +1269,7 @@ function renderTabela(){
       '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input" data-campo="data" value="' + (d.data || '') + '"></td>' +
       '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
-      '<td><select class="td-input" data-campo="status"><option value="EM FILA">EM FILA</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="ENTREGUE">ENTREGUE</option></select></td>' +
+      '<td><select class="td-input td-status-select" data-campo="status"><option value="EM FILA">EM FILA</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="ENTREGUE">ENTREGUE</option><option value="CANCELAR">CANCELAR</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
       '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" onclick="removerLinha_(this)">🗑</button></td>' +
@@ -1328,6 +1430,15 @@ function focarEntrega(i){
   }
 }
 
+document.addEventListener('click', (e) => {
+  if (!filtroPopupAberto) return;
+  const popup = document.getElementById('filtroStatusPopup');
+  if (popup && !popup.contains(e.target) && !e.target.classList.contains('th-filtro-btn')){
+    filtroPopupAberto = false;
+    popup.classList.remove('aberto');
+  }
+});
+
 document.getElementById('periodoToggle').addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -1354,6 +1465,7 @@ initMap();
 carregarEntregas();
 carregarMotoristas();
 carregarConfirmacoesPendentes();
+carregarCoresStatus_();
 
 // ===== ATUALIZAÇÃO AUTOMÁTICA =====
 // A cada 20s o mapa busca os dados de novo sozinho. 20s é um equilíbrio entre
