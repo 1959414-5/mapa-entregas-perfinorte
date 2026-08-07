@@ -44,6 +44,13 @@
   }
 
   #lista{padding:14px; max-width:560px; margin:0 auto; display:none;}
+  .btn-atualizar{
+    display:block; width:100%; margin-bottom:12px; padding:12px;
+    border:none; border-radius:10px; background:var(--azul); color:#fff;
+    font-size:14px; font-weight:700; cursor:pointer;
+  }
+  .btn-atualizar:disabled{opacity:.6;}
+
   .resumo{
     display:flex; gap:10px; margin-bottom:14px;
   }
@@ -83,6 +90,11 @@
   .entrega .acoes button.entregue-btn.ativo{background:var(--verde); border-color:var(--verde); color:#fff;}
   .entrega .acoes button.nao-btn.ativo{background:var(--vermelho); border-color:var(--vermelho); color:#fff;}
   .entrega .marcado-em{margin-top:8px; font-size:11px; color:var(--dim);}
+  .entrega .ja-marcado-banner{
+    margin-top:8px; padding:8px 10px; border-radius:6px;
+    background:rgba(47,158,82,.12); color:var(--verde);
+    font-size:12.5px; font-weight:700;
+  }
 
   .vazio{text-align:center; padding:60px 20px; color:var(--dim);}
   .vazio .big{font-size:34px; margin-bottom:10px;}
@@ -119,6 +131,7 @@
 </div>
 
 <div id="lista">
+  <button id="btnAtualizar" class="btn-atualizar" onclick="atualizarManual_()">🔄 Atualizar entregas</button>
   <div class="resumo">
     <div class="card"><div class="n" id="totCount">–</div><div class="l">Entregas</div></div>
     <div class="card"><div class="n" id="totFeitas">–</div><div class="l">Marcadas</div></div>
@@ -205,23 +218,62 @@ function formatarDataBR_(iso){
   return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
 }
 
-async function carregarEntregasDoMotorista(){
+async function carregarEntregasDoMotorista(mostrarCarregando){
   const motorista = localStorage.getItem('motoristaAtual');
   const data = localStorage.getItem('dataAtual');
   const container = document.getElementById('cards');
-  container.innerHTML = '<div class="vazio"><div class="big">⏳</div>Carregando…</div>';
+  if (mostrarCarregando !== false){
+    container.innerHTML = '<div class="vazio"><div class="big">⏳</div>Carregando…</div>';
+  }
 
   try{
     // filtra já no servidor (só pede as entregas desse motorista/data) —
     // bem mais rápido que baixar as de todo mundo e filtrar aqui
     const params = { formato: 'dados', motorista: motorista };
     if (data) params.data = data;
-    const filtradas = await chamarAPI_GET_(params);
-    entregas = Array.isArray(filtradas) ? filtradas : [];
+
+    const [filtradas, pendentes] = await Promise.all([
+      chamarAPI_GET_(params),
+      chamarAPI_GET_({ formato: 'confirmacoesPendentes' })
+    ]);
+
+    const todasBrutas = Array.isArray(filtradas) ? filtradas : [];
+    const pendentesLista = Array.isArray(pendentes) ? pendentes : [];
+
+    // reconstrói o que ele já marcou (mesmo se foi em outra sessão/aparelho,
+    // não depende só da memória do navegador)
+    marcacoes = {};
+    pendentesLista.forEach(p => {
+      if (String(p.motorista || '').toUpperCase() === motorista.toUpperCase()){
+        marcacoes[p.linha] = p.statusMarcado;
+      }
+    });
+
+    // regra de visibilidade:
+    //  - status já ENTREGUE (confirmado pela Viviane) -> some da lista
+    //  - ele já marcou como ENTREGUE (ainda pendente) -> mostra só informativo
+    //  - "OK" marcado (pedido pronto) e ainda não entregue -> mostra pra ele agir
+    entregas = todasBrutas.filter(d => {
+      if (String(d.status || '').toUpperCase() === 'ENTREGUE') return false;
+      if (marcacoes[d.linha] === 'ENTREGUE') return true;
+      return d.ok === true;
+    });
+
     renderCards();
   }catch(err){
     container.innerHTML = '<div class="vazio"><div class="big">⚠</div>Não foi possível carregar.</div>';
   }
+}
+
+async function atualizarManual_(){
+  const btn = document.getElementById('btnAtualizar');
+  btn.disabled = true;
+  const textoOriginal = btn.textContent;
+  btn.textContent = '🔄 Atualizando…';
+  await carregarEntregasDoMotorista(false); // mantém os cards visíveis, sem tela de carregando
+  btn.disabled = false;
+  btn.textContent = textoOriginal;
+  mostrarToast('Atualizado!');
 }
 
 function renderCards(){
@@ -230,16 +282,28 @@ function renderCards(){
   document.getElementById('totFeitas').textContent = Object.keys(marcacoes).length;
 
   if (!entregas.length){
-    container.innerHTML = '<div class="vazio"><div class="big">📭</div>Nenhuma entrega pra essa data.</div>';
+    container.innerHTML = '<div class="vazio"><div class="big">📭</div>Nenhuma entrega pendente pra você nessa data.</div>';
     return;
   }
 
   container.innerHTML = entregas.map(d => {
     const marcado = marcacoes[d.linha];
-    const classeCard = marcado === 'ENTREGUE' ? 'marcada-entregue' : (marcado === 'NAO_ENTREGUE' ? 'marcada-nao' : '');
+    const jaEntregue = marcado === 'ENTREGUE';
+    const classeCard = jaEntregue ? 'marcada-entregue' : (marcado === 'NAO_ENTREGUE' ? 'marcada-nao' : '');
     const linkMapa = (d.lat != null && d.lng != null)
       ? `<a href="https://www.google.com/maps/search/?api=1&query=${d.lat},${d.lng}" target="_blank" title="Abrir no mapa">📍</a>`
       : '';
+
+    const acoes = jaEntregue
+      ? `<div class="acoes">${linkMapa}</div>
+         <div class="ja-marcado-banner">✅ Você já marcou como entregue — aguardando confirmação da Viviane</div>`
+      : `<div class="acoes">
+          ${linkMapa}
+          <button class="entregue-btn ${marcado === 'ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'ENTREGUE', this)">✅ Entregue</button>
+          <button class="nao-btn ${marcado === 'NAO_ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'NAO_ENTREGUE', this)">❌ Não entregue</button>
+        </div>
+        ${marcado === 'NAO_ENTREGUE' ? '<div class="marcado-em">Marcado como não entregue — aguardando revisão da Viviane</div>' : ''}`;
+
     return `
       <div class="entrega ${classeCard}" data-linha="${d.linha}">
         <div class="topo">
@@ -248,12 +312,7 @@ function renderCards(){
         </div>
         <div class="endereco">${d.endereco}</div>
         ${d.observacoes ? '<div class="endereco">📝 ' + d.observacoes + '</div>' : ''}
-        <div class="acoes">
-          ${linkMapa}
-          <button class="entregue-btn ${marcado === 'ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'ENTREGUE', this)">✅ Entregue</button>
-          <button class="nao-btn ${marcado === 'NAO_ENTREGUE' ? 'ativo' : ''}" onclick="marcar(${d.linha}, 'NAO_ENTREGUE', this)">❌ Não entregue</button>
-        </div>
-        ${marcado ? '<div class="marcado-em">Marcado — aguardando confirmação da Viviane</div>' : ''}
+        ${acoes}
       </div>`;
   }).join('');
 }
