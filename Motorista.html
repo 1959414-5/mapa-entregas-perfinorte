@@ -101,6 +101,8 @@
     flex:1; padding:11px; border:none; border-radius:8px; background:#232a34;
     color:#fff; font-size:13px; font-weight:700; cursor:pointer;
   }
+  .btn-iniciar{background:var(--verde) !important; flex:2 !important;}
+  .btn-iniciar.seguindo{background:var(--vermelho) !important;}
   .nav-info{
     padding:10px 14px; background:#eef7f8; color:var(--azul);
     font-size:13px; font-weight:700; text-align:center;
@@ -211,7 +213,8 @@
 <div id="modoNavegacao" style="display:none;">
   <div class="nav-header">
     <button onclick="sairNavegacao_()">← Voltar</button>
-    <button onclick="atualizarRotaNavegacao_()">🔄 Atualizar rota</button>
+    <button id="btnIniciarSeguir" class="btn-iniciar" onclick="alternarSeguir_()">▶ Iniciar</button>
+    <button onclick="atualizarRotaNavegacao_()">🔄</button>
   </div>
   <div id="navInfo" class="nav-info">Calculando rota…</div>
   <div id="mapaNavegacao"></div>
@@ -535,6 +538,8 @@ let ultimoEnvioLocalizacao = 0;
    aconteceria se ele abrisse o Google Maps por cima. */
 let mapaNav = null, marcadorNavEu = null, linhaNav = null;
 let destinoNavAtual = null;
+let modoSeguindo = false;
+let intervalRecalculoRota = null;
 
 function iniciarNavegacao_(linha){
   const d = listaAtual_().find(x => x.linha === linha);
@@ -565,6 +570,42 @@ function sairNavegacao_(){
   document.getElementById('lista').style.display = 'block';
   destinoNavAtual = null;
   if (linhaNav && mapaNav){ mapaNav.removeLayer(linhaNav); linhaNav = null; }
+  pararSeguir_();
+}
+
+/* "▶ Iniciar" — igual o botão de começar navegação do Google Maps: o mapa
+   passa a acompanhar a posição dele ao vivo (câmera fixa nele, bem de
+   perto) e a rota se recalcula sozinha de tempos em tempos. */
+function alternarSeguir_(){
+  if (modoSeguindo) pararSeguir_(); else iniciarSeguir_();
+}
+
+function iniciarSeguir_(){
+  modoSeguindo = true;
+  const btn = document.getElementById('btnIniciarSeguir');
+  btn.textContent = '⏸ Pausar';
+  btn.classList.add('seguindo');
+
+  if (mapaNav && marcadorNavEu){
+    mapaNav.setView(marcadorNavEu.getLatLng(), 17);
+  }
+
+  // recalcula a rota sozinho a cada 2 minutos, sem precisar tocar no celular
+  if (intervalRecalculoRota) clearInterval(intervalRecalculoRota);
+  intervalRecalculoRota = setInterval(atualizarRotaNavegacao_, 2 * 60 * 1000);
+}
+
+function pararSeguir_(){
+  modoSeguindo = false;
+  const btn = document.getElementById('btnIniciarSeguir');
+  if (btn){
+    btn.textContent = '▶ Iniciar';
+    btn.classList.remove('seguindo');
+  }
+  if (intervalRecalculoRota){
+    clearInterval(intervalRecalculoRota);
+    intervalRecalculoRota = null;
+  }
 }
 
 function atualizarRotaNavegacao_(){
@@ -589,7 +630,11 @@ function atualizarRotaNavegacao_(){
       linhaNav = L.polyline(res.pontos, { color:'#2f93a3', weight:5, opacity:.85 }).addTo(mapaNav);
       document.getElementById('navInfo').textContent =
         '📏 ' + res.distanciaKm + ' km · ⏱ ~' + res.duracaoMin + ' min até ' + destinoNavAtual.cliente;
-      mapaNav.fitBounds(linhaNav.getBounds(), { padding: [30,30] });
+      // no modo "seguindo" a câmera fica fixa nele (não dá pra ver a rota
+      // inteira e seguir ao mesmo tempo); parado, mostra a rota inteirinha
+      if (!modoSeguindo){
+        mapaNav.fitBounds(linhaNav.getBounds(), { padding: [30,30] });
+      }
     }catch(err){
       document.getElementById('navInfo').textContent = 'Erro ao calcular a rota.';
     }
@@ -607,6 +652,10 @@ function atualizarPosicaoNav_(lat, lng){
     }).addTo(mapaNav);
   } else {
     marcadorNavEu.setLatLng([lat, lng]);
+  }
+  // seguindo ativo: a câmera acompanha ele de perto, igual navegação de verdade
+  if (modoSeguindo && mapaNav){
+    mapaNav.setView([lat, lng], mapaNav.getZoom() < 15 ? 17 : mapaNav.getZoom());
   }
 }
 
