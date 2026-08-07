@@ -40,7 +40,7 @@
     background:var(--panel);
     border-right:1px solid var(--line);
     display:flex;flex-direction:column;
-    overflow:hidden;
+    overflow-y:auto; overflow-x:hidden;
     min-width:0;
   }
   #app.sidebar-colapsado #sidebar{border-right:none;}
@@ -241,6 +241,13 @@
     letter-spacing:.06em;text-transform:uppercase;
   }
 
+  .rotulo-cliente{
+    background:#fff; color:#1f2430; border:1px solid rgba(0,0,0,.15);
+    border-radius:5px; padding:2px 7px; font-size:11px; font-weight:700;
+    box-shadow:0 1px 4px rgba(0,0,0,.25); white-space:nowrap;
+  }
+  .rotulo-cliente::before{border-top-color:#fff;}
+
   .pin{
     width:26px;height:26px;border-radius:50% 50% 50% 0;
     transform:rotate(-45deg);
@@ -437,6 +444,22 @@
   .tabela-toolbar .contagem{
     font-family:var(--font-mono); font-size:11px; color:#4b5563;
   }
+  .tabela-controles{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .periodo-tabela{display:flex; border:1px solid #c7ccd3; border-radius:4px; overflow:hidden;}
+  .periodo-tabela button{
+    padding:5px 10px; border:none; background:#fff; color:#4b5563;
+    font-size:10.5px; font-family:var(--font-mono); cursor:pointer;
+    border-right:1px solid #c7ccd3;
+  }
+  .periodo-tabela button:last-child{border-right:none;}
+  .periodo-tabela button.active{background:var(--manha); color:#1a1305; font-weight:700;}
+  .btn-toggle-tabela{
+    padding:5px 10px; border:1px solid #c7ccd3; border-radius:4px;
+    background:#fff; color:#4b5563; font-size:10.5px; font-family:var(--font-mono);
+    cursor:pointer;
+  }
+  .btn-toggle-tabela.active{background:var(--tarde); color:#fff; border-color:var(--tarde); font-weight:700;}
+
   .legenda{display:flex; gap:12px; flex-wrap:wrap;}
   .legenda span{
     display:flex; align-items:center; gap:5px;
@@ -450,6 +473,7 @@
     width:100%; min-width:1100px; border-collapse:collapse; font-size:11px;
     background:#ffffff; border:1px solid #000; table-layout:fixed;
   }
+  .tabela-entregas.largura-percentual{min-width:0; width:100%;}
   .tabela-entregas th{
     text-align:left; padding:7px 8px; border:1px solid #000;
     font-family:var(--font-mono); font-size:9px; letter-spacing:.06em;
@@ -460,12 +484,17 @@
     padding:3px 6px; border:1px solid #000; vertical-align:middle;
     overflow:hidden; text-overflow:ellipsis;
   }
+  .tabela-entregas.condensada th{padding:4px 6px; font-size:8px;}
+  .tabela-entregas.condensada td{padding:0 4px; font-size:10px; line-height:1.5;}
+  .tabela-entregas.condensada .td-input{padding:1px 4px; font-size:10px;}
+  .tabela-entregas.condensada .btn-remover{font-size:11px; padding:1px;}
   .col-resize-handle{
     position:absolute; top:0; right:-3px; width:7px; height:100%;
     cursor:col-resize; user-select:none; z-index:5; touch-action:none;
   }
   .col-resize-handle:hover, .col-resize-handle.resizando{background:rgba(47,147,163,.35);}
   .tabela-entregas .td-cliente{font-weight:600; white-space:nowrap; color:#1f2430;}
+  .tabela-entregas .td-cidade{color:#4b5563; white-space:nowrap;}
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .tabela-entregas .td-remover{text-align:center; width:30px;}
 
@@ -479,9 +508,9 @@
     font-size:9px; color:#1f2430; line-height:1;
   }
   .th-filtro-popup{
-    display:none; position:absolute; top:100%; left:0; margin-top:4px;
+    display:none; position:fixed; margin-top:0;
     background:#fff; border:1px solid #000; border-radius:4px;
-    padding:8px 10px; z-index:50; box-shadow:0 4px 14px rgba(0,0,0,.2);
+    padding:8px 10px; z-index:2000; box-shadow:0 4px 14px rgba(0,0,0,.3);
     min-width:140px;
   }
   .th-filtro-popup.aberto{display:block;}
@@ -1073,23 +1102,20 @@ function aplicarFiltros(ajustarZoom){
   const dataAte = document.getElementById('dataAteInput').value;
   const motorista = document.getElementById('motoristaSelect').value;
 
-  // filtros de data/período/motorista valem pros dois (mapa e tabela);
-  // o filtro de STATUS é separado — o do sidebar só afeta o mapa, a
-  // tabela tem o filtro de status próprio (na coluna dela).
-  const baseSemStatus = todasEntregas.filter(d => {
+  // filtros do sidebar (data/período/motorista/status) só valem pro MAPA —
+  // a tabela é 100% independente, com os filtros dela mesma (status e
+  // período próprios, na própria tabela).
+  entregasAtuais = todasEntregas.filter(d => {
     if (dataDe && d.data && d.data < dataDe) return false;
     if (dataAte && d.data && d.data > dataAte) return false;
     if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
     if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
+    const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
+    if (!filtroStatusSidebar.has(chaveStatus)) return false;
     return true;
   });
 
-  entregasAtuais = baseSemStatus.filter(d => {
-    const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
-    return filtroStatusSidebar.has(chaveStatus);
-  });
-
-  entregasParaTabela = baseSemStatus;
+  entregasParaTabela = todasEntregas;
 
   salvarPreferencias();
   if (modoAtual === 'tabela') renderTabela(ajustarZoom === false); else render(ajustarZoom);
@@ -1143,6 +1169,9 @@ function render(ajustarZoom){
     const numeroRota = rotaSugerida ? rotaSugerida.indexOf(d.linha) + 1 : 0;
     const icone = numeroRota > 0 ? pinIconNumerado_(numeroRota, d.periodo) : pinIcon(d.periodo);
     const marker = L.marker([d.lat, d.lng], { icon: icone });
+    marker.bindTooltip(escapeAttr_(d.cliente), {
+      permanent: true, direction: 'top', offset: [0, -24], className: 'rotulo-cliente'
+    });
     marker.bindPopup(`
       <div class="pop">
         <h3>${numeroRota > 0 ? '#' + numeroRota + ' · ' : ''}${d.cliente}</h3>
@@ -1397,11 +1426,35 @@ function corLinhaEntrega_(d){
 }
 
 let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão
+let filtroPeriodoTabela = ''; // '' = todos — filtro próprio da tabela, não usa o do sidebar
+
+function definirPeriodoTabela_(valor){
+  filtroPeriodoTabela = valor;
+  renderTabela();
+}
 
 /* ----- larguras das colunas da tabela (arrastar pra redimensionar, igual Sheets) ----- */
 const LARGURA_COLUNAS_CHAVE = 'mapaTabelaLarguraColunas';
 let larguraColunas = {};
 try{ larguraColunas = JSON.parse(localStorage.getItem(LARGURA_COLUNAS_CHAVE) || '{}'); }catch(e){ larguraColunas = {}; }
+
+/* ----- tabela condensada e largura em % (preferências salvas no navegador) ----- */
+const TABELA_CONDENSADA_CHAVE = 'mapaTabelaCondensada';
+const TABELA_PORCENTAGEM_CHAVE = 'mapaTabelaLarguraPorcentagem';
+let tabelaCondensada = localStorage.getItem(TABELA_CONDENSADA_CHAVE) === '1';
+let larguraEmPorcentagem = localStorage.getItem(TABELA_PORCENTAGEM_CHAVE) === '1';
+
+function alternarCondensada_(){
+  tabelaCondensada = !tabelaCondensada;
+  try{ localStorage.setItem(TABELA_CONDENSADA_CHAVE, tabelaCondensada ? '1' : '0'); }catch(e){}
+  renderTabela();
+}
+
+function alternarLarguraPorcentagem_(){
+  larguraEmPorcentagem = !larguraEmPorcentagem;
+  try{ localStorage.setItem(TABELA_PORCENTAGEM_CHAVE, larguraEmPorcentagem ? '1' : '0'); }catch(e){}
+  renderTabela();
+}
 
 function estiloLarguraCol_(chave, padrao){
   const largura = larguraColunas[chave] || padrao;
@@ -1460,15 +1513,47 @@ function alternarFiltroStatusPopup_(e){
   e.stopPropagation();
   filtroPopupAberto = !filtroPopupAberto;
   const popup = document.getElementById('filtroStatusPopup');
-  if (popup) popup.classList.toggle('aberto', filtroPopupAberto);
+  if (popup){
+    popup.classList.toggle('aberto', filtroPopupAberto);
+    if (filtroPopupAberto) reposicionarPopupStatus_(e.target);
+  }
+}
+
+// Calcula a posição do popup na hora, baseado em onde o botão ▾ está na
+// TELA (não na tabela) — assim ele nunca fica preso/cortado quando a
+// tabela rola de lado, independente de sticky/scroll.
+function reposicionarPopupStatus_(botao){
+  const popup = document.getElementById('filtroStatusPopup');
+  if (!popup || !botao) return;
+  const rect = botao.getBoundingClientRect();
+  popup.style.top = (rect.bottom + 4) + 'px';
+  popup.style.left = Math.max(4, rect.left - 90) + 'px'; // centraliza mais ou menos sob o botão
 }
 
 function alternarStatusNoFiltro_(valor, marcado){
   if (marcado) filtroStatusTabela.add(valor); else filtroStatusTabela.delete(valor);
   renderTabela();
+  if (filtroPopupAberto){
+    const btn = document.querySelector('.th-filtro-btn');
+    if (btn) reposicionarPopupStatus_(btn);
+  }
 }
 
 function alternarOrdenacaoData_(){
+  // Se tinha uma rota sugerida ativa de antes, ela sempre tem prioridade
+  // sobre a ordenação por data — e ficava "grudada" mesmo depois de bem
+  // depois, fazendo parecer que ordenar por Data tinha "parado de
+  // funcionar". Clicar em Data é um pedido explícito de ordenar por data,
+  // então limpa a rota antiga primeiro.
+  if (rotaSugerida){
+    rotaSugerida = null;
+    rotaOrigem = null;
+    rotaGeometria = null;
+    const btnLimpar = document.getElementById('btnLimparRota');
+    const infoRota = document.getElementById('rotaInfo');
+    if (btnLimpar) btnLimpar.style.display = 'none';
+    if (infoRota) infoRota.style.display = 'none';
+  }
   ordenacaoData = ordenacaoData === null ? 'asc' : (ordenacaoData === 'asc' ? 'desc' : null);
   renderTabela();
 }
@@ -1483,10 +1568,13 @@ function renderTabela(ehAtualizacaoAutomatica){
     return;
   }
 
-  // filtro da coluna Status (independente do filtro global da barra lateral)
+  // filtros próprios da tabela — status e período — totalmente
+  // independentes do sidebar (que só afeta o mapa)
   let lista = entregasParaTabela.filter(d => {
     const chave = String(d.status || '').trim().toUpperCase() || 'VAZIO';
-    return filtroStatusTabela.has(chave);
+    if (!filtroStatusTabela.has(chave)) return false;
+    if (filtroPeriodoTabela && d.periodo !== filtroPeriodoTabela) return false;
+    return true;
   });
 
   if (!lista.length){
@@ -1506,6 +1594,9 @@ function renderTabela(ehAtualizacaoAutomatica){
     lista = lista.slice().sort((a, b) => {
       const da = a.data || '';
       const db = b.data || '';
+      if (!da && !db) return 0;
+      if (!da) return 1;  // sem data sempre por último, nas duas direções
+      if (!db) return -1;
       return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
     });
   } else {
@@ -1516,9 +1607,19 @@ function renderTabela(ehAtualizacaoAutomatica){
   const setaData = ordenacaoData === 'asc' ? '▲' : (ordenacaoData === 'desc' ? '▼' : '↕');
 
   const checkStatus = (valor) => filtroStatusTabela.has(valor) ? ' checked' : '';
+  const ativoPeriodoTabela = (valor) => filtroPeriodoTabela === valor ? ' active' : '';
 
   let html = '<div class="tabela-toolbar">' +
       '<span class="contagem">' + lista.length + ' de ' + entregasParaTabela.length + ' entrega(s)</span>' +
+      '<div class="tabela-controles">' +
+        '<div class="periodo-tabela">' +
+          '<button type="button" class="' + (filtroPeriodoTabela === '' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'\')">Todos</button>' +
+          '<button type="button" class="' + ativoPeriodoTabela('MANHÃ') + '" onclick="definirPeriodoTabela_(\'MANHÃ\')">Manhã</button>' +
+          '<button type="button" class="' + ativoPeriodoTabela('TARDE') + '" onclick="definirPeriodoTabela_(\'TARDE\')">Tarde</button>' +
+        '</div>' +
+        '<button type="button" class="btn-toggle-tabela' + (tabelaCondensada ? ' active' : '') + '" onclick="alternarCondensada_()">↕ Condensada</button>' +
+        '<button type="button" class="btn-toggle-tabela' + (larguraEmPorcentagem ? ' active' : '') + '" onclick="alternarLarguraPorcentagem_()">% Largura</button>' +
+      '</div>' +
       '<div class="legenda">' +
         '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
         '<span><i style="background:' + (coresStatus['OK']||'#cfe2f3') + '"></i>Pedido pronto</span>' +
@@ -1527,12 +1628,13 @@ function renderTabela(ehAtualizacaoAutomatica){
         '<span><i style="background:' + (coresStatus['ATENCAO']||'#ea9999') + '"></i>Atenção</span>' +
       '</div>' +
     '</div>' +
-    '<table class="tabela-entregas"><thead><tr>' +
+    '<table class="tabela-entregas' + (tabelaCondensada ? ' condensada' : '') + (larguraEmPorcentagem ? ' largura-percentual' : '') + '"><thead><tr>' +
     (rotaSugerida ? '<th' + estiloLarguraCol_('numero', 40) + '>#' + handleResize_('numero') + '</th>' : '') +
     '<th' + estiloLarguraCol_('codigo', 70) + '>Código' + handleResize_('codigo') + '</th>' +
     '<th' + estiloLarguraCol_('cliente', 150) + '>Cliente' + handleResize_('cliente') + '</th>' +
     '<th' + estiloLarguraCol_('repr', 70) + '>Repr.' + handleResize_('repr') + '</th>' +
-    '<th' + estiloLarguraCol_('endereco', 240) + '>Endereço' + handleResize_('endereco') + '</th>' +
+    '<th' + estiloLarguraCol_('endereco', 220) + '>Endereço' + handleResize_('endereco') + '</th>' +
+    '<th' + estiloLarguraCol_('cidade', 110) + '>Cidade' + handleResize_('cidade') + '</th>' +
     '<th' + estiloLarguraCol_('motorista', 110) + '>Motorista' + handleResize_('motorista') + '</th>' +
     '<th class="th-ordenavel"' + estiloLarguraCol_('data', 110) + ' onclick="alternarOrdenacaoData_()">Data <span>' + setaData + '</span>' + handleResize_('data') + '</th>' +
     '<th' + estiloLarguraCol_('periodo', 90) + '>Período' + handleResize_('periodo') + '</th>' +
@@ -1562,6 +1664,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td class="td-cliente">' + d.cliente + '</td>' +
       '<td><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px;"></td>' +
       '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
+      '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
       '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input" data-campo="data" value="' + (d.data || '') + '"></td>' +
       '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
