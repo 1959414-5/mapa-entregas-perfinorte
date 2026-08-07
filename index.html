@@ -1618,7 +1618,7 @@ function renderTabela(ehAtualizacaoAutomatica){
           '<button type="button" class="' + ativoPeriodoTabela('TARDE') + '" onclick="definirPeriodoTabela_(\'TARDE\')">Tarde</button>' +
         '</div>' +
         '<button type="button" class="btn-toggle-tabela' + (tabelaCondensada ? ' active' : '') + '" onclick="alternarCondensada_()">↕ Condensada</button>' +
-        '<button type="button" class="btn-toggle-tabela' + (larguraEmPorcentagem ? ' active' : '') + '" onclick="alternarLarguraPorcentagem_()">% Largura</button>' +
+        '<button type="button" class="btn-toggle-tabela' + (larguraEmPorcentagem ? ' active' : '') + '" onclick="alternarLarguraPorcentagem_()" title="' + (larguraEmPorcentagem ? 'Largura fixa: colunas mantêm o tamanho, a tabela rola de lado se não couber' : 'Ajustar à tela: encolhe as colunas proporcionalmente pra caber tudo sem rolar de lado') + '">' + (larguraEmPorcentagem ? '🔒 Largura fixa' : '↔ Ajustar à tela') + '</button>' +
       '</div>' +
       '<div class="legenda">' +
         '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
