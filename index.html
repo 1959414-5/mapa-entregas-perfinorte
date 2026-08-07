@@ -30,6 +30,11 @@
   #app.sidebar-direito-colapsado{grid-template-columns:340px 1fr 0px;}
   #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:0px 1fr 0px;}
 
+  /* na Tabela, o painel direito some inteiro (não importa se estava aberto
+     ou fechado) — evita o bug de layout que dava com os dois abertos */
+  #app.tabela-ativa{grid-template-columns:340px 1fr 0px;}
+  #app.tabela-ativa.sidebar-colapsado{grid-template-columns:0px 1fr 0px;}
+
   /* ---------- SIDEBAR ---------- */
   #sidebar{
     background:var(--panel);
@@ -1342,6 +1347,12 @@ function mostrarView(modo){
   document.getElementById('btnVerTabela').classList.toggle('active', modo === 'tabela');
   document.getElementById('map').style.display = (modo === 'mapa') ? 'block' : 'none';
   document.getElementById('tableView').style.display = (modo === 'tabela') ? 'block' : 'none';
+
+  // o painel direito (lista/estatísticas) é só do mapa — some inteiro na
+  // tabela, junto com o botão de minimizar/maximizar dele, pra não bugar
+  const app = document.getElementById('app');
+  app.classList.toggle('tabela-ativa', modo === 'tabela');
+  document.getElementById('sidebarDireitoToggle').style.display = (modo === 'tabela') ? 'none' : 'flex';
 
   if (modo === 'mapa'){
     setTimeout(function(){ map.invalidateSize(); }, 50);
