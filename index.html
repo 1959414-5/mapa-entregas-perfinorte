@@ -25,8 +25,10 @@
   }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);font-family:var(--font-ui);}
-  #app{display:grid;grid-template-columns:340px 1fr;height:100vh;transition:grid-template-columns .18s ease;}
-  #app.sidebar-colapsado{grid-template-columns:0px 1fr;}
+  #app{display:grid;grid-template-columns:340px 1fr 300px;height:100vh;transition:grid-template-columns .18s ease;}
+  #app.sidebar-colapsado{grid-template-columns:0px 1fr 300px;}
+  #app.sidebar-direito-colapsado{grid-template-columns:340px 1fr 0px;}
+  #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:0px 1fr 0px;}
 
   /* ---------- SIDEBAR ---------- */
   #sidebar{
@@ -51,6 +53,30 @@
   }
   #sidebarToggle:hover{color:var(--paper);}
   #app.sidebar-colapsado #sidebarToggle{left:0;}
+
+  /* ---------- SIDEBAR DIREITO (lista de entregas) ---------- */
+  #sidebarDireito{
+    background:var(--panel);
+    border-left:1px solid var(--line);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    min-width:0;
+  }
+  #app.sidebar-direito-colapsado #sidebarDireito{border-left:none;}
+  #sidebarDireito > *{min-width:300px;}
+
+  #sidebarDireitoToggle{
+    position:fixed; top:50%; right:300px; transform:translateY(-50%);
+    width:22px; height:44px; margin-right:-1px;
+    background:var(--panel); border:1px solid var(--line);
+    color:var(--paper-dim); cursor:pointer;
+    border-radius:6px 0 0 6px;
+    display:flex; align-items:center; justify-content:center;
+    z-index:1500; font-size:12px;
+    transition:right .18s ease;
+  }
+  #sidebarDireitoToggle:hover{color:var(--paper);}
+  #app.sidebar-direito-colapsado #sidebarDireitoToggle{right:0;}
 
   .brand{
     padding:18px 20px 14px;
@@ -96,6 +122,19 @@
   }
   .field input[type=date]:focus, .field select:focus{
     outline:2px solid var(--manha);outline-offset:1px;
+  }
+
+  .status-filtro-sidebar{
+    display:flex; flex-direction:column; gap:6px;
+    background:var(--panel-2); border:1px solid var(--line);
+    border-radius:4px; padding:8px 10px;
+  }
+  .status-filtro-sidebar label{
+    display:flex; align-items:center; gap:7px;
+    font-size:12.5px; color:var(--paper); cursor:pointer;
+  }
+  .status-filtro-sidebar input[type=checkbox]{
+    accent-color:var(--manha); width:14px; height:14px; cursor:pointer;
   }
 
   .date-range{display:flex; align-items:center; gap:6px;}
@@ -489,23 +528,16 @@
         </select>
       </div>
       <div class="field">
-        <label for="statusSelect">Status</label>
-        <select id="statusSelect">
-          <option value="">Todos</option>
-          <option value="ENTREGUE">Entregue</option>
-          <option value="EM FILA">Em fila</option>
-          <option value="EM ANDAMENTO">Em andamento</option>
-        </select>
+        <label>Status</label>
+        <div class="status-filtro-sidebar" id="statusFiltroSidebar">
+          <label><input type="checkbox" value="ENTREGUE" checked onchange="alternarStatusSidebar_(this)"> Entregue</label>
+          <label><input type="checkbox" value="EM ANDAMENTO" checked onchange="alternarStatusSidebar_(this)"> Em andamento</label>
+          <label><input type="checkbox" value="EM FILA" checked onchange="alternarStatusSidebar_(this)"> Em fila</label>
+          <label><input type="checkbox" value="CANCELAR" checked onchange="alternarStatusSidebar_(this)"> Cancelar</label>
+          <label><input type="checkbox" value="VAZIO" checked onchange="alternarStatusSidebar_(this)"> (vazio)</label>
+        </div>
       </div>
     </div>
-
-    <div class="summary">
-      <div class="stat"><div class="n" id="statTotal">–</div><div class="l">Entregas</div></div>
-      <div class="stat"><div class="n" id="statCidades">–</div><div class="l">Cidades</div></div>
-      <div class="stat geo-warn"><div class="n" id="statSemGeo">–</div><div class="l">Sem endereço</div></div>
-    </div>
-
-    <div id="list"><div class="loading"><div class="big">⏳</div>Carregando entregas…</div></div>
   </aside>
 
   <main style="position:relative;">
@@ -515,6 +547,16 @@
     <div id="map"></div>
     <div id="tableView"><div id="tabelaContainer"></div></div>
   </main>
+
+  <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
+  <aside id="sidebarDireito">
+    <div class="summary">
+      <div class="stat"><div class="n" id="statTotal">–</div><div class="l">Entregas</div></div>
+      <div class="stat"><div class="n" id="statCidades">–</div><div class="l">Cidades</div></div>
+      <div class="stat geo-warn"><div class="n" id="statSemGeo">–</div><div class="l">Sem endereço</div></div>
+    </div>
+    <div id="list"><div class="loading"><div class="big">⏳</div>Carregando entregas…</div></div>
+  </aside>
 </div>
 
 <div id="modalOverlay" class="modal-overlay">
@@ -640,6 +682,12 @@ let clienteEncontrado = null;
 let enderecoAplicado = ''; // endereço já montado no padrão, depois de clicar "Aplicar"
 let motoristasDisponiveis = [];
 let miniMap = null, miniMapMarker = null;
+let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','CANCELAR','VAZIO']); // todos marcados por padrão
+
+function alternarStatusSidebar_(chk){
+  if (chk.checked) filtroStatusSidebar.add(chk.value); else filtroStatusSidebar.delete(chk.value);
+  aplicarFiltros();
+}
 
 /* ----- preferências salvas no navegador (sobrevivem a atualizar a página) ----- */
 const PREF_CHAVE = 'mapaEntregasPerfinorte';
@@ -650,7 +698,7 @@ function salvarPreferencias(){
       dataAte: document.getElementById('dataAteInput').value,
       periodo: filtroPeriodo,
       motorista: document.getElementById('motoristaSelect').value,
-      status: document.getElementById('statusSelect').value
+      status: Array.from(filtroStatusSidebar)
     }));
   }catch(e){ /* localStorage indisponível — segue sem salvar */ }
 }
@@ -670,7 +718,13 @@ function carregarPreferencias(){
     });
   }
   window.__motoristaSalvo = salvo.motorista || '';
-  if (salvo.status) document.getElementById('statusSelect').value = salvo.status;
+
+  if (Array.isArray(salvo.status)){
+    filtroStatusSidebar = new Set(salvo.status);
+    document.querySelectorAll('#statusFiltroSidebar input[type=checkbox]').forEach(chk => {
+      chk.checked = filtroStatusSidebar.has(chk.value);
+    });
+  }
 }
 
 /* ----- painel lateral minimizado/maximizado (salvo separado, não expira) ----- */
@@ -690,6 +744,25 @@ function alternarSidebar(){
   document.getElementById('sidebarToggle').textContent = colapsado ? '›' : '‹';
   try{ localStorage.setItem(SIDEBAR_CHAVE, colapsado ? '1' : '0'); }catch(e){}
   // o mapa precisa recalcular o tamanho depois que a transição de largura terminar
+  setTimeout(function(){ if (map) map.invalidateSize(); }, 200);
+}
+
+/* ----- painel direito (lista de entregas) — mesma ideia, chave separada ----- */
+const SIDEBAR_DIREITO_CHAVE = 'mapaEntregasSidebarDireitoColapsado';
+
+function restaurarSidebarDireito_(){
+  let colapsado = false;
+  try{ colapsado = localStorage.getItem(SIDEBAR_DIREITO_CHAVE) === '1'; }catch(e){ colapsado = false; }
+  document.getElementById('app').classList.toggle('sidebar-direito-colapsado', colapsado);
+  document.getElementById('sidebarDireitoToggle').textContent = colapsado ? '‹' : '›';
+}
+
+function alternarSidebarDireito_(){
+  const app = document.getElementById('app');
+  app.classList.toggle('sidebar-direito-colapsado');
+  const colapsado = app.classList.contains('sidebar-direito-colapsado');
+  document.getElementById('sidebarDireitoToggle').textContent = colapsado ? '‹' : '›';
+  try{ localStorage.setItem(SIDEBAR_DIREITO_CHAVE, colapsado ? '1' : '0'); }catch(e){}
   setTimeout(function(){ if (map) map.invalidateSize(); }, 200);
 }
 
@@ -947,14 +1020,14 @@ function aplicarFiltros(ajustarZoom){
   const dataDe = document.getElementById('dataDeInput').value;
   const dataAte = document.getElementById('dataAteInput').value;
   const motorista = document.getElementById('motoristaSelect').value;
-  const status = document.getElementById('statusSelect').value;
 
   entregasAtuais = todasEntregas.filter(d => {
     if (dataDe && d.data && d.data < dataDe) return false;
     if (dataAte && d.data && d.data > dataAte) return false;
     if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
     if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
-    if (status && String(d.status||'').toUpperCase() !== status.toUpperCase()) return false;
+    const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
+    if (!filtroStatusSidebar.has(chaveStatus)) return false;
     return true;
   });
 
@@ -1557,7 +1630,6 @@ document.getElementById('periodoToggle').addEventListener('click', (e) => {
 document.getElementById('dataDeInput').addEventListener('change', aplicarFiltros);
 document.getElementById('dataAteInput').addEventListener('change', aplicarFiltros);
 document.getElementById('motoristaSelect').addEventListener('change', aplicarFiltros);
-document.getElementById('statusSelect').addEventListener('change', aplicarFiltros);
 
 // Restaura data/período/motorista/status da última visita (ou "hoje" na
 // primeira vez), ANTES de carregar
@@ -1566,6 +1638,7 @@ carregarPreferencias();
 // Restaura o painel lateral minimizado/maximizado ANTES de iniciar o mapa,
 // pra ele já nascer com o tamanho certo (sem "pular" na tela)
 restaurarSidebar_();
+restaurarSidebarDireito_();
 
 initMap();
 carregarEntregas();
