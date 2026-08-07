@@ -30,6 +30,9 @@
     background:none; border:1px solid #3a4250; color:#c7ccd3;
     padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;
   }
+  .tag-localizacao{
+    font-size:10.5px; color:var(--verde); display:flex; align-items:center; gap:4px;
+  }
 
   #tela-selecao{padding:24px 18px; max-width:420px; margin:0 auto;}
   #tela-selecao h2{font-size:16px; margin-bottom:14px;}
@@ -115,6 +118,7 @@
   <h1>Minhas Entregas</h1>
   <div class="sub" id="headerSub" style="display:none;">
     <span id="headerInfo"></span>
+    <span class="tag-localizacao">📍 compartilhando localização</span>
     <button onclick="trocarMotorista()">Trocar</button>
   </div>
 </header>
@@ -151,8 +155,12 @@ let entregas = [];
 let marcacoes = {}; // linha -> 'ENTREGUE' | 'NAO_ENTREGUE' (o que já foi marcado nesta sessão)
 
 async function chamarAPI_GET_(params){
-  const qs = new URLSearchParams(params).toString();
-  const resp = await fetch(API_URL + '?' + qs);
+  // "_t" no final força o navegador a nunca reaproveitar uma resposta em
+  // cache — sem isso, às vezes ele mostra dados antigos mesmo já tendo
+  // mudado na planilha de verdade.
+  const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
+  const qs = new URLSearchParams(comCacheBusting).toString();
+  const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
   return await resp.json();
 }
 async function chamarAPI_POST_(corpo){
@@ -210,6 +218,38 @@ async function iniciarSessao(){
   document.getElementById('headerInfo').textContent = motorista + ' · ' + formatarDataBR_(data);
 
   await carregarEntregasDoMotorista();
+  iniciarRastreamento_();
+}
+
+/* ===== LOCALIZAÇÃO EM TEMPO REAL =====
+   Manda a posição do GPS pra Viviane conseguir acompanhar no mapa. Só
+   funciona com a permissão do motorista (o navegador pede sozinho na
+   primeira vez) e só enquanto essa página estiver aberta. */
+let watchIdLocalizacao = null;
+let ultimoEnvioLocalizacao = 0;
+
+function iniciarRastreamento_(){
+  if (!navigator.geolocation || watchIdLocalizacao !== null) return;
+
+  watchIdLocalizacao = navigator.geolocation.watchPosition(
+    (pos) => { enviarLocalizacao_(pos.coords.latitude, pos.coords.longitude); },
+    (err) => { console.error('Erro de localização:', err.message); },
+    { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
+  );
+}
+
+async function enviarLocalizacao_(lat, lng){
+  const agora = Date.now();
+  if (agora - ultimoEnvioLocalizacao < 45000) return; // no máximo a cada 45s, pra não gastar bateria/dados à toa
+  ultimoEnvioLocalizacao = agora;
+
+  const motorista = localStorage.getItem('motoristaAtual');
+  if (!motorista) return;
+  try{
+    await chamarAPI_POST_({ acao: 'atualizarLocalizacao', motorista: motorista, lat: lat, lng: lng });
+  }catch(err){
+    // silencioso — não vale a pena incomodar o motorista com erro de GPS
+  }
 }
 
 function formatarDataBR_(iso){
@@ -291,7 +331,7 @@ function renderCards(){
     const jaEntregue = marcado === 'ENTREGUE';
     const classeCard = jaEntregue ? 'marcada-entregue' : (marcado === 'NAO_ENTREGUE' ? 'marcada-nao' : '');
     const linkMapa = (d.lat != null && d.lng != null)
-      ? `<a href="https://www.google.com/maps/search/?api=1&query=${d.lat},${d.lng}" target="_blank" title="Abrir no mapa">📍</a>`
+      ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}&travelmode=driving" target="_blank" title="Traçar rota até aqui">🧭</a>`
       : '';
 
     const acoes = jaEntregue
