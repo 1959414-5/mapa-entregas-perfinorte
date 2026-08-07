@@ -297,6 +297,15 @@
   }
   .btn-primary:disabled{opacity:.4; cursor:not-allowed;}
 
+  .btn-aplicar{
+    width:100%; margin-top:8px; padding:11px 14px;
+    background:var(--manha); color:#1a1305; border:none; border-radius:6px;
+    font-size:13.5px; font-weight:700; letter-spacing:.02em; cursor:pointer;
+    box-shadow:0 2px 8px rgba(232,162,61,.35);
+  }
+  .btn-aplicar:hover{background:#f0ac4d;}
+  .btn-aplicar:active{transform:translateY(1px); box-shadow:0 1px 4px rgba(232,162,61,.3);}
+
   .toast{
     position:fixed; bottom:20px; left:50%; transform:translate(-50%,20px);
     background:var(--panel); border:1px solid var(--line); color:var(--paper);
@@ -505,8 +514,8 @@
           <div class="endereco-linha" style="margin-top:6px;">
             <input type="text" id="novaCidade" placeholder="Cidade" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
             <input type="text" id="novoUf" placeholder="UF" maxlength="2" oninput="forcarMaiusculo_(event)" style="max-width:60px; text-transform:uppercase;">
-            <button type="button" class="btn-secondary" onclick="aplicarEndereco()">Aplicar</button>
           </div>
+          <button type="button" class="btn-aplicar" onclick="aplicarEndereco()">✓ Aplicar endereço</button>
           <div id="enderecoResultado" class="busca-resultado"></div>
           <div id="miniMap"></div>
         </div>
@@ -1422,6 +1431,13 @@ function formatarCep_(e){
   e.target.value = v;
 }
 
+// Mesma formatação de CEP (00000-000), mas pra usar num valor já pronto
+// (ex: vindo da ROTAS_CLIENTES), não de um evento de digitação.
+function formatarCepValor_(cep){
+  const v = String(cep || '').replace(/\D/g,'').slice(0,8);
+  return v.length > 5 ? v.slice(0,5) + '-' + v.slice(5) : v;
+}
+
 /* Busca o CEP na ViaCEP (Correios, gratuito, sem chave) e preenche Rua/
    Bairro/Cidade/UF sozinho. Número não vem do CEP — a pessoa completa. */
 async function buscarCep(){
@@ -1625,6 +1641,15 @@ async function buscarCliente(){
     } else if (info.rotaSugerida){
       // texto antigo fora do padrão — usa só como dica no campo Rua
       document.getElementById('novaRua').value = info.rotaSugerida;
+    }
+
+    // CEP e número cadastrados na ROTAS_CLIENTES (colunas E e F) — pré-
+    // preenche pra só precisar clicar em "Buscar CEP"
+    if (info.cep){
+      document.getElementById('novoCep').value = formatarCepValor_(info.cep);
+    }
+    if (info.numero && !document.getElementById('novoNumero').value){
+      document.getElementById('novoNumero').value = String(info.numero).toUpperCase();
     }
 
     document.getElementById('camposManuais').style.display = 'flex';
