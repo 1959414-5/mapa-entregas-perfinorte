@@ -92,6 +92,25 @@
   }
   .pin-num span{transform:rotate(45deg); font-size:11px; font-weight:700; color:#1a1305;}
 
+  /* ---------- NAVEGAÇÃO DENTRO DO APP (fica na mesma aba, GPS não pausa) ---------- */
+  #modoNavegacao{position:fixed; inset:0; background:#fff; z-index:200; display:flex; flex-direction:column;}
+  .nav-header{
+    display:flex; gap:8px; padding:12px 14px; background:#12161b;
+  }
+  .nav-header button{
+    flex:1; padding:11px; border:none; border-radius:8px; background:#232a34;
+    color:#fff; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .nav-info{
+    padding:10px 14px; background:#eef7f8; color:var(--azul);
+    font-size:13px; font-weight:700; text-align:center;
+  }
+  #mapaNavegacao{flex:1;}
+  .pin-eu{
+    width:18px; height:18px; border-radius:50%; background:var(--azul);
+    border:3px solid #fff; box-shadow:0 0 0 3px var(--azul), 0 2px 8px rgba(0,0,0,.4);
+  }
+
   .entrega{
     background:#fff; border:1px solid var(--linha); border-radius:12px;
     padding:16px; margin-bottom:12px;
@@ -124,6 +143,9 @@
   }
   .entrega .acoes button.entregue-btn.ativo{background:var(--verde); border-color:var(--verde); color:#fff;}
   .entrega .acoes button.nao-btn.ativo{background:var(--vermelho); border-color:var(--vermelho); color:#fff;}
+  .entrega .acoes button.btn-nav-interno{
+    flex:0 0 auto; width:46px; padding:0; background:var(--azul); border-color:var(--azul);
+  }
   .entrega .marcado-em{margin-top:8px; font-size:11px; color:var(--dim);}
   .entrega .ja-marcado-banner{
     margin-top:8px; padding:8px 10px; border-radius:6px;
@@ -186,6 +208,15 @@
   <div id="cards"></div>
 </div>
 
+<div id="modoNavegacao" style="display:none;">
+  <div class="nav-header">
+    <button onclick="sairNavegacao_()">← Voltar</button>
+    <button onclick="atualizarRotaNavegacao_()">🔄 Atualizar rota</button>
+  </div>
+  <div id="navInfo" class="nav-info">Calculando rota…</div>
+  <div id="mapaNavegacao"></div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -228,7 +259,21 @@ function mostrarToast(msg, erro){
 }
 
 function dataIsoHoje_(){ return new Date().toISOString().slice(0,10); }
-function dataIsoAmanha_(){
+
+// cache simples pra não ficar pedindo o próximo dia útil ao servidor toda
+// hora — só busca de novo se passar de uma sessão nova
+let proximoDiaUtilCache = null;
+async function dataIsoAmanha_(){
+  if (proximoDiaUtilCache) return proximoDiaUtilCache;
+  try{
+    const res = await chamarAPI_GET_({ formato: 'proximoDiaUtil' });
+    proximoDiaUtilCache = (res && res.data) || fallbackAmanha_();
+  }catch(err){
+    proximoDiaUtilCache = fallbackAmanha_();
+  }
+  return proximoDiaUtilCache;
+}
+function fallbackAmanha_(){
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return d.toISOString().slice(0,10);
@@ -309,9 +354,11 @@ async function carregarEntregasDoMotorista(mostrarCarregando){
   }
 
   try{
+    const dataAmanha = await dataIsoAmanha_(); // já resolve o próximo dia útil antes de buscar
+
     const [brutasHoje, brutasAmanha, pendentes] = await Promise.all([
       chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataIsoHoje_() }),
-      chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataIsoAmanha_() }),
+      chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataAmanha }),
       chamarAPI_GET_({ formato: 'confirmacoesPendentes' })
     ]);
 
@@ -376,7 +423,8 @@ function renderCards(){
     const jaEntregue = marcado === 'ENTREGUE';
     const classeCard = jaEntregue ? 'marcada-entregue' : (marcado === 'NAO_ENTREGUE' ? 'marcada-nao' : '');
     const linkMapa = (d.lat != null && d.lng != null)
-      ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}&travelmode=driving" target="_blank" title="Traçar rota até aqui">🧭</a>`
+      ? `<button type="button" class="btn-nav-interno" onclick="iniciarNavegacao_(${d.linha})" title="Navegar aqui dentro do app">🧭</button>` +
+        `<a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}&travelmode=driving" target="_blank" title="Abrir no Google Maps">↗</a>`
       : '';
 
     // amanhã mostra tudo, então mostra o status atual pra ele saber a situação
@@ -481,6 +529,87 @@ const RASTREAMENTO_LIMITE_MS = 10 * 60 * 60 * 1000; // 10 horas
 let watchIdLocalizacao = null;
 let ultimoEnvioLocalizacao = 0;
 
+/* ===== NAVEGAÇÃO DENTRO DO APP =====
+   Mostra a rota + a posição dele ao vivo sem sair da aba — assim o
+   rastreamento de localização (pra Viviane) não é pausado, o que
+   aconteceria se ele abrisse o Google Maps por cima. */
+let mapaNav = null, marcadorNavEu = null, linhaNav = null;
+let destinoNavAtual = null;
+
+function iniciarNavegacao_(linha){
+  const d = listaAtual_().find(x => x.linha === linha);
+  if (!d || d.lat == null || d.lng == null) return;
+
+  destinoNavAtual = d;
+  document.getElementById('lista').style.display = 'none';
+  document.getElementById('modoNavegacao').style.display = 'flex';
+  document.getElementById('navInfo').textContent = 'Calculando rota até ' + d.cliente + '…';
+
+  setTimeout(() => {
+    if (!mapaNav){
+      mapaNav = L.map('mapaNavegacao');
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 20
+      }).addTo(mapaNav);
+    } else {
+      mapaNav.invalidateSize();
+    }
+    L.marker([d.lat, d.lng]).addTo(mapaNav).bindPopup(d.cliente).openPopup();
+    mapaNav.setView([d.lat, d.lng], 14);
+    atualizarRotaNavegacao_();
+  }, 50);
+}
+
+function sairNavegacao_(){
+  document.getElementById('modoNavegacao').style.display = 'none';
+  document.getElementById('lista').style.display = 'block';
+  destinoNavAtual = null;
+  if (linhaNav && mapaNav){ mapaNav.removeLayer(linhaNav); linhaNav = null; }
+}
+
+function atualizarRotaNavegacao_(){
+  if (!destinoNavAtual || !navigator.geolocation) return;
+  document.getElementById('navInfo').textContent = 'Calculando rota…';
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const origemLat = pos.coords.latitude, origemLng = pos.coords.longitude;
+    atualizarPosicaoNav_(origemLat, origemLng);
+
+    try{
+      const res = await chamarAPI_GET_({
+        formato: 'rotaEntrePontos',
+        lat1: origemLat, lng1: origemLng,
+        lat2: destinoNavAtual.lat, lng2: destinoNavAtual.lng
+      });
+      if (!res.ok){
+        document.getElementById('navInfo').textContent = 'Não foi possível calcular a rota.';
+        return;
+      }
+      if (linhaNav) mapaNav.removeLayer(linhaNav);
+      linhaNav = L.polyline(res.pontos, { color:'#2f93a3', weight:5, opacity:.85 }).addTo(mapaNav);
+      document.getElementById('navInfo').textContent =
+        '📏 ' + res.distanciaKm + ' km · ⏱ ~' + res.duracaoMin + ' min até ' + destinoNavAtual.cliente;
+      mapaNav.fitBounds(linhaNav.getBounds(), { padding: [30,30] });
+    }catch(err){
+      document.getElementById('navInfo').textContent = 'Erro ao calcular a rota.';
+    }
+  }, () => {
+    document.getElementById('navInfo').textContent = 'Não consegui pegar sua localização — verifique a permissão de GPS.';
+  }, { enableHighAccuracy:true, maximumAge:15000, timeout:15000 });
+}
+
+function atualizarPosicaoNav_(lat, lng){
+  if (!mapaNav) return;
+  if (!marcadorNavEu){
+    marcadorNavEu = L.marker([lat, lng], {
+      icon: L.divIcon({ className:'', html:'<div class="pin-eu"></div>', iconSize:[18,18] }),
+      zIndexOffset: 1000
+    }).addTo(mapaNav);
+  } else {
+    marcadorNavEu.setLatLng([lat, lng]);
+  }
+}
+
 function iniciarRastreamento_(){
   if (!navigator.geolocation) return;
 
@@ -518,7 +647,13 @@ function iniciarRastreamento_(){
 function ativarWatch_(){
   if (watchIdLocalizacao !== null) return;
   watchIdLocalizacao = navigator.geolocation.watchPosition(
-    (pos) => { enviarLocalizacao_(pos.coords.latitude, pos.coords.longitude); },
+    (pos) => {
+      enviarLocalizacao_(pos.coords.latitude, pos.coords.longitude);
+      // se estiver no modo navegação, atualiza o pontinho dele no mapa a
+      // cada posição nova (mais frequente que o envio pra Viviane, que é
+      // limitado a 1x/45s pra economizar bateria/dados)
+      if (destinoNavAtual) atualizarPosicaoNav_(pos.coords.latitude, pos.coords.longitude);
+    },
     (err) => { console.error('Erro de localização:', err.message); },
     { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
   );
