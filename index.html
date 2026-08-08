@@ -353,6 +353,20 @@
   .busca-resultado.ok{color:var(--entregue); background:rgba(95,174,114,.12); display:block;}
   .busca-resultado.erro{color:var(--fila); background:rgba(216,98,47,.12); display:block;}
   .busca-resultado.carregando{display:block;}
+
+  .barra-progresso-wrap{
+    width:100%; height:7px; background:rgba(255,255,255,.12);
+    border-radius:4px; overflow:hidden;
+  }
+  .barra-progresso-fill{
+    height:100%; width:0%; background:var(--manha); border-radius:4px;
+    transition:width .18s ease-out;
+  }
+  .barra-progresso-texto{
+    margin-top:6px; font-family:var(--font-mono); font-size:11px;
+    color:var(--paper-dim); text-align:center; letter-spacing:.03em;
+  }
+
   .modal-footer{
     display:flex; justify-content:flex-end; gap:8px;
     padding:14px 20px; border-top:1px solid var(--line);
@@ -679,6 +693,8 @@
         </div>
       </div>
     </div>
+
+    <div id="salvarProgresso" style="display:none; padding:0 20px 14px;"></div>
 
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -1929,6 +1945,8 @@ function abrirModal(){
   document.getElementById('enderecoResultado').textContent = '';
   document.getElementById('miniMap').style.display = 'none';
   document.getElementById('camposManuais').style.display = 'none';
+  document.getElementById('salvarProgresso').style.display = 'none';
+  document.getElementById('salvarProgresso').innerHTML = '';
   document.getElementById('btnSalvarNovo').disabled = true;
   document.querySelectorAll('#novoPeriodoToggle button').forEach(b=>b.classList.remove('active'));
   clienteEncontrado = null;
@@ -2140,11 +2158,11 @@ async function buscarCliente(){
     return;
   }
 
-  resultado.className = 'busca-resultado carregando';
-  resultado.textContent = 'Buscando…';
+  const barra = criarBarraProgresso_(resultado, 'Buscando cliente');
 
   try{
     const info = await chamarAPI_GET_({ formato: 'buscarCliente', codigo: codigo });
+    barra.parar();
     if (!info.encontrado){
       resultado.className = 'busca-resultado erro';
       resultado.textContent = info.erro || 'Cliente não encontrado.';
@@ -2191,6 +2209,7 @@ async function buscarCliente(){
       await confirmarEndereco_(info.rotaSugerida.trim()); // usa o texto original direto, já é confiável
     }
   }catch(err){
+    barra.parar();
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Erro: ' + err;
   }
@@ -2225,12 +2244,15 @@ async function salvarNova(){
   };
 
   const btn = document.getElementById('btnSalvarNovo');
+  const progressoEl = document.getElementById('salvarProgresso');
   btn.disabled = true;
-  btn.textContent = 'Salvando…';
+  progressoEl.style.display = 'block';
+  const barra = criarBarraProgresso_(progressoEl, 'Salvando entrega');
 
   try{
     const res = await chamarAPI_POST_({ acao: 'salvarNovaEntrega', dados: dados });
-    btn.textContent = 'Salvar entrega';
+    barra.parar();
+    progressoEl.style.display = 'none';
     if (!res.ok){
       mostrarToast('Erro: ' + res.erro, true);
       btn.disabled = false;
@@ -2240,7 +2262,8 @@ async function salvarNova(){
     fecharModal();
     carregarEntregas();
   }catch(err){
-    btn.textContent = 'Salvar entrega';
+    barra.parar();
+    progressoEl.style.display = 'none';
     btn.disabled = false;
     mostrarToast('Erro: ' + err, true);
   }
@@ -2251,6 +2274,38 @@ function mostrarToast(msg, erro){
   t.textContent = msg;
   t.className = 'toast show' + (erro ? ' erro' : '');
   setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+/* Barra de progresso animada — não existe como saber o progresso real
+   dentro da execução do Apps Script (é uma chamada só, tipo caixa-preta),
+   então ela sobe suave até 90% enquanto espera, e só bate 100% quando a
+   resposta chega de verdade (nunca completa sozinha, então nunca "mente"
+   dizendo que terminou antes da hora). */
+function criarBarraProgresso_(containerEl, textoBase){
+  containerEl.className = 'busca-resultado carregando';
+  containerEl.innerHTML =
+    '<div class="barra-progresso-wrap"><div class="barra-progresso-fill"></div></div>' +
+    '<div class="barra-progresso-texto">' + textoBase + ' — 0%</div>';
+  const fillEl = containerEl.querySelector('.barra-progresso-fill');
+  const textoEl = containerEl.querySelector('.barra-progresso-texto');
+  let progresso = 0;
+
+  const intervalId = setInterval(() => {
+    if (progresso >= 90) return;
+    progresso += (90 - progresso) * 0.18 + 2;
+    if (progresso > 90) progresso = 90;
+    if (fillEl) fillEl.style.width = progresso + '%';
+    if (textoEl) textoEl.textContent = textoBase + ' — ' + Math.round(progresso) + '%';
+  }, 140);
+
+  return {
+    parar: () => clearInterval(intervalId),
+    concluir: () => {
+      clearInterval(intervalId);
+      if (fillEl) fillEl.style.width = '100%';
+      if (textoEl) textoEl.textContent = textoBase + ' — 100%';
+    }
+  };
 }
 </script>
 </body>
