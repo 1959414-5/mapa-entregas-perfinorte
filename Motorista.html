@@ -188,7 +188,7 @@
 </header>
 
 <div id="tela-selecao">
-  <h2>Selecione o Motorista abaixo:</h2>
+  <h2>Quem é você?</h2>
   <label for="selMotorista">Motorista</label>
   <select id="selMotorista">
     <option value="">Carregando...</option>
@@ -366,15 +366,12 @@ async function carregarEntregasDoMotorista(mostrarCarregando){
   }
 
   try{
-    const dataAmanha = await dataIsoAmanha_(); // já resolve o próximo dia útil antes de buscar
+    // uma chamada só pro servidor (hoje + amanhã + pendências já vêm
+    // juntos) em vez de três separadas — cada chamada ao Apps Script tem
+    // um custo próprio de inicialização, então isso fica bem mais rápido
+    const resultado = await chamarAPI_GET_({ formato: 'dadosMotorista', motorista: motorista });
 
-    const [brutasHoje, brutasAmanha, pendentes] = await Promise.all([
-      chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataIsoHoje_() }),
-      chamarAPI_GET_({ formato: 'dados', motorista: motorista, data: dataAmanha }),
-      chamarAPI_GET_({ formato: 'confirmacoesPendentes' })
-    ]);
-
-    const pendentesLista = Array.isArray(pendentes) ? pendentes : [];
+    const pendentesLista = Array.isArray(resultado.pendentes) ? resultado.pendentes : [];
     marcacoes = {};
     pendentesLista.forEach(p => {
       if (String(p.motorista || '').toUpperCase() === motorista.toUpperCase()){
@@ -384,7 +381,8 @@ async function carregarEntregasDoMotorista(mostrarCarregando){
 
     // HOJE: só o que já está pronto (OK marcado) e ainda não entregue — ou
     // já marcado por ele mesmo (informativo, aguardando confirmação).
-    entregasHoje = (Array.isArray(brutasHoje) ? brutasHoje : []).filter(d => {
+    const brutasHoje = Array.isArray(resultado.hoje) ? resultado.hoje : [];
+    entregasHoje = brutasHoje.filter(d => {
       if (String(d.status || '').toUpperCase() === 'ENTREGUE') return false;
       if (marcacoes[d.linha] === 'ENTREGUE') return true;
       return d.ok === true;
@@ -392,7 +390,7 @@ async function carregarEntregasDoMotorista(mostrarCarregando){
 
     // AMANHÃ: mostra tudo, de qualquer status — só pra ele se programar,
     // não precisa estar com pedido pronto ainda.
-    entregasAmanha = Array.isArray(brutasAmanha) ? brutasAmanha : [];
+    entregasAmanha = Array.isArray(resultado.amanha) ? resultado.amanha : [];
 
     renderTudo_();
   }catch(err){
