@@ -2215,6 +2215,8 @@ async function salvarNova(){
   const periodoBtn = document.querySelector('#novoPeriodoToggle button.active');
   const dados = {
     codigo: clienteEncontrado.codigo,
+    fantasia: clienteEncontrado.fantasia,   // já veio do "Buscar" — evita repetir a busca inteira ao salvar
+    vendedor: clienteEncontrado.vendedor,
     endereco: endereco,
     motorista: document.getElementById('novoMotorista').value.trim(),
     data: document.getElementById('novaData').value,
