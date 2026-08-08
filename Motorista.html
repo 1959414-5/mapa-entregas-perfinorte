@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Minhas Entregas — Perfinorte</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 <style>
   :root{
     --azul:#2f93a3;
@@ -108,20 +109,16 @@
     font-size:13px; font-weight:700; text-align:center;
   }
   #mapaNavWrap{flex:1; position:relative; overflow:hidden; background:#e5e3df;}
-  #mapaNavegacao{
-    position:absolute; top:-30%; left:-30%; width:160%; height:160%;
-    transition:transform .3s ease-out;
+  #mapaNavegacao{position:absolute; inset:0;}
+  .pin-caminhao{
+    width:36px; height:36px; border-radius:50%;
+    background:#fff; border:3px solid var(--azul);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; box-shadow:0 3px 10px rgba(0,0,0,.4);
   }
-  .pin-eu-wrap{
-    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
-  }
-  .pin-eu{
-    width:0; height:0;
-    border-left:9px solid transparent;
-    border-right:9px solid transparent;
-    border-bottom:22px solid var(--azul);
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));
-    transition:transform .25s ease;
+  .pin-destino{
+    width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
+    background:var(--vermelho); border:2px solid rgba(0,0,0,.3); box-shadow:0 2px 6px rgba(0,0,0,.35);
   }
 
   .entrega{
@@ -191,7 +188,7 @@
 </header>
 
 <div id="tela-selecao">
-  <h2>Selecionar Motorista:</h2>
+  <h2>Selecione o Motorista abaixo:</h2>
   <label for="selMotorista">Motorista</label>
   <select id="selMotorista">
     <option value="">Carregando...</option>
@@ -234,6 +231,7 @@
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 /* =====================================================================
  * COLE AQUI A MESMA URL DO /exec usada no Mapa.html.
@@ -547,10 +545,12 @@ let ultimoEnvioLocalizacao = 0;
    Mostra a rota + a posição dele ao vivo sem sair da aba — assim o
    rastreamento de localização (pra Viviane) não é pausado, o que
    aconteceria se ele abrisse o Google Maps por cima. */
-let mapaNav = null, marcadorNavEu = null, linhaNav = null;
+let mapaNav = null, marcadorNavEu = null, marcadorNavDestino = null;
 let destinoNavAtual = null;
 let modoSeguindo = false;
 let intervalRecalculoRota = null;
+const ROTA_SOURCE_ID = 'rota-nav-source';
+const ROTA_LAYER_ID = 'rota-nav-layer';
 
 function iniciarNavegacao_(linha){
   const d = listaAtual_().find(x => x.linha === linha);
@@ -563,16 +563,49 @@ function iniciarNavegacao_(linha){
 
   setTimeout(() => {
     if (!mapaNav){
-      mapaNav = L.map('mapaNavegacao');
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd', maxZoom: 20
-      }).addTo(mapaNav);
+      mapaNav = new maplibregl.Map({
+        container: 'mapaNavegacao',
+        style: {
+          version: 8,
+          sources: {
+            'carto-tiles': {
+              type: 'raster',
+              tiles: [
+                'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+              ],
+              tileSize: 256,
+              attribution: '© OpenStreetMap © CARTO'
+            }
+          },
+          layers: [{ id: 'carto-layer', type: 'raster', source: 'carto-tiles' }]
+        },
+        center: [d.lng, d.lat], // MapLibre usa [lng, lat], ao contrário do Leaflet
+        zoom: 14,
+        pitch: 0,
+        bearing: 0,
+        attributionControl: false
+      });
+      mapaNav.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     } else {
-      mapaNav.invalidateSize();
+      mapaNav.resize();
     }
-    L.marker([d.lat, d.lng]).addTo(mapaNav).bindPopup(d.cliente).openPopup();
-    mapaNav.setView([d.lat, d.lng], 14);
-    atualizarRotaNavegacao_();
+
+    const desenharDestino = () => {
+      const elDestino = document.createElement('div');
+      elDestino.className = 'pin-destino';
+      if (marcadorNavDestino) marcadorNavDestino.remove();
+      marcadorNavDestino = new maplibregl.Marker({ element: elDestino, anchor: 'bottom' })
+        .setLngLat([d.lng, d.lat])
+        .setPopup(new maplibregl.Popup({ offset: 20 }).setText(d.cliente))
+        .addTo(mapaNav);
+      mapaNav.setCenter([d.lng, d.lat]);
+      atualizarRotaNavegacao_();
+    };
+
+    if (mapaNav.loaded()) desenharDestino(); else mapaNav.on('load', desenharDestino);
   }, 50);
 }
 
@@ -580,13 +613,13 @@ function sairNavegacao_(){
   document.getElementById('modoNavegacao').style.display = 'none';
   document.getElementById('lista').style.display = 'block';
   destinoNavAtual = null;
-  if (linhaNav && mapaNav){ mapaNav.removeLayer(linhaNav); linhaNav = null; }
   pararSeguir_();
 }
 
 /* "▶ Iniciar" — igual o botão de começar navegação do Google Maps: o mapa
-   passa a acompanhar a posição dele ao vivo (câmera fixa nele, bem de
-   perto) e a rota se recalcula sozinha de tempos em tempos. */
+   passa a acompanhar a posição dele ao vivo, gira de verdade conforme a
+   direção (câmera em primeira pessoa, rotação nativa do MapLibre — não é
+   mais um truque de CSS) e a rota se recalcula sozinha de tempos em tempos. */
 function alternarSeguir_(){
   if (modoSeguindo) pararSeguir_(); else iniciarSeguir_();
 }
@@ -598,7 +631,7 @@ function iniciarSeguir_(){
   btn.classList.add('seguindo');
 
   if (mapaNav && marcadorNavEu){
-    mapaNav.setView(marcadorNavEu.getLatLng(), 17);
+    mapaNav.easeTo({ center: marcadorNavEu.getLngLat(), zoom: 18, pitch: 55, duration: 600 });
   }
 
   // recalcula a rota sozinho a cada 2 minutos, sem precisar tocar no celular
@@ -617,7 +650,9 @@ function pararSeguir_(){
     clearInterval(intervalRecalculoRota);
     intervalRecalculoRota = null;
   }
-  girarMapaNavegacao_(0); // volta o mapa pro norte-pra-cima normal
+  if (mapaNav){
+    mapaNav.easeTo({ bearing: 0, pitch: 0, duration: 500 }); // volta pro norte-pra-cima normal
+  }
 }
 
 function atualizarRotaNavegacao_(){
@@ -638,14 +673,35 @@ function atualizarRotaNavegacao_(){
         document.getElementById('navInfo').textContent = 'Não foi possível calcular a rota.';
         return;
       }
-      if (linhaNav) mapaNav.removeLayer(linhaNav);
-      linhaNav = L.polyline(res.pontos, { color:'#2f93a3', weight:5, opacity:.85 }).addTo(mapaNav);
+      // MapLibre usa GeoJSON com [lng, lat] — o backend devolve [lat, lng]
+      // (pro Leaflet do resto do app), então inverte aqui na hora de usar.
+      const coordsLngLat = res.pontos.map(p => [p[1], p[0]]);
+      const geojson = { type: 'Feature', geometry: { type: 'LineString', coordinates: coordsLngLat } };
+
+      if (mapaNav.getSource(ROTA_SOURCE_ID)){
+        mapaNav.getSource(ROTA_SOURCE_ID).setData(geojson);
+      } else {
+        mapaNav.addSource(ROTA_SOURCE_ID, { type: 'geojson', data: geojson });
+        mapaNav.addLayer({
+          id: ROTA_LAYER_ID,
+          type: 'line',
+          source: ROTA_SOURCE_ID,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': '#2f93a3', 'line-width': 5, 'line-opacity': 0.85 }
+        });
+      }
+
       document.getElementById('navInfo').textContent =
         '📏 ' + res.distanciaKm + ' km · ⏱ ~' + res.duracaoMin + ' min até ' + destinoNavAtual.cliente;
+
       // no modo "seguindo" a câmera fica fixa nele (não dá pra ver a rota
       // inteira e seguir ao mesmo tempo); parado, mostra a rota inteirinha
       if (!modoSeguindo){
-        mapaNav.fitBounds(linhaNav.getBounds(), { padding: [30,30] });
+        const bounds = coordsLngLat.reduce(
+          (b, c) => b.extend(c),
+          new maplibregl.LngLatBounds(coordsLngLat[0], coordsLngLat[0])
+        );
+        mapaNav.fitBounds(bounds, { padding: 40, duration: 500 });
       }
     }catch(err){
       document.getElementById('navInfo').textContent = 'Erro ao calcular a rota.';
@@ -655,52 +711,28 @@ function atualizarRotaNavegacao_(){
   }, { enableHighAccuracy:true, maximumAge:15000, timeout:15000 });
 }
 
-function iconeNavEu_(rotacao){
-  // no modo "seguindo" é o MAPA que gira (a seta fica sempre pra cima,
-  // como no Google Maps) — parado, é a seta que gira mostrando a direção
-  const graus = (!modoSeguindo && typeof rotacao === 'number' && !isNaN(rotacao)) ? rotacao : 0;
-  return L.divIcon({
-    className: '',
-    html: '<div class="pin-eu-wrap"><div class="pin-eu" style="transform:rotate(' + graus + 'deg);"></div></div>',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-  });
-}
-
-// Gira o mapa inteiro pra "câmera em primeira pessoa" — a direção que ele
-// está seguindo fica sempre voltada pra cima na tela, igual navegação de
-// verdade (não é a seta que gira, é o mundo em volta dela).
-function girarMapaNavegacao_(heading){
-  const el = document.getElementById('mapaNavegacao');
-  if (!el) return;
-  const graus = (typeof heading === 'number' && !isNaN(heading)) ? -heading : 0;
-  el.style.transform = 'rotate(' + graus + 'deg)';
-}
-
 function atualizarPosicaoNav_(lat, lng, heading){
   if (!mapaNav) return;
+
   if (!marcadorNavEu){
-    marcadorNavEu = L.marker([lat, lng], {
-      icon: iconeNavEu_(heading),
-      zIndexOffset: 1000
-    }).addTo(mapaNav);
+    const el = document.createElement('div');
+    el.className = 'pin-caminhao';
+    el.innerHTML = '🚚';
+    marcadorNavEu = new maplibregl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .addTo(mapaNav);
   } else {
-    marcadorNavEu.setLatLng([lat, lng]);
-    // só troca o ícone se a direção veio de verdade (o GPS às vezes manda
-    // heading nulo quando ele está parado) — assim a seta não "reseta"
-    // pra cima toda hora sem necessidade
-    if (typeof heading === 'number' && !isNaN(heading)){
-      marcadorNavEu.setIcon(iconeNavEu_(heading));
-    }
+    marcadorNavEu.setLngLat([lng, lat]);
   }
-  // seguindo ativo: câmera em primeira pessoa — acompanha de perto E gira
-  // o mapa conforme a direção dele (só gira quando o GPS manda uma direção
-  // de verdade — parado, sem heading, o mapa fica como estava)
+
+  // seguindo ativo: câmera em primeira pessoa de verdade — o MapLibre gira
+  // o mapa nativamente (bearing) conforme a direção dele, igual navegação
+  // real. Só gira quando o GPS manda uma direção de verdade (parado, sem
+  // heading, mantém como estava).
   if (modoSeguindo && mapaNav){
-    mapaNav.setView([lat, lng], mapaNav.getZoom() < 15 ? 17 : mapaNav.getZoom());
-    if (typeof heading === 'number' && !isNaN(heading)){
-      girarMapaNavegacao_(heading);
-    }
+    const opcoes = { center: [lng, lat], zoom: Math.max(mapaNav.getZoom(), 17), duration: 900 };
+    if (typeof heading === 'number' && !isNaN(heading)) opcoes.bearing = heading;
+    mapaNav.easeTo(opcoes);
   }
 }
 
