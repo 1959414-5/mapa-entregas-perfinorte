@@ -156,6 +156,13 @@
   .entrega .acoes button.btn-nav-interno{
     flex:0 0 auto; width:46px; padding:0; background:var(--azul); border-color:var(--azul);
   }
+  .btn-andamento{
+    display:block; width:100%; margin-top:12px; padding:11px;
+    border:1px solid var(--amber); border-radius:8px;
+    background:rgba(232,162,61,.12); color:#8a5c14;
+    font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .btn-andamento.ativo{background:var(--amber); color:#1a1305; border-color:var(--amber);}
   .entrega .marcado-em{margin-top:8px; font-size:11px; color:var(--dim);}
   .entrega .ja-marcado-banner{
     margin-top:8px; padding:8px 10px; border-radius:6px;
@@ -483,6 +490,7 @@ function renderCards(){
   container.innerHTML = lista.map(d => {
     const marcado = marcacoes[d.linha];
     const jaEntregue = marcado === 'ENTREGUE';
+    const jaEmAndamento = String(d.status || '').toUpperCase() === 'EM ANDAMENTO';
     const classeCard = jaEntregue ? 'marcada-entregue' : (marcado === 'NAO_ENTREGUE' ? 'marcada-nao' : '');
     const linkMapa = (d.lat != null && d.lng != null)
       ? `<button type="button" class="btn-nav-interno" onclick="iniciarNavegacao_(${d.linha})" title="Navegar aqui dentro do app">🧭</button>` +
@@ -492,6 +500,15 @@ function renderCards(){
     // amanhã mostra tudo, então mostra o status atual pra ele saber a situação
     const statusTag = (abaAtual === 'amanha' && d.status)
       ? '<span class="status-tag">' + d.status + (d.ok ? ' · pronto' : '') + '</span>'
+      : '';
+
+    // "Em andamento" é diferente de Entregue/Não entregue: grava direto na
+    // planilha na hora, sem precisar de confirmação da Viviane — é só um
+    // aviso de baixo risco de que ele começou a trabalhar nessa entrega.
+    const btnAndamento = (abaAtual === 'hoje' && !jaEntregue)
+      ? `<button type="button" class="btn-andamento${jaEmAndamento ? ' ativo' : ''}" onclick="marcarAndamento_(${d.linha}, this)">
+          🚚 ${jaEmAndamento ? 'Em andamento' : 'Marcar como em andamento'}
+        </button>`
       : '';
 
     const acoes = (abaAtual !== 'hoje')
@@ -518,9 +535,33 @@ function renderCards(){
         ${statusTag}
         <div class="endereco">${d.endereco}</div>
         ${d.observacoes ? '<div class="endereco">📝 ' + d.observacoes + '</div>' : ''}
+        ${btnAndamento}
         ${acoes}${linkMapaSemAcao}
       </div>`;
   }).join('');
+}
+
+async function marcarAndamento_(linha, botao){
+  const motorista = localStorage.getItem('motoristaAtual');
+  botao.disabled = true;
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'marcarEmAndamento', linha: linha, motorista: motorista });
+    botao.disabled = false;
+    if (!res.ok){
+      mostrarToast('Erro: ' + res.erro, true);
+      return;
+    }
+    // grava direto — não precisa esperar a Viviane confirmar nada aqui,
+    // então já atualiza na memória e re-renderiza na hora
+    const item = entregasHoje.find(d => d.linha === linha);
+    if (item) item.status = 'EM ANDAMENTO';
+    mostrarToast('Marcado como em andamento!');
+    renderCards();
+  }catch(err){
+    botao.disabled = false;
+    mostrarToast('Erro: ' + err, true);
+  }
 }
 
 /* Mapa geral das paradas do dia selecionado — só pra dar noção de onde é
