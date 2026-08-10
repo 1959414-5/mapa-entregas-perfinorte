@@ -170,6 +170,9 @@
   .period-toggle button.active[data-p="MANHÃ"]{background:var(--manha);color:#1a1305;border-color:var(--manha);}
   .period-toggle button.active[data-p="TARDE"]{background:var(--tarde);color:#04191c;border-color:var(--tarde);}
   .period-toggle button.active[data-p=""]{background:var(--paper);color:var(--ink);border-color:var(--paper);}
+  .period-toggle button.active[data-ok=""]{background:var(--paper);color:var(--ink);border-color:var(--paper);}
+  .period-toggle button.active[data-ok="sim"]{background:var(--entregue);color:#0c2e13;border-color:var(--entregue);}
+  .period-toggle button.active[data-ok="nao"]{background:var(--fila);color:#3a1600;border-color:var(--fila);}
 
   .summary{
     padding:14px 20px;
@@ -524,7 +527,7 @@
   .col-resize-handle:hover, .col-resize-handle.resizando{background:rgba(47,147,163,.35);}
   .tabela-entregas .td-cliente{font-weight:700; white-space:nowrap;}
   .tabela-entregas .td-data{font-weight:700;}
-  .tabela-entregas .td-cidade{color:#4b5563; white-space:nowrap;}
+  .tabela-entregas .td-cidade{white-space:nowrap;}
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .tabela-entregas .td-remover{text-align:center; width:30px;}
 
@@ -555,7 +558,7 @@
   .td-input{
     width:100%; background:transparent; border:1px solid transparent;
     padding:4px 6px; border-radius:4px; font-size:11px;
-    font-family:var(--font-ui);
+    font-family:var(--font-ui); color:inherit;
   }
   .td-input:hover{border-color:#c7ccd3; background:#ffffff;}
   .td-input:focus{outline:none; border-color:var(--manha); background:#ffffff;}
