@@ -146,12 +146,15 @@
   .legenda i{display:inline-block; width:10px; height:10px; border-radius:2px; border:1px solid rgba(0,0,0,.25);}
 
   .tabela-entregas{width:100%; min-width:1050px; border-collapse:collapse; font-size:11px; background:#ffffff; border:1px solid #d5a6bd; table-layout:fixed;}
+  .tabela-entregas.largura-percentual{min-width:0; width:100%;}
   .tabela-entregas th{
     text-align:left; padding:7px 8px; border:1px solid #d5a6bd; font-family:var(--font-mono); font-size:9px;
     letter-spacing:.06em; text-transform:uppercase; color:#1f2430; position:sticky; top:0; background:#f0f0f0;
     overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
   .tabela-entregas td{padding:5px 6px; border:1px solid #d5a6bd; vertical-align:middle; overflow:hidden; text-overflow:ellipsis;}
+  .tabela-entregas.condensada th{padding:4px 6px; font-size:8px;}
+  .tabela-entregas.condensada td{padding:0 4px; font-size:10px; line-height:1.5;}
   .tabela-entregas .td-cliente{font-weight:700; white-space:nowrap;}
   .tabela-entregas .td-data{font-weight:700;}
   .tabela-entregas .td-cidade{white-space:nowrap;}
@@ -163,6 +166,11 @@
   .th-filtro-btn{background:none; border:none; cursor:pointer; padding:0 2px; font-size:9px; color:#1f2430; line-height:1;}
   .th-filtro-popup{display:none; position:fixed; background:#fff; border:1px solid #000; border-radius:4px; padding:8px 10px; z-index:2000; box-shadow:0 4px 14px rgba(0,0,0,.3); min-width:140px;}
   .th-filtro-popup.aberto{display:block;}
+  .btn-toggle-tabela{
+    padding:5px 10px; border:1px solid #c7ccd3; border-radius:4px; background:#fff; color:#4b5563;
+    font-size:10.5px; font-family:var(--font-mono); cursor:pointer;
+  }
+  .btn-toggle-tabela.active{background:var(--tarde); color:#fff; border-color:var(--tarde); font-weight:700;}
   .th-filtro-popup label{display:flex; align-items:center; gap:6px; padding:4px 0; font-family:var(--font-ui); font-size:11.5px; text-transform:none; letter-spacing:normal; font-weight:400; color:#1f2430; white-space:nowrap; cursor:pointer;}
   .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:not-allowed;}
 </style>
@@ -259,6 +267,21 @@ let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']);
 let filtroOkSidebar = '';
 let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','VAZIO']);
 let filtroPeriodoTabela = '';
+const TABELA_CONDENSADA_CHAVE = 'vendedoresTabelaCondensada';
+const TABELA_PORCENTAGEM_CHAVE = 'vendedoresTabelaLarguraPorcentagem';
+let tabelaCondensada = localStorage.getItem(TABELA_CONDENSADA_CHAVE) === '1';
+let larguraEmPorcentagem = localStorage.getItem(TABELA_PORCENTAGEM_CHAVE) === '1';
+
+function alternarCondensada_(){
+  tabelaCondensada = !tabelaCondensada;
+  try{ localStorage.setItem(TABELA_CONDENSADA_CHAVE, tabelaCondensada ? '1' : '0'); }catch(e){}
+  renderTabela();
+}
+function alternarLarguraPorcentagem_(){
+  larguraEmPorcentagem = !larguraEmPorcentagem;
+  try{ localStorage.setItem(TABELA_PORCENTAGEM_CHAVE, larguraEmPorcentagem ? '1' : '0'); }catch(e){}
+  renderTabela();
+}
 let ordenacaoData = 'asc';
 let filtroPopupAberto = false;
 let coresStatus = {};
@@ -702,6 +725,8 @@ function renderTabela(ehAtualizacaoAutomatica){
           '<button type="button" class="' + (filtroPeriodoTabela === 'MANHÃ' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'MANHÃ\')">Manhã</button>' +
           '<button type="button" class="' + (filtroPeriodoTabela === 'TARDE' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'TARDE\')">Tarde</button>' +
         '</div>' +
+        '<button type="button" class="btn-toggle-tabela' + (tabelaCondensada ? ' active' : '') + '" onclick="alternarCondensada_()">↕ Condensada</button>' +
+        '<button type="button" class="btn-toggle-tabela' + (larguraEmPorcentagem ? ' active' : '') + '" onclick="alternarLarguraPorcentagem_()" title="' + (larguraEmPorcentagem ? 'Largura fixa: colunas mantêm o tamanho, a tabela rola de lado se não couber' : 'Ajustar à tela: encolhe as colunas proporcionalmente pra caber tudo sem rolar de lado') + '">' + (larguraEmPorcentagem ? '🔒 Largura fixa' : '↔ Ajustar à tela') + '</button>' +
       '</div>' +
       '<div class="legenda">' +
         '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
@@ -711,7 +736,7 @@ function renderTabela(ehAtualizacaoAutomatica){
         '<span><i style="background:' + (coresStatus['ATENCAO']||'#ea9999') + '"></i>Atenção</span>' +
       '</div>' +
     '</div>' +
-    '<table class="tabela-entregas"><thead><tr>' +
+    '<table class="tabela-entregas' + (tabelaCondensada ? ' condensada' : '') + (larguraEmPorcentagem ? ' largura-percentual' : '') + '"><thead><tr>' +
     '<th>Código</th><th>Cliente</th><th>Repr.</th><th>Endereço</th><th>Cidade</th><th>Motorista</th>' +
     '<th class="th-ordenavel" onclick="alternarOrdenacaoData_()">Data <span>' + setaData + '</span></th>' +
     '<th>Período</th>' +
