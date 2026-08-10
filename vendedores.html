@@ -175,6 +175,7 @@
   .tabela-entregas .td-cliente{font-weight:700; white-space:nowrap;}
   .tabela-entregas .td-data{font-weight:700;}
   .tabela-entregas .td-cidade{white-space:nowrap;}
+  .tabela-entregas .td-centro{text-align:center;}
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .th-ordenavel{cursor:pointer; user-select:none;}
   .th-ordenavel:hover{background:#e6e6e6;}
@@ -762,7 +763,7 @@ function corLinhaEntrega_(d){
   if (codigoVazio) return cor('ATENCAO', '#ea9999');
   if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
   if (d.ok === true) return cor('OK', '#cfe2f3');
-  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc');
+  // "Em andamento" não colore a linha inteira — só a célula de Status
   if (status === 'EM FILA') return cor('EM FILA', '#e0c3e8');
   return '';
 }
@@ -772,8 +773,15 @@ function corTextoLinhaEntrega_(d){
   if (status === 'ENTREGUE') return '#0c343d';
   if (codigoVazio) return '';
   if (d.ok === true) return '#1c4587';
-  if (status === 'EM ANDAMENTO') return '#7f6000';
   if (status === 'EM FILA') return '#4c1130';
+  return '';
+}
+function corCelulaStatus_(d){
+  const status = String(d.status || '').trim().toUpperCase();
+  if (status === 'EM ANDAMENTO'){
+    const fundo = coresStatus['EM ANDAMENTO'] || '#fff2cc';
+    return ' style="background:' + fundo + ';color:#7f6000;"';
+  }
   return '';
 }
 
@@ -904,15 +912,15 @@ function renderTabela(ehAtualizacaoAutomatica){
       ? ' style="' + (corLinha ? 'background:' + corLinha + ';' : '') + (corTexto ? 'color:' + corTexto + ';' : '') + '"'
       : '';
     html += '<tr' + estiloLinha + '>' +
-      '<td>' + escapeAttr_(d.codigo) + '</td>' +
+      '<td class="td-centro">' + escapeAttr_(d.codigo) + '</td>' +
       '<td class="td-cliente">' + d.cliente + '</td>' +
-      '<td>' + escapeAttr_(d.representante) + '</td>' +
+      '<td class="td-centro">' + escapeAttr_(d.representante) + '</td>' +
       '<td>' + escapeAttr_(d.endereco) + '</td>' +
-      '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
-      '<td>' + escapeAttr_(d.motorista) + '</td>' +
-      '<td class="td-data">' + formatarDataBR_(d.data) + '</td>' +
-      '<td>' + (d.periodo || '—') + '</td>' +
-      '<td>' + (d.status || '—') + '</td>' +
+      '<td class="td-cidade td-centro">' + (d.cidade || '—') + '</td>' +
+      '<td class="td-centro">' + escapeAttr_(d.motorista) + '</td>' +
+      '<td class="td-data td-centro">' + formatarDataBR_(d.data) + '</td>' +
+      '<td class="td-centro">' + (d.periodo || '—') + '</td>' +
+      '<td class="td-centro"' + corCelulaStatus_(d) + '>' + (d.status || '—') + '</td>' +
       '<td>' + escapeAttr_(d.observacoes) + '</td>' +
       '</tr>';
   });
