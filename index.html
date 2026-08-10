@@ -340,7 +340,10 @@
   }
   #miniMap{
     display:none; height:170px; border-radius:4px; margin-top:8px;
-    border:1px solid var(--line); overflow:hidden;
+    border:1px solid var(--line); overflow:hidden; cursor:grab;
+  }
+  .mini-map-aviso{
+    margin-top:6px; font-size:11px; color:var(--paper-dim); text-align:center;
   }
   .busca-linha{display:flex; gap:8px;}
   .endereco-linha{display:flex; gap:8px;}
@@ -669,6 +672,7 @@
           <button type="button" class="btn-aplicar" onclick="aplicarEndereco()">✓ Aplicar endereço</button>
           <div id="enderecoResultado" class="busca-resultado"></div>
           <div id="miniMap"></div>
+          <div id="miniMapAviso" class="mini-map-aviso"></div>
         </div>
         <div class="field">
           <label for="novoMotorista">Motorista</label>
@@ -757,6 +761,7 @@ let clienteEncontrado = null;
 let enderecoAplicado = ''; // endereço já montado no padrão, depois de clicar "Aplicar"
 let motoristasDisponiveis = [];
 let miniMap = null, miniMapMarker = null;
+let coordsAjustadasManualmente = null; // {lat, lng} — preenchido só se a pessoa arrastar o pino
 let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
 
 function alternarStatusSidebar_(chk){
@@ -1960,6 +1965,7 @@ function abrirModal(){
   document.getElementById('novaCidade').value = '';
   document.getElementById('novoUf').value = '';
   enderecoAplicado = '';
+  coordsAjustadasManualmente = null;
   document.getElementById('novoMotorista').value = '';
   document.getElementById('novaObs').value = '';
   document.getElementById('novaData').value = new Date().toISOString().slice(0,10);
@@ -2149,16 +2155,26 @@ async function aplicarEndereco(){
 function mostrarMiniMap_(lat, lng){
   const container = document.getElementById('miniMap');
   container.style.display = 'block';
+  coordsAjustadasManualmente = null; // reseta — novo endereço aplicado, ajuste antigo não vale mais
+
   if (!miniMap){
     miniMap = L.map('miniMap', { zoomControl:false, attributionControl:false }).setView([lat, lng], 16);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', maxZoom: 20
     }).addTo(miniMap);
-    miniMapMarker = L.marker([lat, lng]).addTo(miniMap);
+    miniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(miniMap);
+    miniMapMarker.on('dragend', function(){
+      const pos = miniMapMarker.getLatLng();
+      coordsAjustadasManualmente = { lat: pos.lat, lng: pos.lng };
+      const aviso = document.getElementById('miniMapAviso');
+      if (aviso) aviso.textContent = '📍 Posição ajustada manualmente — vai ser salva assim.';
+    });
   } else {
     miniMap.setView([lat, lng], 16);
     miniMapMarker.setLatLng([lat, lng]);
   }
+  const aviso = document.getElementById('miniMapAviso');
+  if (aviso) aviso.textContent = 'Arraste o pino se o local não estiver certinho.';
   // o container só passou a ficar visível agora — Leaflet precisa recalcular o tamanho
   setTimeout(function(){ miniMap.invalidateSize(); }, 80);
 }
@@ -2266,6 +2282,14 @@ async function salvarNova(){
     periodo: periodoBtn ? periodoBtn.dataset.p : '',
     observacoes: document.getElementById('novaObs').value.trim()
   };
+  // se a pessoa arrastou o pino no mini-mapa pra corrigir a posição, usa
+  // essa posição exata em vez de geocodificar de novo — e o backend guarda
+  // essa correção, então da próxima vez que alguém usar esse MESMO
+  // endereço, já vem certo direto.
+  if (coordsAjustadasManualmente){
+    dados.latAjustado = coordsAjustadasManualmente.lat;
+    dados.lngAjustado = coordsAjustadasManualmente.lng;
+  }
 
   const btn = document.getElementById('btnSalvarNovo');
   const progressoEl = document.getElementById('salvarProgresso');
