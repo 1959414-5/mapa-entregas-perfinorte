@@ -1571,11 +1571,12 @@ function corLinhaEntrega_(d){
   // vazio (avisos/linhas de atenção, ou qualquer entrega sem código) é
   // SEMPRE vermelho de atenção — não importa o status que tiver (Em fila,
   // Em andamento, vazio, o que for), só perde pro Entregue mesmo.
+  // "Em andamento" NÃO colore a linha inteira — só a célula de Status
+  // (ver corCelulaStatus_), pra facilitar a visualização.
   if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
   if (codigoVazio) return cor('ATENCAO', '#ea9999');
   if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
   if (d.ok === true) return cor('OK', '#cfe2f3');
-  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc'); // amarelinho
   if (status === 'EM FILA') return cor('EM FILA', '#e0c3e8'); // rosa puxado pro roxo
   return '';
 }
@@ -1588,8 +1589,19 @@ function corTextoLinhaEntrega_(d){
   if (status === 'ENTREGUE') return '#0c343d';        // fundo verde
   if (codigoVazio) return '';                          // fundo vermelho de atenção — mantém a cor padrão
   if (d.ok === true) return '#1c4587';                // fundo azul
-  if (status === 'EM ANDAMENTO') return '#7f6000';    // fundo amarelo
   if (status === 'EM FILA') return '#4c1130';         // fundo rosa
+  return '';
+}
+
+// Cor específica só da CÉLULA de Status — usada quando o status é "Em
+// andamento" (não colore a linha inteira, só essa célula, pra facilitar
+// a visualização sem "gritar" na linha toda).
+function corCelulaStatus_(d){
+  const status = String(d.status || '').trim().toUpperCase();
+  if (status === 'EM ANDAMENTO'){
+    const fundo = coresStatus['EM ANDAMENTO'] || '#fff2cc';
+    return ' style="background:' + fundo + ';color:#7f6000;"';
+  }
   return '';
 }
 
@@ -1877,7 +1889,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
       '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
-      '<td><select class="td-input td-status-select" data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
+      '<td><select class="td-input td-status-select"' + corCelulaStatus_(d) + ' data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
       '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" onclick="removerLinha_(this)">🗑</button></td>' +
