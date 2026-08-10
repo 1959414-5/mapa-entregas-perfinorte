@@ -123,6 +123,23 @@
   .pin span{transform:rotate(45deg); font-family:var(--font-mono); font-size:9px; font-weight:700; color:#12161b;}
   .pin.MANHÃ{background:var(--manha);}
   .pin.TARDE{background:var(--tarde);}
+  .pin-origem{
+    width:36px; height:36px; border-radius:50%;
+    background:#1f2530; border:3px solid var(--tarde);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; box-shadow:0 3px 10px rgba(0,0,0,.5);
+  }
+  .pin-motorista{
+    width:34px; height:34px; border-radius:50%;
+    background:#fff; border:3px solid var(--manha);
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; box-shadow:0 3px 10px rgba(0,0,0,.4);
+    animation:pulso-motorista 2s infinite;
+  }
+  @keyframes pulso-motorista{
+    0%, 100%{box-shadow:0 3px 10px rgba(0,0,0,.4);}
+    50%{box-shadow:0 3px 10px rgba(0,0,0,.4), 0 0 0 6px rgba(232,162,61,.25);}
+  }
   .rotulo-cliente{background:#fff; color:#1f2430; border:1px solid rgba(0,0,0,.15); border-radius:5px; padding:2px 7px; font-size:10.5px; font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.25); white-space:nowrap;}
   .rotulo-cliente::before{border-top-color:#fff;}
   .marker-cluster-manha{background:rgba(232,162,61,.5);} .marker-cluster-manha div{background:rgba(232,162,61,.85); color:#1a1305;}
@@ -400,6 +417,77 @@ function pinIcon(periodo){
   const letra = periodo === 'TARDE' ? 'T' : 'M';
   return L.divIcon({ className:'', html:`<div class="pin ${cls}"><span>${letra}</span></div>`, iconSize:[24,24], iconAnchor:[12,24], popupAnchor:[0,-22] });
 }
+
+function origemIcon_(){
+  return L.divIcon({
+    className:'', html:'<div class="pin-origem">🏭</div>',
+    iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20]
+  });
+}
+function motoristaIcon_(){
+  return L.divIcon({
+    className:'', html:'<div class="pin-motorista">🚚</div>',
+    iconSize:[34,34], iconAnchor:[17,17], popupAnchor:[0,-18]
+  });
+}
+function tempoRelativo_(isoTexto){
+  if (!isoTexto) return '';
+  const diffMs = Date.now() - new Date(isoTexto).getTime();
+  const min = Math.round(diffMs / 60000);
+  if (min < 1) return 'agora mesmo';
+  if (min === 1) return 'há 1 min';
+  if (min < 60) return 'há ' + min + ' min';
+  const h = Math.round(min / 60);
+  return 'há ' + h + (h === 1 ? ' hora' : ' horas');
+}
+
+let marcadorPerfinorteFixo = null;
+async function carregarMarcadorPerfinorte_(){
+  if (!API_URL || marcadorPerfinorteFixo) return;
+  try{
+    const res = await chamarAPI_GET_({ formato: 'origemPerfinorte' });
+    if (!res.ok) return;
+    marcadorPerfinorteFixo = L.marker([res.lat, res.lng], { icon: origemIcon_(), zIndexOffset: 500 })
+      .bindPopup('<div class="pop"><h3>🏭 Perfinorte</h3><div class="row">' + (res.endereco || '') + '</div></div>')
+      .addTo(map);
+  }catch(err){}
+}
+
+let markersMotoristas = {};
+async function carregarLocalizacoesMotoristas(){
+  if (!API_URL) return;
+  try{
+    const lista = await chamarAPI_GET_({ formato: 'localizacoesMotoristas' });
+    const agora = Date.now();
+    const vistos = new Set();
+
+    (Array.isArray(lista) ? lista : []).forEach(loc => {
+      const idadeMin = (agora - new Date(loc.atualizadoEm).getTime()) / 60000;
+      if (idadeMin > 20) return;
+
+      vistos.add(loc.motorista);
+      const popupHtml = '<div class="pop"><h3>🚚 ' + loc.motorista + '</h3>' +
+        '<div class="row">Atualizado ' + tempoRelativo_(loc.atualizadoEm) + '</div></div>';
+
+      if (markersMotoristas[loc.motorista]){
+        markersMotoristas[loc.motorista].setLatLng([loc.lat, loc.lng]);
+        markersMotoristas[loc.motorista].setPopupContent(popupHtml);
+      } else {
+        markersMotoristas[loc.motorista] = L.marker([loc.lat, loc.lng], { icon: motoristaIcon_() })
+          .bindPopup(popupHtml)
+          .addTo(map);
+      }
+    });
+
+    Object.keys(markersMotoristas).forEach(nome => {
+      if (!vistos.has(nome)){
+        map.removeLayer(markersMotoristas[nome]);
+        delete markersMotoristas[nome];
+      }
+    });
+  }catch(err){}
+}
+
 function statusClass(status){ return String(status||'').toUpperCase().replace(/\s+/g,''); }
 function formatarDataBR_(iso){
   if (!iso) return '';
@@ -784,9 +872,12 @@ restaurarSidebarDireito_();
 initMap();
 carregarEntregas();
 carregarCoresStatus_();
+carregarMarcadorPerfinorte_();
+carregarLocalizacoesMotoristas();
 
 const INTERVALO_ATUALIZACAO_MS = 10000;
 setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
+setInterval(carregarLocalizacoesMotoristas, 15000);
 </script>
 </body>
 </html>
