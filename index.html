@@ -64,7 +64,7 @@
     background:var(--panel);
     border-left:1px solid var(--line);
     display:flex; flex-direction:column;
-    overflow:hidden;
+    overflow-y:auto; overflow-x:hidden;
     min-width:0;
   }
   #app.sidebar-direito-colapsado #sidebarDireito{border-left:none;}
@@ -1457,6 +1457,7 @@ let filtroPeriodoTabela = ''; // '' = todos — filtro próprio da tabela, não 
 
 function definirPeriodoTabela_(valor){
   filtroPeriodoTabela = valor;
+  salvarPrefsTabela_();
   renderTabela();
 }
 
@@ -1527,6 +1528,27 @@ function iniciarResizeColuna_(e, chave){
 let ordenacaoData = null; // null | 'asc' | 'desc'
 let filtroPopupAberto = false;
 
+/* ----- preferências da tabela (ordenação, filtro de status/período) —
+   sobrevivem a um F5 / fechar e abrir o navegador de novo ----- */
+const TABELA_PREFS_CHAVE = 'mapaTabelaPrefs';
+function salvarPrefsTabela_(){
+  try{
+    localStorage.setItem(TABELA_PREFS_CHAVE, JSON.stringify({
+      ordenacaoData: ordenacaoData,
+      filtroPeriodoTabela: filtroPeriodoTabela,
+      filtroStatusTabela: Array.from(filtroStatusTabela)
+    }));
+  }catch(e){}
+}
+(function carregarPrefsTabela_(){
+  try{
+    const salvo = JSON.parse(localStorage.getItem(TABELA_PREFS_CHAVE) || '{}');
+    if (salvo.ordenacaoData === 'asc' || salvo.ordenacaoData === 'desc') ordenacaoData = salvo.ordenacaoData;
+    if (typeof salvo.filtroPeriodoTabela === 'string') filtroPeriodoTabela = salvo.filtroPeriodoTabela;
+    if (Array.isArray(salvo.filtroStatusTabela)) filtroStatusTabela = new Set(salvo.filtroStatusTabela);
+  }catch(e){}
+})();
+
 function prioridadeStatus_(status){
   const s = String(status || '').trim().toUpperCase();
   if (s === 'ENTREGUE') return 0;
@@ -1559,6 +1581,7 @@ function reposicionarPopupStatus_(botao){
 
 function alternarStatusNoFiltro_(valor, marcado){
   if (marcado) filtroStatusTabela.add(valor); else filtroStatusTabela.delete(valor);
+  salvarPrefsTabela_();
   renderTabela();
   if (filtroPopupAberto){
     const btn = document.querySelector('.th-filtro-btn');
@@ -1582,6 +1605,7 @@ function alternarOrdenacaoData_(){
     if (infoRota) infoRota.style.display = 'none';
   }
   ordenacaoData = ordenacaoData === null ? 'asc' : (ordenacaoData === 'asc' ? 'desc' : null);
+  salvarPrefsTabela_();
   renderTabela();
 }
 
