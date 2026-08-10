@@ -123,6 +123,7 @@
   .pin span{transform:rotate(45deg); font-family:var(--font-mono); font-size:9px; font-weight:700; color:#12161b;}
   .pin.MANHÃ{background:var(--manha);}
   .pin.TARDE{background:var(--tarde);}
+  .pin.INDEFINIDO{background:#8a94a3;}
   .pin-origem{
     width:36px; height:36px; border-radius:50%;
     background:#1f2530; border:3px solid var(--tarde);
@@ -144,6 +145,7 @@
   .rotulo-cliente::before{border-top-color:#fff;}
   .marker-cluster-manha{background:rgba(232,162,61,.5);} .marker-cluster-manha div{background:rgba(232,162,61,.85); color:#1a1305;}
   .marker-cluster-tarde{background:rgba(47,147,163,.5);} .marker-cluster-tarde div{background:rgba(47,147,163,.85); color:#04191c;}
+  .marker-cluster-indefinido{background:rgba(138,148,163,.5);} .marker-cluster-indefinido div{background:rgba(138,148,163,.85); color:#12161b;}
   .marker-cluster-mix{background:rgba(238,241,244,.35);} .marker-cluster-mix div{background:rgba(238,241,244,.85); color:#12161b;}
 
   #config-banner{position:absolute; top:14px; left:14px; right:14px; z-index:1000; background:var(--fila); color:#fff; padding:10px 14px; border-radius:6px; font-size:12.5px; display:none;}
@@ -158,6 +160,16 @@
   .periodo-tabela button{padding:5px 10px; border:none; background:#fff; color:#4b5563; font-size:10.5px; font-family:var(--font-mono); cursor:pointer; border-right:1px solid #c7ccd3;}
   .periodo-tabela button:last-child{border-right:none;}
   .periodo-tabela button.active{background:var(--manha); color:#1a1305; font-weight:700;}
+  .data-tabela{display:flex; align-items:center; gap:5px;}
+  .data-tabela input[type=date]{
+    padding:5px 7px; border:1px solid #c7ccd3; border-radius:4px; color:#1f2430;
+    font-size:10.5px; font-family:var(--font-mono); background:#fff;
+  }
+  .data-tabela span{font-size:10.5px; color:#6b7280;}
+  .data-tabela .btn-limpar-data{
+    padding:5px 8px; border:1px solid #c7ccd3; border-radius:4px; background:#fff;
+    color:#6b7280; font-size:10.5px; font-family:var(--font-mono); cursor:pointer;
+  }
   .legenda{display:flex; gap:12px; flex-wrap:wrap;}
   .legenda span{display:flex; align-items:center; gap:5px; font-size:10.5px; color:#374151;}
   .legenda i{display:inline-block; width:10px; height:10px; border-radius:2px; border:1px solid rgba(0,0,0,.25);}
@@ -281,7 +293,7 @@
  * ===================================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbxq2r5WwP_DxFUpO7jV7XthtIGbTLlie8Od799ehwYANEabahf5TitwIt9RqVhXyft6/exec";
 
-let map, clusterManha, clusterTarde, markersById = {};
+let map, clusterManha, clusterTarde, clusterIndefinido, markersById = {};
 let todasEntregas = [], entregasAtuais = [], entregasParaTabela = [];
 let filtroPeriodo = "";
 let modoAtual = 'mapa';
@@ -290,6 +302,8 @@ let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']);
 let filtroOkSidebar = '';
 let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','VAZIO']);
 let filtroPeriodoTabela = '';
+let filtroDataDeTabela = '';
+let filtroDataAteTabela = '';
 const TABELA_CONDENSADA_CHAVE = 'vendedoresTabelaCondensada';
 const TABELA_PORCENTAGEM_CHAVE = 'vendedoresTabelaLarguraPorcentagem';
 let tabelaCondensada = localStorage.getItem(TABELA_CONDENSADA_CHAVE) === '1';
@@ -401,7 +415,8 @@ const TABELA_PREFS_CHAVE = 'vendedoresTabelaPrefs';
 function salvarPrefsTabela_(){
   try{
     localStorage.setItem(TABELA_PREFS_CHAVE, JSON.stringify({
-      ordenacaoData, filtroPeriodoTabela, filtroStatusTabela: Array.from(filtroStatusTabela)
+      ordenacaoData, filtroPeriodoTabela, filtroStatusTabela: Array.from(filtroStatusTabela),
+      filtroDataDeTabela, filtroDataAteTabela
     }));
   }catch(e){}
 }
@@ -411,6 +426,8 @@ function salvarPrefsTabela_(){
     if (salvo.ordenacaoData === 'asc' || salvo.ordenacaoData === 'desc') ordenacaoData = salvo.ordenacaoData;
     if (typeof salvo.filtroPeriodoTabela === 'string') filtroPeriodoTabela = salvo.filtroPeriodoTabela;
     if (Array.isArray(salvo.filtroStatusTabela)) filtroStatusTabela = new Set(salvo.filtroStatusTabela);
+    if (typeof salvo.filtroDataDeTabela === 'string') filtroDataDeTabela = salvo.filtroDataDeTabela;
+    if (typeof salvo.filtroDataAteTabela === 'string') filtroDataAteTabela = salvo.filtroDataAteTabela;
   }catch(e){}
 })();
 
@@ -453,8 +470,10 @@ function initMap(){
   }).addTo(map);
   clusterManha = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('manha') });
   clusterTarde = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('tarde') });
+  clusterIndefinido = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('indefinido') });
   map.addLayer(clusterManha);
   map.addLayer(clusterTarde);
+  map.addLayer(clusterIndefinido);
 }
 function makeClusterIcon(kind){
   return function(cluster){
@@ -463,8 +482,10 @@ function makeClusterIcon(kind){
   };
 }
 function pinIcon(periodo){
-  const cls = periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
-  const letra = periodo === 'TARDE' ? 'T' : 'M';
+  let cls, letra;
+  if (periodo === 'TARDE'){ cls = 'TARDE'; letra = 'T'; }
+  else if (periodo === 'MANHÃ'){ cls = 'MANHÃ'; letra = 'M'; }
+  else { cls = 'INDEFINIDO'; letra = 'I'; }
   return L.divIcon({ className:'', html:`<div class="pin ${cls}"><span>${letra}</span></div>`, iconSize:[24,24], iconAnchor:[12,24], popupAnchor:[0,-22] });
 }
 
@@ -614,8 +635,10 @@ function aplicarFiltros(ajustarZoom){
   const motorista = document.getElementById('motoristaSelect').value;
 
   entregasAtuais = todasEntregas.filter(d => {
-    if (dataDe && d.data && d.data < dataDe) return false;
-    if (dataAte && d.data && d.data > dataAte) return false;
+    // sem data, não aparece no mapa (continua na tabela normalmente)
+    if (!d.data) return false;
+    if (dataDe && d.data < dataDe) return false;
+    if (dataAte && d.data > dataAte) return false;
     if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
     if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
     const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
@@ -644,6 +667,7 @@ function render(ajustarZoom){
   if (ajustarZoom === undefined) ajustarZoom = true;
   clusterManha.clearLayers();
   clusterTarde.clearLayers();
+  clusterIndefinido.clearLayers();
   markersById = {};
 
   const list = document.getElementById('list');
@@ -686,7 +710,8 @@ function render(ajustarZoom){
         <span class="status ${statusClass(d.status)}">${d.status || '—'}</span>
       </div>
     `);
-    (d.periodo === 'TARDE' ? clusterTarde : clusterManha).addLayer(marker);
+    const clusterAlvo = d.periodo === 'TARDE' ? clusterTarde : (d.periodo === 'MANHÃ' ? clusterManha : clusterIndefinido);
+    clusterAlvo.addLayer(marker);
     markersById[i] = marker;
     bounds.push([d.lat, d.lng]);
   });
@@ -705,10 +730,11 @@ function focarEntrega(i){
   if (!marker) return;
   const ll = marker.getLatLng();
   map.setView(ll, 15, { animate:true });
-  const parent = clusterManha.getVisibleParent(marker) || clusterTarde.getVisibleParent(marker);
+  const parent = clusterManha.getVisibleParent(marker) || clusterTarde.getVisibleParent(marker) || clusterIndefinido.getVisibleParent(marker);
   if (parent && parent !== marker){
     clusterManha.zoomToShowLayer(marker, () => marker.openPopup());
     clusterTarde.zoomToShowLayer(marker, () => marker.openPopup());
+    clusterIndefinido.zoomToShowLayer(marker, () => marker.openPopup());
   } else {
     marker.openPopup();
   }
@@ -790,6 +816,17 @@ function definirPeriodoTabela_(valor){
   salvarPrefsTabela_();
   renderTabela();
 }
+function definirDataTabela_(){
+  filtroDataDeTabela = document.getElementById('tabelaDataDe').value;
+  filtroDataAteTabela = document.getElementById('tabelaDataAte').value;
+  salvarPrefsTabela_();
+  renderTabela();
+}
+function limparDataTabela_(){
+  document.getElementById('tabelaDataDe').value = '';
+  document.getElementById('tabelaDataAte').value = '';
+  definirDataTabela_();
+}
 function alternarStatusNoFiltro_(valor, marcado){
   if (marcado) filtroStatusTabela.add(valor); else filtroStatusTabela.delete(valor);
   salvarPrefsTabela_();
@@ -837,6 +874,8 @@ function renderTabela(ehAtualizacaoAutomatica){
     const chave = String(d.status || '').trim().toUpperCase() || 'VAZIO';
     if (!filtroStatusTabela.has(chave)) return false;
     if (filtroPeriodoTabela && d.periodo !== filtroPeriodoTabela) return false;
+    if (filtroDataDeTabela && d.data && d.data < filtroDataDeTabela) return false;
+    if (filtroDataAteTabela && d.data && d.data > filtroDataAteTabela) return false;
     return true;
   });
 
@@ -865,6 +904,12 @@ function renderTabela(ehAtualizacaoAutomatica){
   let html = '<div class="tabela-toolbar">' +
       '<span class="contagem">' + lista.length + ' de ' + entregasParaTabela.length + ' entrega(s)</span>' +
       '<div class="tabela-controles">' +
+        '<div class="data-tabela">' +
+          '<input type="date" id="tabelaDataDe" value="' + filtroDataDeTabela + '" onchange="definirDataTabela_()">' +
+          '<span>→</span>' +
+          '<input type="date" id="tabelaDataAte" value="' + filtroDataAteTabela + '" onchange="definirDataTabela_()">' +
+          ((filtroDataDeTabela || filtroDataAteTabela) ? '<button type="button" class="btn-limpar-data" onclick="limparDataTabela_()">✕</button>' : '') +
+        '</div>' +
         '<div class="periodo-tabela">' +
           '<button type="button" class="' + (filtroPeriodoTabela === '' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'\')">Todos</button>' +
           '<button type="button" class="' + (filtroPeriodoTabela === 'MANHÃ' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'MANHÃ\')">Manhã</button>' +
