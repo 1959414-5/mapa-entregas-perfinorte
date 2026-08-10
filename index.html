@@ -1564,14 +1564,19 @@ async function carregarCoresStatus_(){
 
 function corLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
+  const codigoVazio = !String(d.codigo || '').trim();
   const cor = function(chave, reserva){ return coresStatus[chave] || reserva; };
 
-  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
+  // Entregue é sempre prioridade máxima. Logo depois, código de cliente
+  // vazio (avisos/linhas de atenção, ou qualquer entrega sem código) é
+  // SEMPRE vermelho de atenção — não importa o status que tiver (Em fila,
+  // Em andamento, vazio, o que for), só perde pro Entregue mesmo.
   if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
+  if (codigoVazio) return cor('ATENCAO', '#ea9999');
+  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
   if (d.ok === true) return cor('OK', '#cfe2f3');
   if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc'); // amarelinho
   if (status === 'EM FILA') return cor('EM FILA', '#e0c3e8'); // rosa puxado pro roxo
-  if (!status && d.data) return cor('ATENCAO', '#ea9999'); // sem status mas com data prevista — precisa de atenção
   return '';
 }
 
@@ -1579,7 +1584,9 @@ function corLinhaEntrega_(d){
 // de corLinhaEntrega_ pra sempre bater com a cor de fundo escolhida.
 function corTextoLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
-  if (status === 'ENTREGUE') return '#0c343d';       // fundo verde
+  const codigoVazio = !String(d.codigo || '').trim();
+  if (status === 'ENTREGUE') return '#0c343d';        // fundo verde
+  if (codigoVazio) return '';                          // fundo vermelho de atenção — mantém a cor padrão
   if (d.ok === true) return '#1c4587';                // fundo azul
   if (status === 'EM ANDAMENTO') return '#7f6000';    // fundo amarelo
   if (status === 'EM FILA') return '#4c1130';         // fundo rosa
