@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Entregas — Vendedores · Perfinorte</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+<style>
+  :root{
+    --ink:#12161b; --panel:#181d24; --panel-2:#1f2530; --line:#2a313c;
+    --paper:#eef1f4; --paper-dim:#aab3bf;
+    --manha:#e8a23d; --tarde:#2f93a3; --entregue:#5fae72; --fila:#d8622f;
+    --font-ui: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);font-family:var(--font-ui);}
+  #app{display:grid;grid-template-columns:300px 1fr 280px;height:100vh;transition:grid-template-columns .18s ease;}
+  #app.sidebar-colapsado{grid-template-columns:0px 1fr 280px;}
+  #app.sidebar-direito-colapsado{grid-template-columns:300px 1fr 0px;}
+  #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:0px 1fr 0px;}
+  #app.tabela-ativa{grid-template-columns:300px 1fr 0px;}
+  #app.tabela-ativa.sidebar-colapsado{grid-template-columns:0px 1fr 0px;}
+
+  #sidebar{background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-width:0;}
+  #sidebar > *{min-width:300px;}
+  #sidebarToggle{
+    position:fixed; top:50%; left:300px; transform:translateY(-50%);
+    width:22px; height:44px; margin-left:-1px; background:var(--panel); border:1px solid var(--line);
+    color:var(--paper-dim); cursor:pointer; border-radius:0 6px 6px 0;
+    display:flex; align-items:center; justify-content:center; z-index:1500; font-size:12px;
+    transition:left .18s ease;
+  }
+  #app.sidebar-colapsado #sidebarToggle{left:0;}
+
+  #sidebarDireito{background:var(--panel); border-left:1px solid var(--line); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-width:0;}
+  #sidebarDireito > *{min-width:280px;}
+  #sidebarDireitoToggle{
+    position:fixed; top:50%; right:280px; transform:translateY(-50%);
+    width:22px; height:44px; margin-right:-1px; background:var(--panel); border:1px solid var(--line);
+    color:var(--paper-dim); cursor:pointer; border-radius:6px 0 0 6px;
+    display:flex; align-items:center; justify-content:center; z-index:1500; font-size:12px;
+    transition:right .18s ease;
+  }
+  #app.sidebar-direito-colapsado #sidebarDireitoToggle{right:0;}
+
+  .brand{padding:18px 20px 14px; border-bottom:1px solid var(--line);}
+  .brand .eyebrow{font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; color:var(--paper-dim); text-transform:uppercase;}
+  .brand h1{margin:4px 0 0; font-size:17px; font-weight:700;}
+  .brand .tag-somente-ver{
+    display:inline-block; margin-top:8px; padding:3px 9px; border-radius:20px;
+    background:rgba(232,162,61,.15); color:var(--manha); font-size:10px;
+    font-family:var(--font-mono); letter-spacing:.05em; text-transform:uppercase;
+  }
+  .view-toggle{display:flex; gap:6px; margin-top:10px;}
+  .view-toggle button{
+    flex:1; padding:7px 6px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--paper-dim);
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:.05em; cursor:pointer;
+  }
+  .view-toggle button.active{background:var(--paper); color:var(--ink); border-color:var(--paper);}
+
+  .controls{padding:16px 20px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:12px;}
+  .field label{display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--paper-dim); margin-bottom:5px;}
+  .field select, .field input[type=date]{
+    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--paper);
+    padding:8px 10px; border-radius:4px; font-size:13px; font-family:var(--font-ui);
+  }
+  .date-range{display:flex; align-items:center; gap:6px;}
+  .date-range input{flex:1; min-width:0;}
+  .date-range-sep{color:var(--paper-dim); font-size:11px; flex-shrink:0;}
+  .date-atalhos{display:flex; gap:6px; margin-top:6px;}
+  .date-atalhos button{
+    flex:1; padding:5px 6px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--paper-dim); font-family:var(--font-mono); font-size:10px; cursor:pointer;
+  }
+  .period-toggle{display:flex; gap:6px;}
+  .period-toggle button{
+    flex:1; padding:8px 6px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--paper-dim); font-family:var(--font-mono); font-size:11px; cursor:pointer;
+  }
+  .period-toggle button.active[data-p="MANHÃ"]{background:var(--manha);color:#1a1305;border-color:var(--manha);}
+  .period-toggle button.active[data-p="TARDE"]{background:var(--tarde);color:#04191c;border-color:var(--tarde);}
+  .period-toggle button.active[data-p=""]{background:var(--paper);color:var(--ink);border-color:var(--paper);}
+  .period-toggle button.active[data-ok=""]{background:var(--paper);color:var(--ink);border-color:var(--paper);}
+  .period-toggle button.active[data-ok="sim"]{background:var(--entregue);color:#0c2e13;border-color:var(--entregue);}
+  .period-toggle button.active[data-ok="nao"]{background:var(--fila);color:#3a1600;border-color:var(--fila);}
+
+  .status-filtro-sidebar{display:flex; flex-direction:column; gap:6px; background:var(--panel-2); border:1px solid var(--line); border-radius:4px; padding:8px 10px;}
+  .status-filtro-sidebar label{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--paper); cursor:pointer;}
+  .status-filtro-sidebar input[type=checkbox]{accent-color:var(--manha); width:14px; height:14px; cursor:pointer;}
+
+  .summary{padding:14px 20px; display:flex; gap:10px; border-bottom:1px solid var(--line);}
+  .summary .stat{flex:1; text-align:left;}
+  .summary .stat .n{font-family:var(--font-mono); font-size:20px; font-weight:700;}
+  .summary .stat .l{font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--paper-dim); margin-top:2px;}
+  .summary .stat.geo-warn .n{color:var(--fila);}
+
+  #list{flex:1; overflow-y:auto; padding:6px 0;}
+  .item{padding:10px 20px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .item:hover{background:var(--panel-2);}
+  .item .top{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .item .cliente{font-weight:600; font-size:13px;}
+  .item .badge{font-family:var(--font-mono); font-size:9px; letter-spacing:.06em; padding:2px 6px; border-radius:3px; white-space:nowrap;}
+  .badge.MANHÃ{background:rgba(232,162,61,.16); color:var(--manha);}
+  .badge.TARDE{background:rgba(47,147,163,.16); color:var(--tarde);}
+  .item .meta{margin-top:3px; font-size:11px; color:var(--paper-dim);}
+  .item .meta .dot{margin:0 5px; opacity:.5;}
+  .item .status{display:inline-block; margin-top:5px; font-family:var(--font-mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase;}
+  .empty, .loading{padding:40px 20px; text-align:center; color:var(--paper-dim); font-size:13px;}
+  .empty .big, .loading .big{font-size:26px; margin-bottom:8px;}
+
+  #map{height:100vh; background:#f2efe9;}
+  .leaflet-tile-container{transform:scale(1.0005);}
+  .leaflet-popup-content-wrapper{background:var(--panel); color:var(--paper); border-radius:6px; border:1px solid var(--line);}
+  .leaflet-popup-tip{background:var(--panel);}
+  .pop h3{margin:0 0 4px; font-size:14px;}
+  .pop .row{font-size:12px; color:var(--paper-dim); margin-top:2px;}
+  .pop .row b{color:var(--paper); font-weight:600;}
+  .pin{width:24px; height:24px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; border:2px solid rgba(0,0,0,.35); box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  .pin span{transform:rotate(45deg); font-family:var(--font-mono); font-size:9px; font-weight:700; color:#12161b;}
+  .pin.MANHÃ{background:var(--manha);}
+  .pin.TARDE{background:var(--tarde);}
+  .rotulo-cliente{background:#fff; color:#1f2430; border:1px solid rgba(0,0,0,.15); border-radius:5px; padding:2px 7px; font-size:10.5px; font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.25); white-space:nowrap;}
+  .rotulo-cliente::before{border-top-color:#fff;}
+  .marker-cluster-manha{background:rgba(232,162,61,.5);} .marker-cluster-manha div{background:rgba(232,162,61,.85); color:#1a1305;}
+  .marker-cluster-tarde{background:rgba(47,147,163,.5);} .marker-cluster-tarde div{background:rgba(47,147,163,.85); color:#04191c;}
+  .marker-cluster-mix{background:rgba(238,241,244,.35);} .marker-cluster-mix div{background:rgba(238,241,244,.85); color:#12161b;}
+
+  #config-banner{position:absolute; top:14px; left:14px; right:14px; z-index:1000; background:var(--fila); color:#fff; padding:10px 14px; border-radius:6px; font-size:12.5px; display:none;}
+
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+  #tableView{display:none; height:100vh; overflow:auto; padding:20px; background:#ffffff; color:#1f2430;}
+  .tabela-toolbar{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;}
+  .tabela-toolbar .contagem{font-family:var(--font-mono); font-size:11px; color:#4b5563;}
+  .tabela-controles{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .periodo-tabela{display:flex; border:1px solid #c7ccd3; border-radius:4px; overflow:hidden;}
+  .periodo-tabela button{padding:5px 10px; border:none; background:#fff; color:#4b5563; font-size:10.5px; font-family:var(--font-mono); cursor:pointer; border-right:1px solid #c7ccd3;}
+  .periodo-tabela button:last-child{border-right:none;}
+  .periodo-tabela button.active{background:var(--manha); color:#1a1305; font-weight:700;}
+  .legenda{display:flex; gap:12px; flex-wrap:wrap;}
+  .legenda span{display:flex; align-items:center; gap:5px; font-size:10.5px; color:#374151;}
+  .legenda i{display:inline-block; width:10px; height:10px; border-radius:2px; border:1px solid rgba(0,0,0,.25);}
+
+  .tabela-entregas{width:100%; min-width:1050px; border-collapse:collapse; font-size:11px; background:#ffffff; border:1px solid #d5a6bd; table-layout:fixed;}
+  .tabela-entregas th{
+    text-align:left; padding:7px 8px; border:1px solid #d5a6bd; font-family:var(--font-mono); font-size:9px;
+    letter-spacing:.06em; text-transform:uppercase; color:#1f2430; position:sticky; top:0; background:#f0f0f0;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  }
+  .tabela-entregas td{padding:5px 6px; border:1px solid #d5a6bd; vertical-align:middle; overflow:hidden; text-overflow:ellipsis;}
+  .tabela-entregas .td-cliente{font-weight:700; white-space:nowrap;}
+  .tabela-entregas .td-data{font-weight:700;}
+  .tabela-entregas .td-cidade{white-space:nowrap;}
+  .tabela-entregas .td-check{text-align:center; width:34px;}
+  .th-ordenavel{cursor:pointer; user-select:none;}
+  .th-ordenavel:hover{background:#e6e6e6;}
+  .th-status{position:relative;}
+  .th-status-linha{display:flex; align-items:center; gap:4px;}
+  .th-filtro-btn{background:none; border:none; cursor:pointer; padding:0 2px; font-size:9px; color:#1f2430; line-height:1;}
+  .th-filtro-popup{display:none; position:fixed; background:#fff; border:1px solid #000; border-radius:4px; padding:8px 10px; z-index:2000; box-shadow:0 4px 14px rgba(0,0,0,.3); min-width:140px;}
+  .th-filtro-popup.aberto{display:block;}
+  .th-filtro-popup label{display:flex; align-items:center; gap:6px; padding:4px 0; font-family:var(--font-ui); font-size:11.5px; text-transform:none; letter-spacing:normal; font-weight:400; color:#1f2430; white-space:nowrap; cursor:pointer;}
+  .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:not-allowed;}
+</style>
+</head>
+<body>
+<div id="app">
+  <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="eyebrow">Perfinorte · Expedição · <span id="ultimaAtualizacao"></span></div>
+      <h1>Mapa de Entregas</h1>
+      <span class="tag-somente-ver">👁 Somente visualização</span>
+      <div class="view-toggle">
+        <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
+        <button id="btnVerTabela" onclick="mostrarView('tabela')">📋 Tabela</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="field">
+        <label>Data (previsão)</label>
+        <div class="date-range">
+          <input type="date" id="dataDeInput">
+          <span class="date-range-sep">→</span>
+          <input type="date" id="dataAteInput">
+        </div>
+        <div class="date-atalhos">
+          <button type="button" onclick="definirDataAtalho_('hoje')">Hoje</button>
+          <button type="button" onclick="definirDataAtalho_('amanha')">Amanhã</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Período</label>
+        <div class="period-toggle" id="periodoToggle">
+          <button data-p="" class="active">TODOS</button>
+          <button data-p="MANHÃ">MANHÃ</button>
+          <button data-p="TARDE">TARDE</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="motoristaSelect">Motorista</label>
+        <select id="motoristaSelect"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label>Status <small style="text-transform:none; opacity:.6;">(só afeta o mapa)</small></label>
+        <div class="status-filtro-sidebar" id="statusFiltroSidebar">
+          <label><input type="checkbox" value="ENTREGUE" checked onchange="alternarStatusSidebar_(this)"> Entregue</label>
+          <label><input type="checkbox" value="EM ANDAMENTO" checked onchange="alternarStatusSidebar_(this)"> Em andamento</label>
+          <label><input type="checkbox" value="EM FILA" checked onchange="alternarStatusSidebar_(this)"> Em fila</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pedido pronto <small style="text-transform:none; opacity:.6;">(só afeta o mapa)</small></label>
+        <div class="period-toggle" id="okToggle">
+          <button type="button" data-ok="" class="active" onclick="definirFiltroOk_('')">Todos</button>
+          <button type="button" data-ok="sim" onclick="definirFiltroOk_('sim')">✓ Prontos</button>
+          <button type="button" data-ok="nao" onclick="definirFiltroOk_('nao')">✗ Não prontos</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="position:relative;">
+    <div id="config-banner">Configure a URL da API no início do arquivo (constante <code>API_URL</code>).</div>
+    <div id="map"></div>
+    <div id="tableView"><div id="tabelaContainer"></div></div>
+  </main>
+
+  <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
+  <aside id="sidebarDireito">
+    <div class="summary">
+      <div class="stat"><div class="n" id="statTotal">–</div><div class="l">Entregas</div></div>
+      <div class="stat"><div class="n" id="statCidades">–</div><div class="l">Cidades</div></div>
+      <div class="stat geo-warn"><div class="n" id="statSemGeo">–</div><div class="l">Sem endereço</div></div>
+    </div>
+    <div id="list"><div class="loading"><div class="big">⏳</div>Carregando entregas…</div></div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+/* =====================================================================
+ * COLE AQUI A MESMA URL DO /exec usada no Mapa.html.
+ * ===================================================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbxq2r5WwP_DxFUpO7jV7XthtIGbTLlie8Od799ehwYANEabahf5TitwIt9RqVhXyft6/exec";
+
+let map, clusterManha, clusterTarde, markersById = {};
+let todasEntregas = [], entregasAtuais = [], entregasParaTabela = [];
+let filtroPeriodo = "";
+let modoAtual = 'mapa';
+let motoristasDisponiveis = [];
+let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']);
+let filtroOkSidebar = '';
+let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','VAZIO']);
+let filtroPeriodoTabela = '';
+let ordenacaoData = 'asc';
+let filtroPopupAberto = false;
+let coresStatus = {};
+
+async function chamarAPI_GET_(params){
+  const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
+  const qs = new URLSearchParams(comCacheBusting).toString();
+  const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
+  return await resp.json();
+}
+
+function mostrarToast(){} // sem toasts nesse painel — é só visualização
+
+/* ----- preferências (sobrevivem a um F5) ----- */
+const PREF_CHAVE = 'vendedoresMapaPrefs';
+function salvarPreferencias(){
+  try{
+    localStorage.setItem(PREF_CHAVE, JSON.stringify({
+      dataDe: document.getElementById('dataDeInput').value,
+      dataAte: document.getElementById('dataAteInput').value,
+      periodo: filtroPeriodo,
+      motorista: document.getElementById('motoristaSelect').value,
+      status: Array.from(filtroStatusSidebar),
+      ok: filtroOkSidebar
+    }));
+  }catch(e){}
+}
+function carregarPreferencias(){
+  const hoje = new Date().toISOString().slice(0,10);
+  let salvo = {};
+  try{ salvo = JSON.parse(localStorage.getItem(PREF_CHAVE) || '{}'); }catch(e){ salvo = {}; }
+  document.getElementById('dataDeInput').value = salvo.dataDe || hoje;
+  document.getElementById('dataAteInput').value = salvo.dataAte || hoje;
+  if (salvo.periodo){
+    filtroPeriodo = salvo.periodo;
+    document.querySelectorAll('#periodoToggle button').forEach(b=>b.classList.toggle('active', b.dataset.p === salvo.periodo));
+  }
+  window.__motoristaSalvo = salvo.motorista || '';
+  if (Array.isArray(salvo.status)){
+    filtroStatusSidebar = new Set(salvo.status);
+    document.querySelectorAll('#statusFiltroSidebar input[type=checkbox]').forEach(chk => chk.checked = filtroStatusSidebar.has(chk.value));
+  }
+  if (typeof salvo.ok === 'string'){
+    filtroOkSidebar = salvo.ok;
+    document.querySelectorAll('#okToggle button').forEach(b => b.classList.toggle('active', b.dataset.ok === salvo.ok));
+  }
+}
+
+const TABELA_PREFS_CHAVE = 'vendedoresTabelaPrefs';
+function salvarPrefsTabela_(){
+  try{
+    localStorage.setItem(TABELA_PREFS_CHAVE, JSON.stringify({
+      ordenacaoData, filtroPeriodoTabela, filtroStatusTabela: Array.from(filtroStatusTabela)
+    }));
+  }catch(e){}
+}
+(function carregarPrefsTabela_(){
+  try{
+    const salvo = JSON.parse(localStorage.getItem(TABELA_PREFS_CHAVE) || '{}');
+    if (salvo.ordenacaoData === 'asc' || salvo.ordenacaoData === 'desc') ordenacaoData = salvo.ordenacaoData;
+    if (typeof salvo.filtroPeriodoTabela === 'string') filtroPeriodoTabela = salvo.filtroPeriodoTabela;
+    if (Array.isArray(salvo.filtroStatusTabela)) filtroStatusTabela = new Set(salvo.filtroStatusTabela);
+  }catch(e){}
+})();
+
+const SIDEBAR_CHAVE = 'vendedoresSidebarColapsado';
+function restaurarSidebar_(){
+  let colapsado = false;
+  try{ colapsado = localStorage.getItem(SIDEBAR_CHAVE) === '1'; }catch(e){}
+  document.getElementById('app').classList.toggle('sidebar-colapsado', colapsado);
+  document.getElementById('sidebarToggle').textContent = colapsado ? '›' : '‹';
+}
+function alternarSidebar(){
+  const app = document.getElementById('app');
+  app.classList.toggle('sidebar-colapsado');
+  const colapsado = app.classList.contains('sidebar-colapsado');
+  document.getElementById('sidebarToggle').textContent = colapsado ? '›' : '‹';
+  try{ localStorage.setItem(SIDEBAR_CHAVE, colapsado ? '1' : '0'); }catch(e){}
+  setTimeout(function(){ if (map) map.invalidateSize(); }, 200);
+}
+
+const SIDEBAR_DIREITO_CHAVE = 'vendedoresSidebarDireitoColapsado';
+function restaurarSidebarDireito_(){
+  let colapsado = false;
+  try{ colapsado = localStorage.getItem(SIDEBAR_DIREITO_CHAVE) === '1'; }catch(e){}
+  document.getElementById('app').classList.toggle('sidebar-direito-colapsado', colapsado);
+  document.getElementById('sidebarDireitoToggle').textContent = colapsado ? '‹' : '›';
+}
+function alternarSidebarDireito_(){
+  const app = document.getElementById('app');
+  app.classList.toggle('sidebar-direito-colapsado');
+  const colapsado = app.classList.contains('sidebar-direito-colapsado');
+  document.getElementById('sidebarDireitoToggle').textContent = colapsado ? '‹' : '›';
+  try{ localStorage.setItem(SIDEBAR_DIREITO_CHAVE, colapsado ? '1' : '0'); }catch(e){}
+  setTimeout(function(){ if (map) map.invalidateSize(); }, 200);
+}
+
+function initMap(){
+  map = L.map('map', { zoomControl:true }).setView([-23.42, -52.0], 8);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 20
+  }).addTo(map);
+  clusterManha = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('manha') });
+  clusterTarde = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('tarde') });
+  map.addLayer(clusterManha);
+  map.addLayer(clusterTarde);
+}
+function makeClusterIcon(kind){
+  return function(cluster){
+    const count = cluster.getChildCount();
+    return L.divIcon({ html: `<div>${count}</div>`, className: 'marker-cluster marker-cluster-' + kind, iconSize: L.point(36,36) });
+  };
+}
+function pinIcon(periodo){
+  const cls = periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
+  const letra = periodo === 'TARDE' ? 'T' : 'M';
+  return L.divIcon({ className:'', html:`<div class="pin ${cls}"><span>${letra}</span></div>`, iconSize:[24,24], iconAnchor:[12,24], popupAnchor:[0,-22] });
+}
+function statusClass(status){ return String(status||'').toUpperCase().replace(/\s+/g,''); }
+function formatarDataBR_(iso){
+  if (!iso) return '';
+  const p = iso.split('-');
+  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
+}
+function escapeAttr_(s){ return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+async function carregarEntregas(){
+  const primeiraCarga = todasEntregas.length === 0;
+  if (primeiraCarga){
+    document.getElementById('list').innerHTML = '<div class="loading"><div class="big">⏳</div>Carregando entregas…</div>';
+  }
+  if (!API_URL){
+    document.getElementById('config-banner').style.display = 'block';
+    return;
+  }
+  try{
+    const dados = await chamarAPI_GET_({ formato: 'dados' });
+    todasEntregas = Array.isArray(dados) ? dados : [];
+    document.getElementById('ultimaAtualizacao').textContent = 'atualizado ' + new Date().toLocaleTimeString('pt-BR');
+    populaMotoristas();
+    aplicarFiltros(primeiraCarga);
+  }catch(err){
+    if (primeiraCarga){
+      document.getElementById('list').innerHTML = '<div class="empty"><div class="big">⚠</div>Não foi possível carregar os dados.</div>';
+    }
+  }
+}
+
+async function carregarCoresStatus_(){
+  if (!API_URL) return;
+  try{
+    const cores = await chamarAPI_GET_({ formato: 'coresStatus' });
+    coresStatus = (cores && typeof cores === 'object') ? cores : {};
+  }catch(e){}
+}
+
+function definirDataAtalho_(qual){
+  const hoje = new Date().toISOString().slice(0,10);
+  if (qual === 'hoje'){
+    document.getElementById('dataDeInput').value = hoje;
+    document.getElementById('dataAteInput').value = hoje;
+    aplicarFiltros();
+  } else if (qual === 'amanha'){
+    chamarAPI_GET_({ formato: 'proximoDiaUtil' }).then(res => {
+      const data = (res && res.data) || hoje;
+      document.getElementById('dataDeInput').value = data;
+      document.getElementById('dataAteInput').value = data;
+      aplicarFiltros();
+    }).catch(() => {
+      document.getElementById('dataDeInput').value = hoje;
+      document.getElementById('dataAteInput').value = hoje;
+      aplicarFiltros();
+    });
+  }
+}
+
+function alternarStatusSidebar_(chk){
+  if (chk.checked) filtroStatusSidebar.add(chk.value); else filtroStatusSidebar.delete(chk.value);
+  aplicarFiltros();
+}
+function definirFiltroOk_(valor){
+  filtroOkSidebar = valor;
+  document.querySelectorAll('#okToggle button').forEach(b => b.classList.toggle('active', b.dataset.ok === valor));
+  salvarPreferencias();
+  aplicarFiltros();
+}
+
+function aplicarFiltros(ajustarZoom){
+  if (ajustarZoom === undefined) ajustarZoom = true;
+  const dataDe = document.getElementById('dataDeInput').value;
+  const dataAte = document.getElementById('dataAteInput').value;
+  const motorista = document.getElementById('motoristaSelect').value;
+
+  entregasAtuais = todasEntregas.filter(d => {
+    if (dataDe && d.data && d.data < dataDe) return false;
+    if (dataAte && d.data && d.data > dataAte) return false;
+    if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
+    if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
+    const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
+    if (!filtroStatusSidebar.has(chaveStatus)) return false;
+    if (filtroOkSidebar === 'sim' && d.ok !== true) return false;
+    if (filtroOkSidebar === 'nao' && d.ok === true) return false;
+    return true;
+  });
+
+  entregasParaTabela = todasEntregas;
+
+  salvarPreferencias();
+  if (modoAtual === 'tabela') renderTabela(ajustarZoom === false); else render(ajustarZoom);
+}
+
+function populaMotoristas(){
+  const sel = document.getElementById('motoristaSelect');
+  const atual = sel.value || window.__motoristaSalvo || '';
+  const nomes = [...new Set(todasEntregas.map(d=>d.motorista).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos</option>' + nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
+  sel.value = atual;
+  window.__motoristaSalvo = '';
+}
+
+function render(ajustarZoom){
+  if (ajustarZoom === undefined) ajustarZoom = true;
+  clusterManha.clearLayers();
+  clusterTarde.clearLayers();
+  markersById = {};
+
+  const list = document.getElementById('list');
+  const cidades = new Set();
+  let semGeo = 0;
+  const bounds = [];
+
+  if (!entregasAtuais.length){
+    list.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>para esses filtros.</div>';
+  } else {
+    list.innerHTML = entregasAtuais.map((d, i) => {
+      const badgeClass = d.periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
+      const semEndereco = (d.lat == null || d.lng == null);
+      return `
+        <div class="item" data-idx="${i}" onclick="focarEntrega(${i})">
+          <div class="top">
+            <span class="cliente">${d.cliente}</span>
+            <span class="badge ${badgeClass}">${d.periodo || '—'}</span>
+          </div>
+          <div class="meta">${d.cidade || '—'}<span class="dot">·</span>${d.motorista || '—'}</div>
+          <span class="status ${statusClass(d.status)}">${d.status || '—'}</span>
+          ${semEndereco ? '' : ''}
+        </div>`;
+    }).join('');
+  }
+
+  entregasAtuais.forEach((d, i) => {
+    if (d.cidade) cidades.add(d.cidade);
+    if (d.lat == null || d.lng == null){ semGeo++; return; }
+    const icone = pinIcon(d.periodo);
+    const marker = L.marker([d.lat, d.lng], { icon: icone });
+    marker.bindTooltip(escapeAttr_(d.cliente), { permanent: true, direction: 'top', offset: [0, -22], className: 'rotulo-cliente' });
+    marker.bindPopup(`
+      <div class="pop">
+        <h3>${d.cliente}</h3>
+        <div class="row"><b>Endereço:</b> ${d.endereco}</div>
+        <div class="row"><b>Motorista:</b> ${d.motorista || '—'}</div>
+        <div class="row"><b>Data:</b> ${formatarDataBR_(d.data) || '—'} · ${d.periodo || '—'}</div>
+        ${d.observacoes ? `<div class="row"><b>Obs:</b> ${d.observacoes}</div>` : ''}
+        <span class="status ${statusClass(d.status)}">${d.status || '—'}</span>
+      </div>
+    `);
+    (d.periodo === 'TARDE' ? clusterTarde : clusterManha).addLayer(marker);
+    markersById[i] = marker;
+    bounds.push([d.lat, d.lng]);
+  });
+
+  document.getElementById('statTotal').textContent = entregasAtuais.length;
+  document.getElementById('statCidades').textContent = cidades.size;
+  document.getElementById('statSemGeo').textContent = semGeo;
+
+  if (ajustarZoom && bounds.length){
+    map.fitBounds(bounds, { padding:[40,40], maxZoom:13 });
+  }
+}
+
+function focarEntrega(i){
+  const marker = markersById[i];
+  if (!marker) return;
+  const ll = marker.getLatLng();
+  map.setView(ll, 15, { animate:true });
+  const parent = clusterManha.getVisibleParent(marker) || clusterTarde.getVisibleParent(marker);
+  if (parent && parent !== marker){
+    clusterManha.zoomToShowLayer(marker, () => marker.openPopup());
+    clusterTarde.zoomToShowLayer(marker, () => marker.openPopup());
+  } else {
+    marker.openPopup();
+  }
+}
+
+document.getElementById('periodoToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#periodoToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filtroPeriodo = btn.dataset.p;
+  aplicarFiltros();
+});
+document.getElementById('dataDeInput').addEventListener('change', aplicarFiltros);
+document.getElementById('dataAteInput').addEventListener('change', aplicarFiltros);
+document.getElementById('motoristaSelect').addEventListener('change', aplicarFiltros);
+
+/* ===== TABELA (só leitura — sem inputs de edição, sem botão de remover) ===== */
+
+function mostrarView(modo){
+  modoAtual = modo;
+  document.getElementById('btnVerMapa').classList.toggle('active', modo === 'mapa');
+  document.getElementById('btnVerTabela').classList.toggle('active', modo === 'tabela');
+  document.getElementById('map').style.display = (modo === 'mapa') ? 'block' : 'none';
+  document.getElementById('tableView').style.display = (modo === 'tabela') ? 'block' : 'none';
+  const app = document.getElementById('app');
+  app.classList.toggle('tabela-ativa', modo === 'tabela');
+  document.getElementById('sidebarDireitoToggle').style.display = (modo === 'tabela') ? 'none' : 'flex';
+  if (modo === 'mapa'){
+    setTimeout(function(){ map.invalidateSize(); }, 50);
+    render();
+  } else {
+    renderTabela();
+  }
+}
+
+function prioridadeStatusBase_(status){
+  const s = String(status || '').trim().toUpperCase();
+  if (s === 'ENTREGUE') return 0;
+  if (s === 'EM ANDAMENTO') return 1;
+  if (s === 'EM FILA') return 2;
+  if (!s) return 3;
+  if (s === 'CANCELAR') return 4;
+  return 5;
+}
+
+function corLinhaEntrega_(d){
+  const status = String(d.status || '').trim().toUpperCase();
+  const codigoVazio = !String(d.codigo || '').trim();
+  const cor = function(chave, reserva){ return coresStatus[chave] || reserva; };
+  if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
+  if (codigoVazio) return cor('ATENCAO', '#ea9999');
+  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
+  if (d.ok === true) return cor('OK', '#cfe2f3');
+  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc');
+  if (status === 'EM FILA') return cor('EM FILA', '#e0c3e8');
+  return '';
+}
+function corTextoLinhaEntrega_(d){
+  const status = String(d.status || '').trim().toUpperCase();
+  const codigoVazio = !String(d.codigo || '').trim();
+  if (status === 'ENTREGUE') return '#0c343d';
+  if (codigoVazio) return '';
+  if (d.ok === true) return '#1c4587';
+  if (status === 'EM ANDAMENTO') return '#7f6000';
+  if (status === 'EM FILA') return '#4c1130';
+  return '';
+}
+
+function definirPeriodoTabela_(valor){
+  filtroPeriodoTabela = valor;
+  salvarPrefsTabela_();
+  renderTabela();
+}
+function alternarStatusNoFiltro_(valor, marcado){
+  if (marcado) filtroStatusTabela.add(valor); else filtroStatusTabela.delete(valor);
+  salvarPrefsTabela_();
+  renderTabela();
+  if (filtroPopupAberto){
+    const btn = document.querySelector('.th-filtro-btn');
+    if (btn) reposicionarPopupStatus_(btn);
+  }
+}
+function alternarOrdenacaoData_(){
+  ordenacaoData = ordenacaoData === 'asc' ? 'desc' : 'asc';
+  salvarPrefsTabela_();
+  renderTabela();
+}
+function alternarFiltroStatusPopup_(e){
+  e.stopPropagation();
+  filtroPopupAberto = !filtroPopupAberto;
+  const popup = document.getElementById('filtroStatusPopup');
+  if (popup){
+    popup.classList.toggle('aberto', filtroPopupAberto);
+    if (filtroPopupAberto) reposicionarPopupStatus_(e.target);
+  }
+}
+function reposicionarPopupStatus_(botao){
+  const popup = document.getElementById('filtroStatusPopup');
+  if (!popup || !botao) return;
+  const rect = botao.getBoundingClientRect();
+  popup.style.top = (rect.bottom + 4) + 'px';
+  popup.style.left = Math.max(4, rect.left - 90) + 'px';
+}
+document.addEventListener('click', (e) => {
+  if (!filtroPopupAberto) return;
+  const popup = document.getElementById('filtroStatusPopup');
+  if (popup && !popup.contains(e.target) && !e.target.classList.contains('th-filtro-btn')){
+    filtroPopupAberto = false;
+    popup.classList.remove('aberto');
+  }
+});
+
+function renderTabela(ehAtualizacaoAutomatica){
+  const container = document.getElementById('tabelaContainer');
+  if (ehAtualizacaoAutomatica && container && document.activeElement && container.contains(document.activeElement)) return;
+
+  let lista = entregasParaTabela.filter(d => {
+    const chave = String(d.status || '').trim().toUpperCase() || 'VAZIO';
+    if (!filtroStatusTabela.has(chave)) return false;
+    if (filtroPeriodoTabela && d.periodo !== filtroPeriodoTabela) return false;
+    return true;
+  });
+
+  if (!lista.length){
+    container.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>pra esses filtros.</div>';
+    return;
+  }
+
+  lista = lista.slice().sort((a, b) => {
+    const pa = prioridadeStatusBase_(a.status);
+    const pb = prioridadeStatusBase_(b.status);
+    if (pa !== pb) return pa - pb;
+    const da = a.data || '';
+    const db = b.data || '';
+    if (da !== db){
+      if (!da) return 1;
+      if (!db) return -1;
+      return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+    }
+    return (b.ok === true ? 1 : 0) - (a.ok === true ? 1 : 0);
+  });
+
+  const setaData = ordenacaoData === 'asc' ? '▲' : '▼';
+  const checkStatus = (valor) => filtroStatusTabela.has(valor) ? ' checked' : '';
+
+  let html = '<div class="tabela-toolbar">' +
+      '<span class="contagem">' + lista.length + ' de ' + entregasParaTabela.length + ' entrega(s)</span>' +
+      '<div class="tabela-controles">' +
+        '<div class="periodo-tabela">' +
+          '<button type="button" class="' + (filtroPeriodoTabela === '' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'\')">Todos</button>' +
+          '<button type="button" class="' + (filtroPeriodoTabela === 'MANHÃ' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'MANHÃ\')">Manhã</button>' +
+          '<button type="button" class="' + (filtroPeriodoTabela === 'TARDE' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'TARDE\')">Tarde</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="legenda">' +
+        '<span><i style="background:' + (coresStatus['ENTREGUE']||'#d9ead3') + '"></i>Entregue</span>' +
+        '<span><i style="background:' + (coresStatus['OK']||'#cfe2f3') + '"></i>Pedido pronto</span>' +
+        '<span><i style="background:' + (coresStatus['EM ANDAMENTO']||'#fff2cc') + '"></i>Em andamento</span>' +
+        '<span><i style="background:' + (coresStatus['EM FILA']||'#e0c3e8') + '"></i>Em fila</span>' +
+        '<span><i style="background:' + (coresStatus['ATENCAO']||'#ea9999') + '"></i>Atenção</span>' +
+      '</div>' +
+    '</div>' +
+    '<table class="tabela-entregas"><thead><tr>' +
+    '<th>Código</th><th>Cliente</th><th>Repr.</th><th>Endereço</th><th>Cidade</th><th>Motorista</th>' +
+    '<th class="th-ordenavel" onclick="alternarOrdenacaoData_()">Data <span>' + setaData + '</span></th>' +
+    '<th>Período</th>' +
+    '<th class="th-status">' +
+      '<span class="th-status-linha">Status' +
+        '<button type="button" class="th-filtro-btn" onclick="alternarFiltroStatusPopup_(event)">▾</button>' +
+      '</span>' +
+      '<div class="th-filtro-popup' + (filtroPopupAberto ? ' aberto' : '') + '" id="filtroStatusPopup">' +
+        '<label><input type="checkbox"' + checkStatus('ENTREGUE') + ' onchange="alternarStatusNoFiltro_(\'ENTREGUE\', this.checked)"> Entregue</label>' +
+        '<label><input type="checkbox"' + checkStatus('EM ANDAMENTO') + ' onchange="alternarStatusNoFiltro_(\'EM ANDAMENTO\', this.checked)"> Em andamento</label>' +
+        '<label><input type="checkbox"' + checkStatus('EM FILA') + ' onchange="alternarStatusNoFiltro_(\'EM FILA\', this.checked)"> Em fila</label>' +
+        '<label><input type="checkbox"' + checkStatus('VAZIO') + ' onchange="alternarStatusNoFiltro_(\'VAZIO\', this.checked)"> — (vazio)</label>' +
+      '</div>' +
+    '</th>' +
+    '<th>OK</th><th>Observações</th>' +
+    '</tr></thead><tbody>';
+
+  lista.forEach(d => {
+    const corLinha = corLinhaEntrega_(d);
+    const corTexto = corTextoLinhaEntrega_(d);
+    const estiloLinha = (corLinha || corTexto)
+      ? ' style="' + (corLinha ? 'background:' + corLinha + ';' : '') + (corTexto ? 'color:' + corTexto + ';' : '') + '"'
+      : '';
+    html += '<tr' + estiloLinha + '>' +
+      '<td>' + escapeAttr_(d.codigo) + '</td>' +
+      '<td class="td-cliente">' + d.cliente + '</td>' +
+      '<td>' + escapeAttr_(d.representante) + '</td>' +
+      '<td>' + escapeAttr_(d.endereco) + '</td>' +
+      '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
+      '<td>' + escapeAttr_(d.motorista) + '</td>' +
+      '<td class="td-data">' + formatarDataBR_(d.data) + '</td>' +
+      '<td>' + (d.periodo || '—') + '</td>' +
+      '<td>' + (d.status || '—') + '</td>' +
+      '<td class="td-check"><input type="checkbox" class="td-checkbox" disabled' + (d.ok ? ' checked' : '') + '></td>' +
+      '<td>' + escapeAttr_(d.observacoes) + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ===== INÍCIO =====
+carregarPreferencias();
+restaurarSidebar_();
+restaurarSidebarDireito_();
+initMap();
+carregarEntregas();
+carregarCoresStatus_();
+
+const INTERVALO_ATUALIZACAO_MS = 10000;
+setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
+</script>
+</body>
+</html>
