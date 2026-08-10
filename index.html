@@ -1557,7 +1557,7 @@ function corTextoLinhaEntrega_(d){
   return '';
 }
 
-let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão
+let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','VAZIO']); // todos marcados por padrão
 let filtroPeriodoTabela = ''; // '' = todos — filtro próprio da tabela, não usa o do sidebar
 
 function definirPeriodoTabela_(valor){
@@ -1630,7 +1630,7 @@ function iniciarResizeColuna_(e, chave){
   document.addEventListener('touchend', soltar);
 }
 
-let ordenacaoData = null; // null | 'asc' | 'desc'
+let ordenacaoData = 'asc'; // 'asc' | 'desc' — sempre ativo agora (é a ordenação DENTRO de cada status)
 let filtroPopupAberto = false;
 
 /* ----- preferências da tabela (ordenação, filtro de status/período) —
@@ -1654,18 +1654,17 @@ function salvarPrefsTabela_(){
   }catch(e){}
 })();
 
-function prioridadeStatus_(status, ok){
+// Prioridade BASE, só do status — Entregue primeiro, depois Em andamento,
+// depois Em fila, vazio por último. A data e o "OK" entram como critério
+// de desempate DENTRO de cada grupo (ver a ordenação em renderTabela).
+function prioridadeStatusBase_(status){
   const s = String(status || '').trim().toUpperCase();
-  let base;
-  if (s === 'ENTREGUE') base = 0;
-  else if (s === 'EM ANDAMENTO') base = 1;
-  else if (s === 'EM FILA') base = 2;
-  else if (s === 'CANCELAR') base = 3;
-  else base = 99; // vazio ou outros valores — sempre por último
-
-  // dentro da MESMA categoria, quem está com "OK" (pedido pronto) marcado
-  // vem antes de quem não está
-  return base * 2 + (ok === true ? 0 : 1);
+  if (s === 'ENTREGUE') return 0;
+  if (s === 'EM ANDAMENTO') return 1;
+  if (s === 'EM FILA') return 2;
+  if (!s) return 3; // vazio — antes do Cancelar, que já nem aparece mais na tabela
+  if (s === 'CANCELAR') return 4;
+  return 5; // qualquer outro valor inesperado
 }
 
 function alternarFiltroStatusPopup_(e){
@@ -1714,7 +1713,7 @@ function alternarOrdenacaoData_(){
     if (btnLimpar) btnLimpar.style.display = 'none';
     if (infoRota) infoRota.style.display = 'none';
   }
-  ordenacaoData = ordenacaoData === null ? 'asc' : (ordenacaoData === 'asc' ? 'desc' : null);
+  ordenacaoData = ordenacaoData === 'asc' ? 'desc' : 'asc';
   salvarPrefsTabela_();
   renderTabela();
 }
@@ -1743,31 +1742,38 @@ function renderTabela(ehAtualizacaoAutomatica){
     return;
   }
 
-  // ordem: rota sugerida (se tiver) > ordenação manual de data (se ativada)
-  // > padrão: Entregue, depois Em andamento, depois Em fila, vazio por último
+  // ordem: rota sugerida (se tiver) sempre vence tudo. Sem rota: Status
+  // é SEMPRE o critério principal (Entregue > Em andamento > Em fila >
+  // vazio) — dentro de CADA grupo de status, ordena por data (a seta ▲▼
+  // controla só essa parte), e dentro da mesma data, quem tem "OK"
+  // marcado vem primeiro.
   if (rotaSugerida){
     lista = lista.slice().sort((a, b) => {
       const ia = rotaSugerida.indexOf(a.linha);
       const ib = rotaSugerida.indexOf(b.linha);
       return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
     });
-  } else if (ordenacaoData){
+  } else {
     lista = lista.slice().sort((a, b) => {
+      const pa = prioridadeStatusBase_(a.status);
+      const pb = prioridadeStatusBase_(b.status);
+      if (pa !== pb) return pa - pb;
+
       const da = a.data || '';
       const db = b.data || '';
-      if (!da && !db) return 0;
-      if (!da) return 1;  // sem data sempre por último, nas duas direções
-      if (!db) return -1;
-      if (da !== db) return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
-      // mesma data: quem está com "OK" marcado vem primeiro
+      if (da !== db){
+        if (!da) return 1;  // sem data sempre por último dentro do grupo
+        if (!db) return -1;
+        return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+      }
+
+      // mesmo status e mesma data: quem está com "OK" marcado vem primeiro
       return (b.ok === true ? 1 : 0) - (a.ok === true ? 1 : 0);
     });
-  } else {
-    lista = lista.slice().sort((a, b) => prioridadeStatus_(a.status, a.ok) - prioridadeStatus_(b.status, b.ok));
   }
 
   const opcoesMotorista = motoristasDisponiveis.map(m => `<option value="${escapeAttr_(m)}">${m}</option>`).join('');
-  const setaData = ordenacaoData === 'asc' ? '▲' : (ordenacaoData === 'desc' ? '▼' : '↕');
+  const setaData = ordenacaoData === 'asc' ? '▲' : '▼';
 
   const checkStatus = (valor) => filtroStatusTabela.has(valor) ? ' checked' : '';
   const ativoPeriodoTabela = (valor) => filtroPeriodoTabela === valor ? ' active' : '';
@@ -1809,6 +1815,7 @@ function renderTabela(ehAtualizacaoAutomatica){
         '<label><input type="checkbox"' + checkStatus('ENTREGUE') + ' onchange="alternarStatusNoFiltro_(\'ENTREGUE\', this.checked)"> Entregue</label>' +
         '<label><input type="checkbox"' + checkStatus('EM ANDAMENTO') + ' onchange="alternarStatusNoFiltro_(\'EM ANDAMENTO\', this.checked)"> Em andamento</label>' +
         '<label><input type="checkbox"' + checkStatus('EM FILA') + ' onchange="alternarStatusNoFiltro_(\'EM FILA\', this.checked)"> Em fila</label>' +
+        '<label><input type="checkbox"' + checkStatus('VAZIO') + ' onchange="alternarStatusNoFiltro_(\'VAZIO\', this.checked)"> — (vazio)</label>' +
       '</div>' +
       handleResize_('status') +
     '</th>' +
@@ -1834,7 +1841,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
       '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
-      '<td><select class="td-input td-status-select" data-campo="status"><option value="EM FILA">EM FILA</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="ENTREGUE">ENTREGUE</option><option value="CANCELAR">CANCELAR</option></select></td>' +
+      '<td><select class="td-input td-status-select" data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
       '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" onclick="removerLinha_(this)">🗑</button></td>' +
