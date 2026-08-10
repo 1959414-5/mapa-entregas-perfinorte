@@ -488,18 +488,18 @@
   }
   .tabela-entregas{
     width:100%; min-width:1100px; border-collapse:collapse; font-size:11px;
-    background:#ffffff; border:1px solid #000; table-layout:fixed;
+    background:#ffffff; border:1px solid #d5a6bd; table-layout:fixed;
   }
   .tabela-entregas.largura-percentual{min-width:0; width:100%;}
   .tabela-entregas th{
-    text-align:left; padding:7px 8px; border:1px solid #000;
+    text-align:left; padding:7px 8px; border:1px solid #d5a6bd;
     font-family:var(--font-mono); font-size:9px; letter-spacing:.06em;
     text-transform:uppercase; color:#1f2430; position:sticky; top:0;
     background:#f0f0f0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
   .tabela-entregas td{
-    padding:3px 6px; border:1px solid #000; vertical-align:middle;
-    overflow:hidden; text-overflow:ellipsis;
+    padding:3px 6px; border:1px solid #d5a6bd; vertical-align:middle;
+    overflow:hidden; text-overflow:ellipsis; color:#1f2430;
   }
   .tabela-entregas.condensada th{padding:4px 6px; font-size:8px;}
   .tabela-entregas.condensada td{padding:0 4px; font-size:10px; line-height:1.5;}
@@ -510,7 +510,8 @@
     cursor:col-resize; user-select:none; z-index:5; touch-action:none;
   }
   .col-resize-handle:hover, .col-resize-handle.resizando{background:rgba(47,147,163,.35);}
-  .tabela-entregas .td-cliente{font-weight:600; white-space:nowrap; color:#1f2430;}
+  .tabela-entregas .td-cliente{font-weight:700; white-space:nowrap;}
+  .tabela-entregas .td-data{font-weight:700;}
   .tabela-entregas .td-cidade{color:#4b5563; white-space:nowrap;}
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .tabela-entregas .td-remover{text-align:center; width:30px;}
@@ -541,7 +542,7 @@
 
   .td-input{
     width:100%; background:transparent; border:1px solid transparent;
-    color:#1f2430; padding:4px 6px; border-radius:4px; font-size:11px;
+    padding:4px 6px; border-radius:4px; font-size:11px;
     font-family:var(--font-ui);
   }
   .td-input:hover{border-color:#c7ccd3; background:#ffffff;}
@@ -610,6 +611,14 @@
           <label><input type="checkbox" value="ENTREGUE" checked onchange="alternarStatusSidebar_(this)"> Entregue</label>
           <label><input type="checkbox" value="EM ANDAMENTO" checked onchange="alternarStatusSidebar_(this)"> Em andamento</label>
           <label><input type="checkbox" value="EM FILA" checked onchange="alternarStatusSidebar_(this)"> Em fila</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pedido pronto <small style="text-transform:none; opacity:.6;">(só afeta o mapa)</small></label>
+        <div class="period-toggle" id="okToggle">
+          <button type="button" data-ok="" class="active" onclick="definirFiltroOk_('')">Todos</button>
+          <button type="button" data-ok="sim" onclick="definirFiltroOk_('sim')">✓ Prontos</button>
+          <button type="button" data-ok="nao" onclick="definirFiltroOk_('nao')">✗ Não prontos</button>
         </div>
       </div>
     </div>
@@ -763,9 +772,19 @@ let motoristasDisponiveis = [];
 let miniMap = null, miniMapMarker = null;
 let coordsAjustadasManualmente = null; // {lat, lng} — preenchido só se a pessoa arrastar o pino
 let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
+let filtroOkSidebar = ''; // '' = todos, 'sim' = só prontos, 'nao' = só não prontos — só afeta o mapa
 
 function alternarStatusSidebar_(chk){
   if (chk.checked) filtroStatusSidebar.add(chk.value); else filtroStatusSidebar.delete(chk.value);
+  aplicarFiltros();
+}
+
+function definirFiltroOk_(valor){
+  filtroOkSidebar = valor;
+  document.querySelectorAll('#okToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.ok === valor);
+  });
+  salvarPreferencias();
   aplicarFiltros();
 }
 
@@ -800,7 +819,8 @@ function salvarPreferencias(){
       dataAte: document.getElementById('dataAteInput').value,
       periodo: filtroPeriodo,
       motorista: document.getElementById('motoristaSelect').value,
-      status: Array.from(filtroStatusSidebar)
+      status: Array.from(filtroStatusSidebar),
+      ok: filtroOkSidebar
     }));
   }catch(e){ /* localStorage indisponível — segue sem salvar */ }
 }
@@ -825,6 +845,13 @@ function carregarPreferencias(){
     filtroStatusSidebar = new Set(salvo.status);
     document.querySelectorAll('#statusFiltroSidebar input[type=checkbox]').forEach(chk => {
       chk.checked = filtroStatusSidebar.has(chk.value);
+    });
+  }
+
+  if (typeof salvo.ok === 'string'){
+    filtroOkSidebar = salvo.ok;
+    document.querySelectorAll('#okToggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.ok === salvo.ok);
     });
   }
 }
@@ -1149,6 +1176,8 @@ function aplicarFiltros(ajustarZoom){
     if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
     const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
     if (!filtroStatusSidebar.has(chaveStatus)) return false;
+    if (filtroOkSidebar === 'sim' && d.ok !== true) return false;
+    if (filtroOkSidebar === 'nao' && d.ok === true) return false;
     return true;
   });
 
@@ -1457,6 +1486,17 @@ function corLinhaEntrega_(d){
   return '';
 }
 
+// Cor da FONTE da linha, combinando com o fundo — segue a mesma prioridade
+// de corLinhaEntrega_ pra sempre bater com a cor de fundo escolhida.
+function corTextoLinhaEntrega_(d){
+  const status = String(d.status || '').trim().toUpperCase();
+  if (status === 'ENTREGUE') return '#0c343d';       // fundo verde
+  if (d.ok === true) return '#1c4587';                // fundo azul
+  if (status === 'EM ANDAMENTO') return '#7f6000';    // fundo amarelo
+  if (status === 'EM FILA') return '#4c1130';         // fundo rosa
+  return '';
+}
+
 let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão
 let filtroPeriodoTabela = ''; // '' = todos — filtro próprio da tabela, não usa o do sidebar
 
@@ -1712,7 +1752,10 @@ function renderTabela(ehAtualizacaoAutomatica){
 
   lista.forEach(d => {
     const corLinha = corLinhaEntrega_(d);
-    const estiloLinha = corLinha ? ' style="background:' + corLinha + ';"' : '';
+    const corTexto = corTextoLinhaEntrega_(d);
+    const estiloLinha = (corLinha || corTexto)
+      ? ' style="' + (corLinha ? 'background:' + corLinha + ';' : '') + (corTexto ? 'color:' + corTexto + ';' : '') + '"'
+      : '';
     const numeroRota = rotaSugerida ? rotaSugerida.indexOf(d.linha) + 1 : 0;
     html += '<tr data-linha="' + d.linha + '"' + estiloLinha + '>' +
       (rotaSugerida ? '<td style="text-align:center;font-weight:700;">' + (numeroRota > 0 ? numeroRota : '—') + '</td>' : '') +
@@ -1722,7 +1765,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
       '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
       '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
-      '<td><input type="date" class="td-input" data-campo="data" value="' + (d.data || '') + '"></td>' +
+      '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
       '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
       '<td><select class="td-input td-status-select" data-campo="status"><option value="EM FILA">EM FILA</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="ENTREGUE">ENTREGUE</option><option value="CANCELAR">CANCELAR</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
