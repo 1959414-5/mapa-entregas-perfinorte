@@ -311,6 +311,14 @@
     cursor:pointer;
   }
   .btn-nova:hover{opacity:.9;}
+  .btn-formatar{background:var(--panel-2); color:var(--paper); border:1px solid var(--line);}
+
+  .fmt-copia-linha{display:flex; gap:8px;}
+  .fmt-copia-linha input{
+    flex:1; background:var(--panel-2); border:1px solid var(--line);
+    color:var(--paper); padding:8px 10px; border-radius:4px; font-size:12.5px;
+    font-family:var(--font-mono);
+  }
 
   .modal-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.55);
@@ -339,6 +347,10 @@
     font-family:var(--font-ui);
   }
   #miniMap{
+    display:none; height:170px; border-radius:4px; margin-top:8px;
+    border:1px solid var(--line); overflow:hidden; cursor:grab;
+  }
+  #fmtMiniMap{
     display:none; height:170px; border-radius:4px; margin-top:8px;
     border:1px solid var(--line); overflow:hidden; cursor:grab;
   }
@@ -499,7 +511,7 @@
   }
   .tabela-entregas td{
     padding:3px 6px; border:1px solid #d5a6bd; vertical-align:middle;
-    overflow:hidden; text-overflow:ellipsis; color:#1f2430;
+    overflow:hidden; text-overflow:ellipsis;
   }
   .tabela-entregas.condensada th{padding:4px 6px; font-size:8px;}
   .tabela-entregas.condensada td{padding:0 4px; font-size:10px; line-height:1.5;}
@@ -566,6 +578,7 @@
       <div class="eyebrow">Perfinorte · Expedição · <span id="ultimaAtualizacao"></span></div>
       <h1>Mapa de Entregas</h1>
       <button class="btn-nova" onclick="abrirModal()">+ Nova entrega</button>
+      <button class="btn-nova btn-formatar" onclick="abrirModalFormatarEndereco()">📍 Formatar endereço</button>
       <div class="view-toggle">
         <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
         <button id="btnVerTabela" onclick="mostrarView('tabela')">📋 Tabela</button>
@@ -716,6 +729,48 @@
   </div>
 </div>
 
+<div id="modalFormatarEndereco" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Formatar endereço</h2>
+      <button class="modal-close" onclick="fecharModalFormatarEndereco()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Endereço</label>
+        <div class="endereco-linha">
+          <input type="text" id="fmtCep" placeholder="CEP" maxlength="9" style="max-width:120px;" oninput="formatarCep_(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCepFmt_();}">
+          <button type="button" class="btn-cep" onclick="buscarCepFmt_()">🔍 Buscar CEP</button>
+        </div>
+        <div class="endereco-linha" style="margin-top:6px;">
+          <input type="text" id="fmtRua" placeholder="Rua/Avenida" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+          <input type="text" id="fmtNumero" placeholder="Nº (ou S/N)" oninput="forcarMaiusculo_(event)" style="max-width:100px; text-transform:uppercase;">
+        </div>
+        <div class="endereco-linha" style="margin-top:6px;">
+          <input type="text" id="fmtBairro" placeholder="Bairro" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+        </div>
+        <div class="endereco-linha" style="margin-top:6px;">
+          <input type="text" id="fmtCidade" placeholder="Cidade" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+          <input type="text" id="fmtUf" placeholder="UF" maxlength="2" oninput="forcarMaiusculo_(event)" style="max-width:60px; text-transform:uppercase;">
+        </div>
+        <button type="button" class="btn-aplicar" onclick="aplicarEnderecoFmt_()">✓ Aplicar endereço</button>
+        <div id="fmtResultado" class="busca-resultado"></div>
+        <div id="fmtMiniMap"></div>
+      </div>
+      <div id="fmtCopiaBox" style="display:none;">
+        <label style="display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--paper-dim); margin-bottom:5px;">Endereço formatado</label>
+        <div class="fmt-copia-linha">
+          <input type="text" id="fmtTextoFinal" readonly>
+          <button type="button" class="btn-secondary" onclick="copiarEnderecoFmt_()">📋 Copiar</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalFormatarEndereco()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="modalConfirmacoes" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -771,6 +826,8 @@ let enderecoAplicado = ''; // endereço já montado no padrão, depois de clicar
 let motoristasDisponiveis = [];
 let miniMap = null, miniMapMarker = null;
 let coordsAjustadasManualmente = null; // {lat, lng} — preenchido só se a pessoa arrastar o pino
+let fmtMiniMap = null, fmtMiniMapMarker = null;
+let fmtEnderecoTexto = ''; // texto formatado atual da ferramenta "Formatar endereço"
 let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
 let filtroOkSidebar = ''; // '' = todos, 'sim' = só prontos, 'nao' = só não prontos — só afeta o mapa
 
@@ -1594,13 +1651,18 @@ function salvarPrefsTabela_(){
   }catch(e){}
 })();
 
-function prioridadeStatus_(status){
+function prioridadeStatus_(status, ok){
   const s = String(status || '').trim().toUpperCase();
-  if (s === 'ENTREGUE') return 0;
-  if (s === 'EM ANDAMENTO') return 1;
-  if (s === 'EM FILA') return 2;
-  if (s === 'CANCELAR') return 3;
-  return 99; // vazio ou outros valores — sempre por último
+  let base;
+  if (s === 'ENTREGUE') base = 0;
+  else if (s === 'EM ANDAMENTO') base = 1;
+  else if (s === 'EM FILA') base = 2;
+  else if (s === 'CANCELAR') base = 3;
+  else base = 99; // vazio ou outros valores — sempre por último
+
+  // dentro da MESMA categoria, quem está com "OK" (pedido pronto) marcado
+  // vem antes de quem não está
+  return base * 2 + (ok === true ? 0 : 1);
 }
 
 function alternarFiltroStatusPopup_(e){
@@ -1693,10 +1755,12 @@ function renderTabela(ehAtualizacaoAutomatica){
       if (!da && !db) return 0;
       if (!da) return 1;  // sem data sempre por último, nas duas direções
       if (!db) return -1;
-      return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+      if (da !== db) return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+      // mesma data: quem está com "OK" marcado vem primeiro
+      return (b.ok === true ? 1 : 0) - (a.ok === true ? 1 : 0);
     });
   } else {
-    lista = lista.slice().sort((a, b) => prioridadeStatus_(a.status) - prioridadeStatus_(b.status));
+    lista = lista.slice().sort((a, b) => prioridadeStatus_(a.status, a.ok) - prioridadeStatus_(b.status, b.ok));
   }
 
   const opcoesMotorista = motoristasDisponiveis.map(m => `<option value="${escapeAttr_(m)}">${m}</option>`).join('');
@@ -2088,6 +2152,159 @@ async function buscarCep(){
   }catch(err){
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Erro ao buscar CEP: ' + err;
+  }
+}
+
+/* =====================================================================
+   FERRAMENTA "FORMATAR ENDEREÇO" — independente da Nova Entrega, só pra
+   montar um endereço no padrão certo e copiar (ex: pra colar direto na
+   planilha). Mesma lógica de CEP/mini-mapa arrastável, campos separados.
+   ===================================================================== */
+function abrirModalFormatarEndereco(){
+  document.getElementById('modalFormatarEndereco').classList.add('show');
+  document.getElementById('fmtCep').value = '';
+  document.getElementById('fmtRua').value = '';
+  document.getElementById('fmtNumero').value = '';
+  document.getElementById('fmtBairro').value = '';
+  document.getElementById('fmtCidade').value = '';
+  document.getElementById('fmtUf').value = '';
+  document.getElementById('fmtResultado').className = 'busca-resultado';
+  document.getElementById('fmtResultado').textContent = '';
+  document.getElementById('fmtMiniMap').style.display = 'none';
+  document.getElementById('fmtCopiaBox').style.display = 'none';
+  fmtEnderecoTexto = '';
+}
+
+function fecharModalFormatarEndereco(){
+  document.getElementById('modalFormatarEndereco').classList.remove('show');
+}
+
+async function buscarCepFmt_(){
+  const cep = document.getElementById('fmtCep').value.replace(/\D/g,'');
+  const resultado = document.getElementById('fmtResultado');
+
+  if (cep.length !== 8){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'CEP inválido — precisa ter 8 dígitos.';
+    return;
+  }
+
+  resultado.className = 'busca-resultado carregando';
+  resultado.textContent = 'Buscando CEP…';
+
+  try{
+    const resp = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+    const dados = await resp.json();
+    if (dados.erro){
+      resultado.className = 'busca-resultado erro';
+      resultado.textContent = 'CEP não encontrado.';
+      return;
+    }
+    document.getElementById('fmtRua').value = (dados.logradouro || '').toUpperCase();
+    document.getElementById('fmtBairro').value = (dados.bairro || '').toUpperCase();
+    document.getElementById('fmtCidade').value = (dados.localidade || '').toUpperCase();
+    document.getElementById('fmtUf').value = (dados.uf || '').toUpperCase();
+    resultado.className = 'busca-resultado ok';
+    resultado.textContent = 'Endereço encontrado — confira o número e clique em Aplicar.';
+    document.getElementById('fmtNumero').focus();
+  }catch(err){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Erro ao buscar CEP: ' + err;
+  }
+}
+
+function construirEnderecoFmt_(){
+  const rua = document.getElementById('fmtRua').value.trim();
+  const numero = document.getElementById('fmtNumero').value.trim() || 'S/N';
+  const bairro = document.getElementById('fmtBairro').value.trim();
+  const cidade = document.getElementById('fmtCidade').value.trim();
+  const uf = document.getElementById('fmtUf').value.trim().toUpperCase();
+
+  if (!rua || !bairro || !cidade || !uf) return null;
+
+  return rua.toUpperCase() + ', ' + numero.toUpperCase() + ' - ' + bairro.toUpperCase() + ' - ' + cidade.toUpperCase() + '/' + uf;
+}
+
+async function aplicarEnderecoFmt_(){
+  const resultado = document.getElementById('fmtResultado');
+  const endereco = construirEnderecoFmt_();
+
+  if (!endereco){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Preencha rua, bairro, cidade e UF.';
+    document.getElementById('fmtMiniMap').style.display = 'none';
+    document.getElementById('fmtCopiaBox').style.display = 'none';
+    return;
+  }
+
+  fmtEnderecoTexto = endereco;
+
+  if (!API_URL){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Configure a API_URL no início do arquivo.';
+    return;
+  }
+
+  resultado.className = 'busca-resultado carregando';
+  resultado.textContent = 'Localizando…';
+
+  try{
+    const res = await chamarAPI_GET_({ formato: 'geocodificarPreview', endereco: endereco });
+    if (!res.ok){
+      resultado.className = 'busca-resultado erro';
+      resultado.textContent = res.erro;
+      document.getElementById('fmtMiniMap').style.display = 'none';
+      document.getElementById('fmtCopiaBox').style.display = 'none';
+      return;
+    }
+    resultado.className = 'busca-resultado ok';
+    resultado.textContent = 'Local encontrado ✓ — arraste o pino se não estiver certinho.';
+    mostrarFmtMiniMap_(res.lat, res.lng);
+    mostrarCopiaFmt_(endereco);
+  }catch(err){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Erro: ' + err;
+  }
+}
+
+function mostrarFmtMiniMap_(lat, lng){
+  const container = document.getElementById('fmtMiniMap');
+  container.style.display = 'block';
+
+  if (!fmtMiniMap){
+    fmtMiniMap = L.map('fmtMiniMap', { zoomControl:false, attributionControl:false }).setView([lat, lng], 16);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 20
+    }).addTo(fmtMiniMap);
+    fmtMiniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(fmtMiniMap);
+    fmtMiniMapMarker.on('dragend', function(){
+      // arrastar o pino aqui só corrige a POSIÇÃO no mapa — o texto do
+      // endereço formatado continua sendo o que foi montado dos campos
+      // (CEP/rua/bairro/etc), que é o que ela quer copiar
+      mostrarToast('Posição ajustada — o texto do endereço continua o mesmo.');
+    });
+  } else {
+    fmtMiniMap.setView([lat, lng], 16);
+    fmtMiniMapMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(function(){ fmtMiniMap.invalidateSize(); }, 80);
+}
+
+function mostrarCopiaFmt_(endereco){
+  document.getElementById('fmtCopiaBox').style.display = 'block';
+  document.getElementById('fmtTextoFinal').value = endereco;
+}
+
+function copiarEnderecoFmt_(){
+  const campo = document.getElementById('fmtTextoFinal');
+  campo.select();
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(campo.value)
+      .then(function(){ mostrarToast('Endereço copiado!'); })
+      .catch(function(){ document.execCommand('copy'); mostrarToast('Endereço copiado!'); });
+  } else {
+    document.execCommand('copy');
+    mostrarToast('Endereço copiado!');
   }
 }
 
