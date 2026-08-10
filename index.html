@@ -315,6 +315,7 @@
   }
   .btn-nova:hover{opacity:.9;}
   .btn-formatar{background:var(--panel-2); color:var(--paper); border:1px solid var(--line);}
+  .btn-atencao-topo{background:rgba(234,153,153,.15); color:#ea9999; border:1px solid #ea9999;}
 
   .fmt-copia-linha{display:flex; gap:8px;}
   .fmt-copia-linha input{
@@ -582,6 +583,7 @@
       <h1>Mapa de Entregas</h1>
       <button class="btn-nova" onclick="abrirModal()">+ Nova entrega</button>
       <button class="btn-nova btn-formatar" onclick="abrirModalFormatarEndereco()">📍 Formatar endereço</button>
+      <button class="btn-nova btn-atencao-topo" onclick="abrirModalAtencao()">⚠ Linha de atenção</button>
       <div class="view-toggle">
         <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
         <button id="btnVerTabela" onclick="mostrarView('tabela')">📋 Tabela</button>
@@ -770,6 +772,33 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModalFormatarEndereco()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalAtencao" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>⚠ Linha de atenção</h2>
+      <button class="modal-close" onclick="fecharModalAtencao()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="atencaoMensagem">Mensagem (aparece no lugar de "Cliente")</label>
+        <input type="text" id="atencaoMensagem" placeholder="Ex: Conferir pedido pendente da filial">
+      </div>
+      <div class="field">
+        <label for="atencaoData">Data</label>
+        <input type="date" id="atencaoData">
+      </div>
+      <p style="font-size:11.5px; color:var(--paper-dim); margin:0;">
+        Não precisa de código de cliente nem endereço — essa linha não aparece no mapa,
+        só na tabela, com fundo vermelho de atenção.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalAtencao()">Cancelar</button>
+      <button class="btn-primary" id="btnSalvarAtencao" onclick="salvarLinhaAtencao_()">Salvar</button>
     </div>
   </div>
 </div>
@@ -2187,6 +2216,50 @@ function abrirModalFormatarEndereco(){
 
 function fecharModalFormatarEndereco(){
   document.getElementById('modalFormatarEndereco').classList.remove('show');
+}
+
+/* ===== LINHA DE ATENÇÃO — aviso livre na tabela, sem código de cliente
+   nem endereço. Fica com STATUS vazio, o que já ativa sozinho o fundo
+   vermelho (mesma regra que já existe pra qualquer linha sem status). ===== */
+function abrirModalAtencao(){
+  document.getElementById('modalAtencao').classList.add('show');
+  document.getElementById('atencaoMensagem').value = '';
+  document.getElementById('atencaoData').value = new Date().toISOString().slice(0,10);
+}
+
+function fecharModalAtencao(){
+  document.getElementById('modalAtencao').classList.remove('show');
+}
+
+async function salvarLinhaAtencao_(){
+  const mensagem = document.getElementById('atencaoMensagem').value.trim();
+  const data = document.getElementById('atencaoData').value;
+
+  if (!mensagem){
+    mostrarToast('Escreva uma mensagem pra linha de atenção.', true);
+    return;
+  }
+
+  const btn = document.getElementById('btnSalvarAtencao');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'salvarLinhaAtencao', mensagem: mensagem, data: data });
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+    if (!res.ok){
+      mostrarToast('Erro: ' + res.erro, true);
+      return;
+    }
+    mostrarToast('Linha de atenção adicionada!');
+    fecharModalAtencao();
+    carregarEntregas();
+  }catch(err){
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+    mostrarToast('Erro: ' + err, true);
+  }
 }
 
 async function buscarCepFmt_(){
