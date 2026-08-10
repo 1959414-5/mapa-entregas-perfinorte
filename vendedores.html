@@ -152,7 +152,7 @@
     letter-spacing:.06em; text-transform:uppercase; color:#1f2430; position:sticky; top:0; background:#f0f0f0;
     overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
-  .tabela-entregas td{padding:5px 6px; border:1px solid #d5a6bd; vertical-align:middle; overflow:hidden; text-overflow:ellipsis;}
+  .tabela-entregas td{padding:5px 6px; border:1px solid #d5a6bd; vertical-align:middle; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .tabela-entregas.condensada th{padding:4px 6px; font-size:8px;}
   .tabela-entregas.condensada td{padding:0 4px; font-size:10px; line-height:1.5;}
   .tabela-entregas .td-cliente{font-weight:700; white-space:nowrap;}
@@ -751,7 +751,7 @@ function renderTabela(ehAtualizacaoAutomatica){
         '<label><input type="checkbox"' + checkStatus('VAZIO') + ' onchange="alternarStatusNoFiltro_(\'VAZIO\', this.checked)"> — (vazio)</label>' +
       '</div>' +
     '</th>' +
-    '<th>OK</th><th>Observações</th>' +
+    '<th>Observações</th>' +
     '</tr></thead><tbody>';
 
   lista.forEach(d => {
@@ -770,7 +770,6 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td class="td-data">' + formatarDataBR_(d.data) + '</td>' +
       '<td>' + (d.periodo || '—') + '</td>' +
       '<td>' + (d.status || '—') + '</td>' +
-      '<td class="td-check"><input type="checkbox" class="td-checkbox" disabled' + (d.ok ? ' checked' : '') + '></td>' +
       '<td>' + escapeAttr_(d.observacoes) + '</td>' +
       '</tr>';
   });
