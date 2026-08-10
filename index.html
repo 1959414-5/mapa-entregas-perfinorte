@@ -261,6 +261,7 @@
   .pin span{transform:rotate(45deg);font-family:var(--font-mono);font-size:10px;font-weight:700;color:#12161b;}
   .pin.MANHÃ{background:var(--manha);}
   .pin.TARDE{background:var(--tarde);}
+  .pin.INDEFINIDO{background:#8a94a3;}
 
   .pin-origem{
     width:36px; height:36px; border-radius:50%;
@@ -285,6 +286,8 @@
   .marker-cluster-manha div{background:rgba(232,162,61,.85);color:#1a1305;}
   .marker-cluster-tarde{background:rgba(47,147,163,.5);}
   .marker-cluster-tarde div{background:rgba(47,147,163,.85);color:#04191c;}
+  .marker-cluster-indefinido{background:rgba(138,148,163,.5);}
+  .marker-cluster-indefinido div{background:rgba(138,148,163,.85);color:#12161b;}
   .marker-cluster-mix{background:rgba(238,241,244,.35);}
   .marker-cluster-mix div{background:rgba(238,241,244,.85);color:#12161b;}
 
@@ -486,6 +489,16 @@
   }
   .periodo-tabela button:last-child{border-right:none;}
   .periodo-tabela button.active{background:var(--manha); color:#1a1305; font-weight:700;}
+  .data-tabela{display:flex; align-items:center; gap:5px;}
+  .data-tabela input[type=date]{
+    padding:5px 7px; border:1px solid #c7ccd3; border-radius:4px; color:#1f2430;
+    font-size:10.5px; font-family:var(--font-mono); background:#fff;
+  }
+  .data-tabela span{font-size:10.5px; color:#6b7280;}
+  .data-tabela .btn-limpar-data{
+    padding:5px 8px; border:1px solid #c7ccd3; border-radius:4px; background:#fff;
+    color:#6b7280; font-size:10.5px; font-family:var(--font-mono); cursor:pointer;
+  }
   .btn-toggle-tabela{
     padding:5px 10px; border:1px solid #c7ccd3; border-radius:4px;
     background:#fff; color:#4b5563; font-size:10.5px; font-family:var(--font-mono);
@@ -839,7 +852,7 @@ const DADOS_EXEMPLO = [
   {cliente:"SAUTEC", motorista:"JOÃO", data:new Date().toISOString().slice(0,10), periodo:"MANHÃ", status:"EM ANDAMENTO", cidade:"ARARUNA", endereco:"Rua Paraná, 120 - Ararununa/PR", observacoes:"", lat:-23.9500, lng:-52.4900},
 ];
 
-let map, clusterManha, clusterTarde, markersById = {};
+let map, clusterManha, clusterTarde, clusterIndefinido, markersById = {};
 let rotaSugerida = null; // array de "linha" na ordem sugerida (ou null se nenhuma rota ativa)
 let rotaGeometria = null; // polyline codificada da rota real (pelas ruas), devolvida pelo OpenRouteService
 let marcadorPerfinorteFixo = null;  // ícone da fábrica, sempre visível no mapa (não depende de rota ativa)
@@ -994,8 +1007,10 @@ function initMap(){
 
   clusterManha = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('manha') });
   clusterTarde = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('tarde') });
+  clusterIndefinido = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('indefinido') });
   map.addLayer(clusterManha);
   map.addLayer(clusterTarde);
+  map.addLayer(clusterIndefinido);
 }
 
 function makeClusterIcon(kind){
@@ -1010,8 +1025,10 @@ function makeClusterIcon(kind){
 }
 
 function pinIcon(periodo){
-  const cls = periodo === 'TARDE' ? 'TARDE' : 'MANHÃ';
-  const letra = periodo === 'TARDE' ? 'T' : 'M';
+  let cls, letra;
+  if (periodo === 'TARDE'){ cls = 'TARDE'; letra = 'T'; }
+  else if (periodo === 'MANHÃ'){ cls = 'MANHÃ'; letra = 'M'; }
+  else { cls = 'INDEFINIDO'; letra = 'I'; } // sem período definido — pino cinza
   return L.divIcon({
     className:'',
     html:`<div class="pin ${cls}"><span>${letra}</span></div>`,
@@ -1259,8 +1276,12 @@ function aplicarFiltros(ajustarZoom){
   // a tabela é 100% independente, com os filtros dela mesma (status e
   // período próprios, na própria tabela).
   entregasAtuais = todasEntregas.filter(d => {
-    if (dataDe && d.data && d.data < dataDe) return false;
-    if (dataAte && d.data && d.data > dataAte) return false;
+    // sem data, não aparece no mapa — o mapa é sobre "onde ir e quando",
+    // uma entrega sem data prevista não tem "quando" pra mostrar aqui
+    // (mas continua aparecendo normalmente na tabela)
+    if (!d.data) return false;
+    if (dataDe && d.data < dataDe) return false;
+    if (dataAte && d.data > dataAte) return false;
     if (filtroPeriodo && d.periodo !== filtroPeriodo) return false;
     if (motorista && String(d.motorista||'').toUpperCase() !== motorista.toUpperCase()) return false;
     const chaveStatus = String(d.status || '').trim().toUpperCase() || 'VAZIO';
@@ -1289,6 +1310,7 @@ function render(ajustarZoom){
   if (ajustarZoom === undefined) ajustarZoom = true;
   clusterManha.clearLayers();
   clusterTarde.clearLayers();
+  clusterIndefinido.clearLayers();
   markersById = {};
 
   const list = document.getElementById('list');
@@ -1337,7 +1359,8 @@ function render(ajustarZoom){
         <span class="status ${statusClass(d.status)}">${d.status || '—'}</span>
       </div>
     `);
-    (d.periodo === 'TARDE' ? clusterTarde : clusterManha).addLayer(marker);
+    const clusterAlvo = d.periodo === 'TARDE' ? clusterTarde : (d.periodo === 'MANHÃ' ? clusterManha : clusterIndefinido);
+    clusterAlvo.addLayer(marker);
     markersById[i] = marker;
     bounds.push([d.lat, d.lng]);
   });
@@ -1607,11 +1630,24 @@ function corCelulaStatus_(d){
 
 let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','VAZIO']); // todos marcados por padrão
 let filtroPeriodoTabela = ''; // '' = todos — filtro próprio da tabela, não usa o do sidebar
+let filtroDataDeTabela = '';
+let filtroDataAteTabela = '';
 
 function definirPeriodoTabela_(valor){
   filtroPeriodoTabela = valor;
   salvarPrefsTabela_();
   renderTabela();
+}
+function definirDataTabela_(){
+  filtroDataDeTabela = document.getElementById('tabelaDataDe').value;
+  filtroDataAteTabela = document.getElementById('tabelaDataAte').value;
+  salvarPrefsTabela_();
+  renderTabela();
+}
+function limparDataTabela_(){
+  document.getElementById('tabelaDataDe').value = '';
+  document.getElementById('tabelaDataAte').value = '';
+  definirDataTabela_();
 }
 
 /* ----- larguras das colunas da tabela (arrastar pra redimensionar, igual Sheets) ----- */
@@ -1689,7 +1725,9 @@ function salvarPrefsTabela_(){
     localStorage.setItem(TABELA_PREFS_CHAVE, JSON.stringify({
       ordenacaoData: ordenacaoData,
       filtroPeriodoTabela: filtroPeriodoTabela,
-      filtroStatusTabela: Array.from(filtroStatusTabela)
+      filtroStatusTabela: Array.from(filtroStatusTabela),
+      filtroDataDeTabela: filtroDataDeTabela,
+      filtroDataAteTabela: filtroDataAteTabela
     }));
   }catch(e){}
 }
@@ -1699,6 +1737,8 @@ function salvarPrefsTabela_(){
     if (salvo.ordenacaoData === 'asc' || salvo.ordenacaoData === 'desc') ordenacaoData = salvo.ordenacaoData;
     if (typeof salvo.filtroPeriodoTabela === 'string') filtroPeriodoTabela = salvo.filtroPeriodoTabela;
     if (Array.isArray(salvo.filtroStatusTabela)) filtroStatusTabela = new Set(salvo.filtroStatusTabela);
+    if (typeof salvo.filtroDataDeTabela === 'string') filtroDataDeTabela = salvo.filtroDataDeTabela;
+    if (typeof salvo.filtroDataAteTabela === 'string') filtroDataAteTabela = salvo.filtroDataAteTabela;
   }catch(e){}
 })();
 
@@ -1782,6 +1822,10 @@ function renderTabela(ehAtualizacaoAutomatica){
     const chave = String(d.status || '').trim().toUpperCase() || 'VAZIO';
     if (!filtroStatusTabela.has(chave)) return false;
     if (filtroPeriodoTabela && d.periodo !== filtroPeriodoTabela) return false;
+    // filtro de data próprio da tabela — linhas sem data continuam
+    // aparecendo (pedido dela: status/data vazios não podem sumir da tabela)
+    if (filtroDataDeTabela && d.data && d.data < filtroDataDeTabela) return false;
+    if (filtroDataAteTabela && d.data && d.data > filtroDataAteTabela) return false;
     return true;
   });
 
@@ -1829,6 +1873,12 @@ function renderTabela(ehAtualizacaoAutomatica){
   let html = '<div class="tabela-toolbar">' +
       '<span class="contagem">' + lista.length + ' de ' + entregasParaTabela.length + ' entrega(s)</span>' +
       '<div class="tabela-controles">' +
+        '<div class="data-tabela">' +
+          '<input type="date" id="tabelaDataDe" value="' + filtroDataDeTabela + '" onchange="definirDataTabela_()">' +
+          '<span>→</span>' +
+          '<input type="date" id="tabelaDataAte" value="' + filtroDataAteTabela + '" onchange="definirDataTabela_()">' +
+          ((filtroDataDeTabela || filtroDataAteTabela) ? '<button type="button" class="btn-limpar-data" onclick="limparDataTabela_()">✕</button>' : '') +
+        '</div>' +
         '<div class="periodo-tabela">' +
           '<button type="button" class="' + (filtroPeriodoTabela === '' ? 'active' : '') + '" onclick="definirPeriodoTabela_(\'\')">Todos</button>' +
           '<button type="button" class="' + ativoPeriodoTabela('MANHÃ') + '" onclick="definirPeriodoTabela_(\'MANHÃ\')">Manhã</button>' +
@@ -2041,10 +2091,11 @@ function focarEntrega(i){
   const ll = marker.getLatLng();
   map.setView(ll, 15, { animate:true });
   // abre o popup mesmo estando dentro de um cluster
-  const parent = clusterManha.getVisibleParent(marker) || clusterTarde.getVisibleParent(marker);
+  const parent = clusterManha.getVisibleParent(marker) || clusterTarde.getVisibleParent(marker) || clusterIndefinido.getVisibleParent(marker);
   if (parent && parent !== marker){
     clusterManha.zoomToShowLayer(marker, () => marker.openPopup());
     clusterTarde.zoomToShowLayer(marker, () => marker.openPopup());
+    clusterIndefinido.zoomToShowLayer(marker, () => marker.openPopup());
   } else {
     marker.openPopup();
   }
