@@ -610,6 +610,13 @@
   .td-input:focus{outline:none; border-color:var(--manha); background:#ffffff;}
   .td-input.salvando{opacity:.5;}
   .td-input.erro-salvar{border-color:var(--fila); background:#fdecea;}
+  .td-endereco-cel{position:relative; display:flex; align-items:center; gap:2px;}
+  .td-endereco-cel .td-input{flex:1; min-width:0;}
+  .btn-editar-endereco{
+    flex:0 0 auto; background:none; border:none; cursor:pointer;
+    font-size:12px; padding:2px 3px; opacity:.55; border-radius:3px;
+  }
+  .btn-editar-endereco:hover{opacity:1; background:#f0f0f0;}
   .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:pointer;}
   .btn-remover{
     background:none; border:none; color:#c2c7cf; cursor:pointer;
@@ -838,6 +845,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModalFormatarEndereco()">Fechar</button>
+      <button class="btn-primary" id="btnSalvarFmtNaEntrega" onclick="salvarEnderecoNaEntrega_()" style="display:none;">💾 Salvar nesta entrega</button>
     </div>
   </div>
 </div>
@@ -926,6 +934,7 @@ let miniMap = null, miniMapMarker = null;
 let coordsAjustadasManualmente = null; // {lat, lng} — preenchido só se a pessoa arrastar o pino
 let fmtMiniMap = null, fmtMiniMapMarker = null;
 let fmtEnderecoTexto = ''; // texto formatado atual da ferramenta "Formatar endereço"
+let fmtLinhaAlvo = null; // se veio do lápis de editar numa linha da tabela, guarda o número dela
 let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
 let filtroOkSidebar = ''; // '' = todos, 'sim' = só prontos, 'nao' = só não prontos — só afeta o mapa
 
@@ -2027,7 +2036,9 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><input type="text" class="td-input" data-campo="codigo" value="' + escapeAttr_(d.codigo) + '" style="width:70px;"></td>' +
       '<td class="td-cliente">' + d.cliente + '</td>' +
       '<td class="td-centro"><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px; text-align:center;"></td>' +
-      '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
+      '<td class="td-endereco-cel"><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '">' +
+        '<button type="button" class="btn-editar-endereco" title="Buscar endereço por CEP" onclick="abrirModalFormatarEndereco(' + d.linha + ')">✏️</button>' +
+      '</td>' +
       '<td class="td-cidade td-centro">' + (d.cidade || '—') + '</td>' +
       '<td class="td-centro"><select class="td-input" data-campo="motorista"' + corCelulaMotorista_(d) + '><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
@@ -2381,7 +2392,7 @@ async function buscarCep(){
    montar um endereço no padrão certo e copiar (ex: pra colar direto na
    planilha). Mesma lógica de CEP/mini-mapa arrastável, campos separados.
    ===================================================================== */
-function abrirModalFormatarEndereco(){
+function abrirModalFormatarEndereco(linhaAlvo){
   document.getElementById('modalFormatarEndereco').classList.add('show');
   document.getElementById('fmtCep').value = '';
   document.getElementById('fmtRua').value = '';
@@ -2394,10 +2405,18 @@ function abrirModalFormatarEndereco(){
   document.getElementById('fmtMiniMap').style.display = 'none';
   document.getElementById('fmtCopiaBox').style.display = 'none';
   fmtEnderecoTexto = '';
+
+  // se veio de um lápis de editar na tabela, guarda a linha alvo — assim
+  // "Aplicar" também mostra a opção de salvar direto naquela entrega, em
+  // vez de só copiar o texto
+  fmtLinhaAlvo = (typeof linhaAlvo === 'number') ? linhaAlvo : null;
+  const titulo = document.querySelector('#modalFormatarEndereco h2');
+  if (titulo) titulo.textContent = fmtLinhaAlvo ? 'Editar endereço da entrega' : 'Formatar endereço';
 }
 
 function fecharModalFormatarEndereco(){
   document.getElementById('modalFormatarEndereco').classList.remove('show');
+  fmtLinhaAlvo = null;
 }
 
 /* ===== LINHA DE ATENÇÃO — aviso livre na tabela, sem código de cliente
@@ -2657,6 +2676,43 @@ function mostrarFmtMiniMap_(lat, lng){
 function mostrarCopiaFmt_(endereco){
   document.getElementById('fmtCopiaBox').style.display = 'block';
   document.getElementById('fmtTextoFinal').value = endereco;
+  document.getElementById('btnSalvarFmtNaEntrega').style.display = fmtLinhaAlvo ? 'inline-block' : 'none';
+}
+
+async function salvarEnderecoNaEntrega_(){
+  if (!fmtLinhaAlvo || !fmtEnderecoTexto) return;
+
+  const btn = document.getElementById('btnSalvarFmtNaEntrega');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'atualizarCampo', linha: fmtLinhaAlvo, campo: 'endereco', valor: fmtEnderecoTexto });
+    btn.disabled = false;
+    btn.textContent = '💾 Salvar nesta entrega';
+
+    if (!res.ok){
+      mostrarToast('Erro: ' + res.erro, true);
+      return;
+    }
+
+    // atualiza a linha na tabela na hora, sem esperar o próximo refresh
+    const item = todasEntregas.find(d => String(d.linha) === String(fmtLinhaAlvo));
+    if (item) item.endereco = fmtEnderecoTexto;
+    const campoNaTabela = document.querySelector('tr [data-campo="endereco"]');
+    document.querySelectorAll('.tabela-entregas tbody tr').forEach(tr => {
+      // encontra a linha certa pelo botão do lápis que referencia essa linha
+      const lapis = tr.querySelector('.btn-editar-endereco[onclick*="(' + fmtLinhaAlvo + ')"]');
+      if (lapis) tr.querySelector('[data-campo="endereco"]').value = fmtEnderecoTexto;
+    });
+
+    mostrarToast('Endereço salvo!');
+    fecharModalFormatarEndereco();
+  }catch(err){
+    btn.disabled = false;
+    btn.textContent = '💾 Salvar nesta entrega';
+    mostrarToast('Erro: ' + err, true);
+  }
 }
 
 function copiarEnderecoFmt_(){
