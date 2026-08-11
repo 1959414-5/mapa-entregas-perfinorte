@@ -568,6 +568,12 @@
     cursor:pointer;
   }
   .td-status-select{text-align:center; text-align-last:center;}
+  .td-periodo-pill{
+    width:auto !important; display:inline-block; padding:4px 14px;
+    border-radius:999px; font-weight:700; border:none !important;
+    text-align:center; text-align-last:center;
+  }
+  .td-centro{text-align:center;}
 
   .td-input{
     width:100%; background:transparent; border:1px solid transparent;
@@ -1966,12 +1972,12 @@ function renderTabela(ehAtualizacaoAutomatica){
       (rotaSugerida ? '<td style="text-align:center;font-weight:700;">' + (numeroRota > 0 ? numeroRota : '—') + '</td>' : '') +
       '<td><input type="text" class="td-input" data-campo="codigo" value="' + escapeAttr_(d.codigo) + '" style="width:70px;"></td>' +
       '<td class="td-cliente">' + d.cliente + '</td>' +
-      '<td><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px;"></td>' +
+      '<td class="td-centro"><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px; text-align:center;"></td>' +
       '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
       '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
-      '<td><select class="td-input" data-campo="motorista"' + corCelulaMotorista_(d) + '><option value="">—</option>' + opcoesMotorista + '</select></td>' +
+      '<td class="td-centro"><select class="td-input" data-campo="motorista"' + corCelulaMotorista_(d) + '><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
-      '<td><select class="td-input" data-campo="periodo"' + corCelulaPeriodo_(d) + '><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
+      '<td class="td-centro"><select class="td-input td-periodo-pill" data-campo="periodo"' + corCelulaPeriodo_(d) + '><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
       '<td><select class="td-input td-status-select"' + corCelulaStatus_(d) + ' data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
