@@ -568,11 +568,6 @@
     cursor:pointer;
   }
   .td-status-select{text-align:center; text-align-last:center;}
-  .td-periodo-pill{
-    width:auto !important; display:inline-block; padding:4px 14px;
-    border-radius:999px; font-weight:700; border:none !important;
-    text-align:center; text-align-last:center;
-  }
   .td-centro{text-align:center;}
 
   .td-input{
@@ -1635,12 +1630,12 @@ function corCelulaStatus_(d){
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
 
-// Cor da célula de Período — mesmas cores do mapa (âmbar pra manhã, azul
-// pra tarde), só nessa célula, igual o Status.
+// Cor da célula de Período — fundo claro com a fonte numa cor escura da
+// mesma família (mesmo padrão visual do "Em andamento"/"Pedido pronto").
 function estiloCelulaPeriodo_(periodo){
   const p = String(periodo || '').trim().toUpperCase();
-  if (p === 'MANHÃ') return { fundo: 'var(--manha)', texto: '#1a1305' };
-  if (p === 'TARDE') return { fundo: 'var(--tarde)', texto: '#04191c' };
+  if (p === 'MANHÃ') return { fundo: '#fff2cc', texto: '#7f6000' };
+  if (p === 'TARDE') return { fundo: '#cfe2f3', texto: '#1c4587' };
   return null;
 }
 function corCelulaPeriodo_(d){
@@ -1977,7 +1972,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
       '<td class="td-centro"><select class="td-input" data-campo="motorista"' + corCelulaMotorista_(d) + '><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
-      '<td class="td-centro"><select class="td-input td-periodo-pill" data-campo="periodo"' + corCelulaPeriodo_(d) + '><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
+      '<td class="td-centro"><select class="td-input" data-campo="periodo"' + corCelulaPeriodo_(d) + '><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
       '<td><select class="td-input td-status-select"' + corCelulaStatus_(d) + ' data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
