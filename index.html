@@ -15,8 +15,8 @@
     --line:#2a313c;
     --paper:#eef1f4;
     --paper-dim:#aab3bf;
-    --manha:#e8a23d;
-    --tarde:#2f93a3;
+    --manha:#e07b39;
+    --tarde:#1fb6c9;
     --entregue:#5fae72;
     --fila:#d8622f;
     --andamento:#c9b23d;
@@ -569,6 +569,7 @@
   }
   .td-status-select{text-align:center; text-align-last:center;}
   .td-centro{text-align:center;}
+  .td-centro select.td-input{text-align-last:center;}
 
   .td-input{
     width:100%; background:transparent; border:1px solid transparent;
@@ -1630,12 +1631,13 @@ function corCelulaStatus_(d){
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
 
-// Cor da célula de Período — fundo claro com a fonte numa cor escura da
-// mesma família (mesmo padrão visual do "Em andamento"/"Pedido pronto").
+// Cor da célula de Período — laranja pra manhã, ciano pra tarde (fundo
+// claro, fonte escura) — cores diferentes do "Em andamento" (amarelo) de
+// propósito, pra não ficar parecido.
 function estiloCelulaPeriodo_(periodo){
   const p = String(periodo || '').trim().toUpperCase();
-  if (p === 'MANHÃ') return { fundo: '#fff2cc', texto: '#7f6000' };
-  if (p === 'TARDE') return { fundo: '#cfe2f3', texto: '#1c4587' };
+  if (p === 'MANHÃ') return { fundo: '#fde3d0', texto: '#8a4014' };
+  if (p === 'TARDE') return { fundo: '#d0f0f3', texto: '#0e6570' };
   return null;
 }
 function corCelulaPeriodo_(d){
@@ -1647,9 +1649,11 @@ function corCelulaPeriodo_(d){
 // (calculada a partir do texto, não sorteada de verdade), assim o mesmo
 // motorista sempre aparece com a mesma cor, sem precisar cadastrar cor
 // nenhuma na mão — funciona pra qualquer motorista, até os novos.
+// "GENTIL" é uma exceção: cor vermelha fixa, pedida especificamente.
 function estiloCelulaMotorista_(nome){
   const texto = String(nome || '').trim().toUpperCase();
   if (!texto) return null;
+  if (texto === 'GENTIL') return { fundo: '#fbd6d6', texto: '#8b1e1e' };
   let hash = 0;
   for (let i = 0; i < texto.length; i++){
     hash = texto.charCodeAt(i) + ((hash << 5) - hash);
@@ -1969,7 +1973,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td class="td-cliente">' + d.cliente + '</td>' +
       '<td class="td-centro"><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px; text-align:center;"></td>' +
       '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
-      '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
+      '<td class="td-cidade td-centro">' + (d.cidade || '—') + '</td>' +
       '<td class="td-centro"><select class="td-input" data-campo="motorista"' + corCelulaMotorista_(d) + '><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
       '<td class="td-centro"><select class="td-input" data-campo="periodo"' + corCelulaPeriodo_(d) + '><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
