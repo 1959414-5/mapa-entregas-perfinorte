@@ -11,7 +11,7 @@
   :root{
     --ink:#12161b; --panel:#181d24; --panel-2:#1f2530; --line:#2a313c;
     --paper:#eef1f4; --paper-dim:#aab3bf;
-    --manha:#e8a23d; --tarde:#2f93a3; --entregue:#5fae72; --fila:#d8622f;
+    --manha:#e07b39; --tarde:#1fb6c9; --entregue:#5fae72; --fila:#d8622f;
     --font-ui: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   }
@@ -811,21 +811,23 @@ function corCelulaStatus_(d){
   return '';
 }
 
-// Cor da célula de Período — fundo claro com a fonte numa cor escura da
-// mesma família (mesmo padrão visual do "Em andamento"/"Pedido pronto").
+// Cor da célula de Período — laranja pra manhã, ciano pra tarde (fundo
+// claro, fonte escura) — diferente do "Em andamento" (amarelo) de
+// propósito, pra não ficar parecido.
 function corCelulaPeriodo_(d){
   const periodo = String(d.periodo || '').trim().toUpperCase();
-  if (periodo === 'MANHÃ') return ' style="background:#fff2cc;color:#7f6000;"';
-  if (periodo === 'TARDE') return ' style="background:#cfe2f3;color:#1c4587;"';
+  if (periodo === 'MANHÃ') return ' style="background:#fde3d0;color:#8a4014;"';
+  if (periodo === 'TARDE') return ' style="background:#d0f0f3;color:#0e6570;"';
   return '';
 }
 
 // Cor da célula de Motorista — cor fixa e consistente por nome (calculada
 // a partir do texto), assim o mesmo motorista sempre aparece com a mesma
-// cor, sem precisar cadastrar nada na mão.
+// cor, sem precisar cadastrar nada na mão. "GENTIL" é exceção: vermelho fixo.
 function corCelulaMotorista_(d){
   const nome = String(d.motorista || '').trim().toUpperCase();
   if (!nome) return '';
+  if (nome === 'GENTIL') return ' style="background:#fbd6d6;color:#8b1e1e;"';
   let hash = 0;
   for (let i = 0; i < nome.length; i++){
     hash = nome.charCodeAt(i) + ((hash << 5) - hash);
