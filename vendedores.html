@@ -63,6 +63,11 @@
   .view-toggle button.active{background:var(--paper); color:var(--ink); border-color:var(--paper);}
 
   .controls{padding:16px 20px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:12px;}
+  .secao-titulo{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--paper-dim); font-weight:700;
+    border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:2px;
+  }
   .field label{display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--paper-dim); margin-bottom:5px;}
   .field select, .field input[type=date]{
     width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--paper);
@@ -225,6 +230,7 @@
     </div>
 
     <div class="controls">
+      <div class="secao-titulo">Filtros</div>
       <div class="field">
         <label>Data (previsão)</label>
         <div class="date-range">
@@ -518,6 +524,7 @@ async function carregarMarcadorPerfinorte_(){
   try{
     const res = await chamarAPI_GET_({ formato: 'origemPerfinorte' });
     if (!res.ok) return;
+    map.setView([res.lat, res.lng], 12); // primeira entrada: câmera parte da Perfinorte
     marcadorPerfinorteFixo = L.marker([res.lat, res.lng], { icon: origemIcon_(), zIndexOffset: 500 })
       .bindPopup('<div class="pop"><h3>🏭 Perfinorte</h3><div class="row">' + (res.endereco || '') + '</div></div>')
       .addTo(map);
@@ -716,7 +723,9 @@ function render(ajustarZoom){
     bounds.push([d.lat, d.lng]);
   });
 
-  document.getElementById('statTotal').textContent = entregasAtuais.length;
+  // não conta linhas de atenção (avisos) sem código de cliente
+  const totalComCodigo = entregasAtuais.filter(d => String(d.codigo || '').trim()).length;
+  document.getElementById('statTotal').textContent = totalComCodigo;
   document.getElementById('statCidades').textContent = cidades.size;
   document.getElementById('statSemGeo').textContent = semGeo;
 
@@ -1003,9 +1012,11 @@ carregarPreferencias();
 restaurarSidebar_();
 restaurarSidebarDireito_();
 initMap();
-carregarEntregas();
+// Perfinorte centraliza a câmera ANTES das entregas carregarem
+carregarMarcadorPerfinorte_().then(() => {
+  carregarEntregas();
+});
 carregarCoresStatus_();
-carregarMarcadorPerfinorte_();
 carregarLocalizacoesMotoristas();
 
 const INTERVALO_ATUALIZACAO_MS = 10000;
