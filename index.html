@@ -406,6 +406,18 @@
   .busca-resultado.erro{color:var(--fila); background:rgba(216,98,47,.12); display:block;}
   .busca-resultado.carregando{display:block;}
 
+  .memoria-titulo{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--paper-dim); margin:10px 0 6px;
+  }
+  .memoria-endereco{
+    display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:4px;
+    color:var(--paper); font-size:12px; cursor:pointer;
+  }
+  .memoria-endereco:hover{border-color:var(--tarde); background:rgba(31,182,201,.08);}
+  .memoria-endereco span{display:block; font-size:9.5px; color:var(--paper-dim); margin-top:2px; font-family:var(--font-mono);}
+
   .barra-progresso-wrap{
     width:100%; height:7px; background:rgba(255,255,255,.12);
     border-radius:4px; overflow:hidden;
@@ -735,6 +747,7 @@
           <button class="btn-secondary" onclick="buscarCliente()">Buscar</button>
         </div>
         <div id="buscaResultado" class="busca-resultado"></div>
+        <div id="enderecosMemoria" style="display:none;"></div>
       </div>
 
       <div id="camposManuais" style="display:none; flex-direction:column; gap:14px;">
@@ -2859,11 +2872,45 @@ function mostrarMiniMap_(lat, lng){
   setTimeout(function(){ miniMap.invalidateSize(); }, 80);
 }
 
+let enderecosMemoriaAtuais = [];
+
+async function mostrarEnderecosMemoria_(codigo){
+  const container = document.getElementById('enderecosMemoria');
+  container.style.display = 'none';
+  container.innerHTML = '';
+  enderecosMemoriaAtuais = [];
+
+  try{
+    const res = await chamarAPI_GET_({ formato: 'enderecosCliente', codigo: codigo });
+    const enderecos = (res && Array.isArray(res.enderecos)) ? res.enderecos : [];
+    if (!enderecos.length) return;
+
+    enderecosMemoriaAtuais = enderecos.map(e => e.endereco);
+    let html = '<div class="memoria-titulo">📍 Endereços já usados por esse cliente — clique pra usar</div>';
+    enderecosMemoriaAtuais.forEach((end, i) => {
+      html += '<button type="button" class="memoria-endereco" onclick="usarEnderecoMemoria_(' + i + ')">' + end + '</button>';
+    });
+    container.innerHTML = html;
+    container.style.display = 'block';
+  }catch(err){
+    // silencioso — não atrapalha o fluxo normal de busca se isso falhar
+  }
+}
+
+async function usarEnderecoMemoria_(indice){
+  const endereco = enderecosMemoriaAtuais[indice];
+  if (!endereco) return;
+  await confirmarEndereco_(endereco);
+  mostrarToast('Endereço aplicado — pode salvar direto ou trocar antes.');
+}
+
 async function buscarCliente(){
   const codigo = document.getElementById('novoCodigo').value.trim();
   const resultado = document.getElementById('buscaResultado');
   document.getElementById('camposManuais').style.display = 'none';
   document.getElementById('btnSalvarNovo').disabled = true;
+  document.getElementById('enderecosMemoria').style.display = 'none';
+  document.getElementById('enderecosMemoria').innerHTML = '';
   clienteEncontrado = null;
 
   if (!codigo){
@@ -2891,6 +2938,10 @@ async function buscarCliente(){
     clienteEncontrado = info;
     resultado.className = 'busca-resultado ok';
     resultado.innerHTML = '<b>' + info.fantasia + '</b>' + (info.vendedor ? ' · ' + info.vendedor : '');
+
+    // mostra os endereços já usados por esse cliente antes, se tiver algum
+    // — ela pode escolher um em vez de digitar tudo de novo
+    mostrarEnderecosMemoria_(codigo);
 
     // se a rota sugerida já vier pronta e no padrão, confia nela e aplica
     // direto — não precisa a pessoa preencher/clicar em nada
