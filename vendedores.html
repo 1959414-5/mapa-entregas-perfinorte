@@ -188,10 +188,6 @@
   .tabela-entregas .td-data{font-weight:700;}
   .tabela-entregas .td-cidade{white-space:nowrap;}
   .tabela-entregas .td-centro{text-align:center;}
-  .selo-periodo{
-    display:inline-block; padding:3px 12px; border-radius:999px;
-    font-weight:700; font-size:10px;
-  }
   .tabela-entregas .td-check{text-align:center; width:34px;}
   .th-ordenavel{cursor:pointer; user-select:none;}
   .th-ordenavel:hover{background:#e6e6e6;}
@@ -815,13 +811,13 @@ function corCelulaStatus_(d){
   return '';
 }
 
-// Selo de Período — mesmas cores do mapa (âmbar pra manhã, azul pra
-// tarde), num "selo" arredondado dentro da célula (não a célula inteira).
-function seloPeriodo_(d){
+// Cor da célula de Período — fundo claro com a fonte numa cor escura da
+// mesma família (mesmo padrão visual do "Em andamento"/"Pedido pronto").
+function corCelulaPeriodo_(d){
   const periodo = String(d.periodo || '').trim().toUpperCase();
-  if (periodo === 'MANHÃ') return '<span class="selo-periodo" style="background:var(--manha);color:#1a1305;">MANHÃ</span>';
-  if (periodo === 'TARDE') return '<span class="selo-periodo" style="background:var(--tarde);color:#04191c;">TARDE</span>';
-  return '—';
+  if (periodo === 'MANHÃ') return ' style="background:#fff2cc;color:#7f6000;"';
+  if (periodo === 'TARDE') return ' style="background:#cfe2f3;color:#1c4587;"';
+  return '';
 }
 
 // Cor da célula de Motorista — cor fixa e consistente por nome (calculada
@@ -991,7 +987,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td class="td-cidade td-centro">' + (d.cidade || '—') + '</td>' +
       '<td class="td-centro"' + corCelulaMotorista_(d) + '>' + escapeAttr_(d.motorista) + '</td>' +
       '<td class="td-data td-centro">' + formatarDataBR_(d.data) + '</td>' +
-      '<td class="td-centro">' + seloPeriodo_(d) + '</td>' +
+      '<td class="td-centro"' + corCelulaPeriodo_(d) + '>' + (d.periodo || '—') + '</td>' +
       '<td class="td-centro"' + corCelulaStatus_(d) + '>' + (d.status || '—') + '</td>' +
       '<td>' + escapeAttr_(d.observacoes) + '</td>' +
       '</tr>';
