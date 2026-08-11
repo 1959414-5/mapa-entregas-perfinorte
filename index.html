@@ -1619,13 +1619,46 @@ function corTextoLinhaEntrega_(d){
 // Cor específica só da CÉLULA de Status — usada quando o status é "Em
 // andamento" (não colore a linha inteira, só essa célula, pra facilitar
 // a visualização sem "gritar" na linha toda).
+function estiloCelulaStatus_(status){
+  const s = String(status || '').trim().toUpperCase();
+  if (s === 'EM ANDAMENTO') return { fundo: coresStatus['EM ANDAMENTO'] || '#fff2cc', texto: '#7f6000' };
+  return null;
+}
 function corCelulaStatus_(d){
-  const status = String(d.status || '').trim().toUpperCase();
-  if (status === 'EM ANDAMENTO'){
-    const fundo = coresStatus['EM ANDAMENTO'] || '#fff2cc';
-    return ' style="background:' + fundo + ';color:#7f6000;"';
+  const e = estiloCelulaStatus_(d.status);
+  return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
+}
+
+// Cor da célula de Período — mesmas cores do mapa (âmbar pra manhã, azul
+// pra tarde), só nessa célula, igual o Status.
+function estiloCelulaPeriodo_(periodo){
+  const p = String(periodo || '').trim().toUpperCase();
+  if (p === 'MANHÃ') return { fundo: 'var(--manha)', texto: '#1a1305' };
+  if (p === 'TARDE') return { fundo: 'var(--tarde)', texto: '#04191c' };
+  return null;
+}
+function corCelulaPeriodo_(d){
+  const e = estiloCelulaPeriodo_(d.periodo);
+  return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
+}
+
+// Cor da célula de Motorista — uma cor fixa e consistente por nome
+// (calculada a partir do texto, não sorteada de verdade), assim o mesmo
+// motorista sempre aparece com a mesma cor, sem precisar cadastrar cor
+// nenhuma na mão — funciona pra qualquer motorista, até os novos.
+function estiloCelulaMotorista_(nome){
+  const texto = String(nome || '').trim().toUpperCase();
+  if (!texto) return null;
+  let hash = 0;
+  for (let i = 0; i < texto.length; i++){
+    hash = texto.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return '';
+  const matiz = Math.abs(hash) % 360;
+  return { fundo: 'hsl(' + matiz + ',60%,88%)', texto: 'hsl(' + matiz + ',55%,26%)' };
+}
+function corCelulaMotorista_(d){
+  const e = estiloCelulaMotorista_(d.motorista);
+  return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
 
 let filtroStatusTabela = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA','VAZIO']); // todos marcados por padrão
@@ -1936,9 +1969,9 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px;"></td>' +
       '<td><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '"></td>' +
       '<td class="td-cidade">' + (d.cidade || '—') + '</td>' +
-      '<td><select class="td-input" data-campo="motorista"><option value="">—</option>' + opcoesMotorista + '</select></td>' +
+      '<td><select class="td-input" data-campo="motorista"' + corCelulaMotorista_(d) + '><option value="">—</option>' + opcoesMotorista + '</select></td>' +
       '<td><input type="date" class="td-input td-data" data-campo="data" value="' + (d.data || '') + '"></td>' +
-      '<td><select class="td-input" data-campo="periodo"><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
+      '<td><select class="td-input" data-campo="periodo"' + corCelulaPeriodo_(d) + '><option value="">—</option><option value="MANHÃ">MANHÃ</option><option value="TARDE">TARDE</option></select></td>' +
       '<td><select class="td-input td-status-select"' + corCelulaStatus_(d) + ' data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
@@ -1996,6 +2029,15 @@ async function onEditarCelula_(e){
     if (item) item[campo] = valor;
     const item2 = entregasAtuais.find(d => String(d.linha) === String(linha));
     if (item2) item2[campo] = valor;
+
+    // recolore a própria célula na hora — sem isso, ficaria com a cor
+    // antiga até o próximo refresh automático (10s depois)
+    const funcaoEstilo = { periodo: estiloCelulaPeriodo_, motorista: estiloCelulaMotorista_, status: estiloCelulaStatus_ }[campo];
+    if (funcaoEstilo){
+      const estilo = funcaoEstilo(valor);
+      el.setAttribute('style', estilo ? 'background:' + estilo.fundo + ';color:' + estilo.texto + ';' : '');
+    }
+
     mostrarToast('Salvo!');
   }catch(err){
     el.classList.remove('salvando');
