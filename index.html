@@ -2967,12 +2967,6 @@ async function buscarCliente(){
       document.getElementById('novoNumero').value = String(info.numero).toUpperCase();
     }
 
-    // data sugerida: olha os pedidos desse cliente na ENTREGAS e evita
-    // repetir uma data que ele já tem agendada
-    if (info.dataSugerida){
-      document.getElementById('novaData').value = info.dataSugerida;
-    }
-
     document.getElementById('camposManuais').style.display = 'flex';
     document.getElementById('btnSalvarNovo').disabled = false;
 
