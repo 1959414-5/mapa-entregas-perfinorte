@@ -790,6 +790,15 @@ function prioridadeStatusBase_(status){
   return 5;
 }
 
+// Prioridade do Período, DENTRO de cada data — Manhã sempre antes de
+// Tarde; sem período definido vai por último dentro daquela data.
+function prioridadePeriodo_(periodo){
+  const p = String(periodo || '').trim().toUpperCase();
+  if (p === 'MANHÃ') return 0;
+  if (p === 'TARDE') return 1;
+  return 2;
+}
+
 function corLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
   const codigoVazio = !String(d.codigo || '').trim();
@@ -939,6 +948,10 @@ function renderTabela(ehAtualizacaoAutomatica){
       if (!db) return -1;
       return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
     }
+    // mesmo status e mesma data: manhã antes de tarde
+    const ppa = prioridadePeriodo_(a.periodo);
+    const ppb = prioridadePeriodo_(b.periodo);
+    if (ppa !== ppb) return ppa - ppb;
     return (b.ok === true ? 1 : 0) - (a.ok === true ? 1 : 0);
   });
 
