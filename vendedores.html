@@ -830,13 +830,23 @@ function corCelulaPeriodo_(d){
   return '';
 }
 
-// Cor da célula de Motorista — cor fixa e consistente por nome (calculada
-// a partir do texto), assim o mesmo motorista sempre aparece com a mesma
-// cor, sem precisar cadastrar nada na mão. "GENTIL" é exceção: vermelho fixo.
+// Cor da célula de Motorista — motoristas conhecidos (da lista da
+// planilha original) têm cor fixa parecida com a de lá; qualquer outro
+// nome ganha uma cor calculada automaticamente a partir do texto, sempre
+// a mesma pro mesmo nome.
+const CORES_MOTORISTA_FIXAS_ = {
+  'JOÃO':          { fundo: '#d4e6f7', texto: '#1c4587' },
+  'GENTIL':        { fundo: '#fbd6d6', texto: '#8b1e1e' },
+  'JOÃO BATISTOL': { fundo: '#c3daf5', texto: '#153a70' },
+  'MÁRCIO':        { fundo: '#f0e6d2', texto: '#8a6d1f' },
+  'OUTROS':        { fundo: '#e5e5e5', texto: '#555555' },
+  'JOÃO LUÍS':     { fundo: '#dcdcdc', texto: '#3f3f3f' }
+};
 function corCelulaMotorista_(d){
   const nome = String(d.motorista || '').trim().toUpperCase();
   if (!nome) return '';
-  if (nome === 'GENTIL') return ' style="background:#fbd6d6;color:#8b1e1e;"';
+  const fixa = CORES_MOTORISTA_FIXAS_[nome];
+  if (fixa) return ' style="background:' + fixa.fundo + ';color:' + fixa.texto + ';"';
   let hash = 0;
   for (let i = 0; i < nome.length; i++){
     hash = nome.charCodeAt(i) + ((hash << 5) - hash);
