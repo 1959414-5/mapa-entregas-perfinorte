@@ -1877,6 +1877,15 @@ function prioridadeStatusBase_(status){
   return 5; // qualquer outro valor inesperado
 }
 
+// Prioridade do Período, DENTRO de cada data — Manhã sempre antes de
+// Tarde; sem período definido vai por último dentro daquela data.
+function prioridadePeriodo_(periodo){
+  const p = String(periodo || '').trim().toUpperCase();
+  if (p === 'MANHÃ') return 0;
+  if (p === 'TARDE') return 1;
+  return 2;
+}
+
 function alternarFiltroStatusPopup_(e){
   e.stopPropagation();
   filtroPopupAberto = !filtroPopupAberto;
@@ -1981,7 +1990,12 @@ function renderTabela(ehAtualizacaoAutomatica){
         return ordenacaoData === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
       }
 
-      // mesmo status e mesma data: quem está com "OK" marcado vem primeiro
+      // mesmo status e mesma data: manhã antes de tarde
+      const ppa = prioridadePeriodo_(a.periodo);
+      const ppb = prioridadePeriodo_(b.periodo);
+      if (ppa !== ppb) return ppa - ppb;
+
+      // mesmo status, data e período: quem está com "OK" marcado vem primeiro
       return (b.ok === true ? 1 : 0) - (a.ok === true ? 1 : 0);
     });
   }
