@@ -2110,7 +2110,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       (rotaSugerida ? '<td style="text-align:center;font-weight:700;">' + (numeroRota > 0 ? numeroRota : '—') + '</td>' : '') +
       '<td><input type="text" class="td-input" data-campo="codigo" value="' + escapeAttr_(d.codigo) + '" style="width:70px;"></td>' +
       '<td class="td-cliente">' + d.cliente + '</td>' +
-      '<td class="td-centro"><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px; text-align:center;"></td>' +
+      '<td><input type="text" class="td-input" data-campo="representante" value="' + escapeAttr_(d.representante) + '" style="width:70px;"></td>' +
       '<td class="td-endereco-cel"><input type="text" class="td-input" data-campo="endereco" value="' + escapeAttr_(d.endereco) + '">' +
         '<button type="button" class="btn-editar-endereco" title="Buscar endereço por CEP" onclick="abrirModalFormatarEndereco(' + d.linha + ')">✏️</button>' +
       '</td>' +
