@@ -323,6 +323,7 @@
   }
   .btn-nova:hover{opacity:.9;}
   .btn-formatar{background:var(--panel-2); color:var(--paper); border:1px solid var(--line);}
+  .btn-cliente-topo{background:rgba(95,174,114,.15); color:var(--entregue); border:1px solid var(--entregue);}
   .btn-atencao-topo{background:rgba(234,153,153,.15); color:#ea9999; border:1px solid #ea9999;}
   .modo-toggle{display:flex; gap:0; padding:0 20px; margin-top:12px;}
   .modo-toggle button{
@@ -647,6 +648,7 @@
       <h1>Mapa de Entregas</h1>
       <button class="btn-nova" onclick="abrirModal()">+ Nova entrega</button>
       <button class="btn-nova btn-formatar" onclick="abrirModalFormatarEndereco()">📍 Formatar endereço</button>
+      <button class="btn-nova btn-cliente-topo" onclick="abrirModalNovoCliente()">🧾 Novo cliente</button>
       <button class="btn-nova btn-atencao-topo" onclick="abrirModalAtencao()">⚠ Linha de atenção</button>
       <div class="view-toggle">
         <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
@@ -886,6 +888,33 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModalAtencao()">Cancelar</button>
       <button class="btn-primary" id="btnSalvarAtencao" onclick="salvarLinhaAtencao_()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalNovoCliente" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🧾 Novo cliente</h2>
+      <button class="modal-close" onclick="fecharModalNovoCliente()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="ncCodigo">Código do cliente</label>
+        <input type="text" id="ncCodigo" placeholder="Sugestão automática...">
+      </div>
+      <div class="field">
+        <label for="ncFantasia">Nome fantasia</label>
+        <input type="text" id="ncFantasia" placeholder="Ex: MERCADO SÃO JOSÉ" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+      </div>
+      <p style="font-size:11.5px; color:var(--paper-dim); margin:0;">
+        Grava direto na aba CADASTRO_CLIENTES (coluna A = código, coluna C = nome fantasia).
+      </p>
+      <div id="ncResultado" class="busca-resultado"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalNovoCliente()">Cancelar</button>
+      <button class="btn-primary" id="btnSalvarNovoCliente" onclick="salvarNovoCliente_()">Salvar cliente</button>
     </div>
   </div>
 </div>
@@ -2543,6 +2572,72 @@ async function salvarLinhaAtencao_(){
     btn.disabled = false;
     btn.textContent = 'Salvar';
     mostrarToast('Erro: ' + err, true);
+  }
+}
+
+/* ===== NOVO CLIENTE — cadastra direto na CADASTRO_CLIENTES (coluna A =
+   código, coluna C = fantasia). O código já vem sugerido com o próximo
+   número disponível, mas dá pra editar antes de salvar. ===== */
+async function abrirModalNovoCliente(){
+  document.getElementById('modalNovoCliente').classList.add('show');
+  document.getElementById('ncFantasia').value = '';
+  document.getElementById('ncResultado').className = 'busca-resultado';
+  document.getElementById('ncResultado').textContent = '';
+  document.getElementById('ncCodigo').value = '';
+  document.getElementById('ncCodigo').placeholder = 'Buscando sugestão...';
+
+  try{
+    const res = await chamarAPI_GET_({ formato: 'proximoCodigoCliente' });
+    if (res.ok){
+      document.getElementById('ncCodigo').value = res.proximoCodigo;
+    }
+  }catch(err){
+    // se falhar, ela digita o código na mão mesmo
+  }
+  document.getElementById('ncCodigo').placeholder = 'Código do cliente';
+  document.getElementById('ncFantasia').focus();
+}
+
+function fecharModalNovoCliente(){
+  document.getElementById('modalNovoCliente').classList.remove('show');
+}
+
+async function salvarNovoCliente_(){
+  const codigo = document.getElementById('ncCodigo').value.trim();
+  const fantasia = document.getElementById('ncFantasia').value.trim();
+  const resultado = document.getElementById('ncResultado');
+
+  if (!codigo){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Informe o código do cliente.';
+    return;
+  }
+  if (!fantasia){
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Informe o nome fantasia.';
+    return;
+  }
+
+  const btn = document.getElementById('btnSalvarNovoCliente');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try{
+    const res = await chamarAPI_POST_({ acao: 'salvarNovoCadastroCliente', codigo: codigo, fantasia: fantasia });
+    btn.disabled = false;
+    btn.textContent = 'Salvar cliente';
+    if (!res.ok){
+      resultado.className = 'busca-resultado erro';
+      resultado.textContent = res.erro;
+      return;
+    }
+    mostrarToast('Cliente ' + res.codigo + ' cadastrado!');
+    fecharModalNovoCliente();
+  }catch(err){
+    btn.disabled = false;
+    btn.textContent = 'Salvar cliente';
+    resultado.className = 'busca-resultado erro';
+    resultado.textContent = 'Erro: ' + err;
   }
 }
 
