@@ -1016,7 +1016,7 @@ function renderTabela(ehAtualizacaoAutomatica){
     html += '<tr' + estiloLinha + '>' +
       '<td class="td-centro">' + escapeAttr_(d.codigo) + '</td>' +
       '<td class="td-cliente">' + d.cliente + '</td>' +
-      '<td class="td-centro">' + escapeAttr_(d.representante) + '</td>' +
+      '<td>' + escapeAttr_(d.representante) + '</td>' +
       '<td>' + escapeAttr_(d.endereco) + '</td>' +
       '<td class="td-cidade td-centro">' + (d.cidade || '—') + '</td>' +
       '<td class="td-centro"' + corCelulaMotorista_(d) + '>' + escapeAttr_(d.motorista) + '</td>' +
