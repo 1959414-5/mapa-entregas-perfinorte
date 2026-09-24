@@ -935,6 +935,43 @@ let rotaLinha = null;    // camada do Leaflet com a linha da rota desenhada
 let rotaSetas = null;    // camada com as setas de direção sobre a linha
 let markersMotoristas = {}; // motorista -> marcador no mapa
 let todasEntregas = [];   // tudo que veio da planilha, sem filtro nenhum
+
+/* Proteção contra condição de corrida: a cada atualização automática (10s),
+   o sistema busca tudo de novo e substitui "todasEntregas" inteiro. Se essa
+   busca pegar um retrato da planilha de um instante ANTES de uma edição sua
+   ter terminado de salvar, ela sobrescrevia sua edição recém-feita com o
+   valor antigo — parecia que "não salvou". Agora, por 15s depois de cada
+   edição, o valor que você acabou de salvar tem prioridade sobre o que
+   vier de uma busca automática, dando tempo da escrita realmente propagar. */
+let edicoesRecentes_ = {}; // chave "linha|campo" -> {valor, quando}
+function marcarEdicaoRecente_(linha, campo, valor){
+  edicoesRecentes_[linha + '|' + campo] = { valor: valor, quando: Date.now() };
+}
+function protegerEdicoesRecentes_(lista){
+  const agora = Date.now();
+  const chaves = Object.keys(edicoesRecentes_);
+  if (!chaves.length) return lista;
+
+  chaves.forEach(chave => {
+    if (agora - edicoesRecentes_[chave].quando > 15000) delete edicoesRecentes_[chave];
+  });
+
+  const chavesAtivas = Object.keys(edicoesRecentes_);
+  if (!chavesAtivas.length) return lista;
+
+  lista.forEach(item => {
+    chavesAtivas.forEach(chave => {
+      const separador = chave.indexOf('|');
+      const linhaChave = chave.slice(0, separador);
+      const campoChave = chave.slice(separador + 1);
+      if (String(item.linha) === linhaChave){
+        item[campoChave] = edicoesRecentes_[chave].valor;
+      }
+    });
+  });
+  return lista;
+}
+
 let entregasAtuais = [];  // resultado filtrado pro MAPA (inclui o status do sidebar)
 let entregasParaTabela = []; // resultado filtrado pra TABELA (sem o status do sidebar — ela tem o filtro próprio)
 let filtroPeriodo = "";
@@ -946,7 +983,7 @@ let motoristasDisponiveis = [];
 // Motoristas que já têm cor fixa (ver CORES_MOTORISTA_FIXAS_) — aparecem
 // sempre como opção pra escolher, mesmo que ainda não tenham nenhuma
 // entrega cadastrada (senão não tinha como escolher eles pela primeira vez).
-const MOTORISTAS_CONHECIDOS_ = ['JOÃO', 'GENTIL', 'JOÃO BATISTIOL', 'MÁRCIO', 'OUTROS', 'JOÃO LUÍS'];
+const MOTORISTAS_CONHECIDOS_ = ['JOÃO', 'GENTIL', 'JOÃO BATISTOL', 'MÁRCIO', 'OUTROS', 'JOÃO LUÍS'];
 let miniMap = null, miniMapMarker = null;
 let coordsAjustadasManualmente = null; // {lat, lng} — preenchido só se a pessoa arrastar o pino
 let fmtMiniMap = null, fmtMiniMapMarker = null;
@@ -1321,7 +1358,7 @@ async function carregarEntregas(){
   try{
     const resp = await fetch(API_URL + '?formato=dados');
     const dados = await resp.json();
-    todasEntregas = Array.isArray(dados) ? dados : [];
+    todasEntregas = protegerEdicoesRecentes_(Array.isArray(dados) ? dados : []);
     document.getElementById('ultimaAtualizacao').textContent =
       'atualizado ' + new Date().toLocaleTimeString('pt-BR');
     populaMotoristas();
@@ -1733,7 +1770,7 @@ function corCelulaPeriodo_(d){
 const CORES_MOTORISTA_FIXAS_ = {
   'JOÃO':          { fundo: '#d4e6f7', texto: '#1c4587' }, // azul
   'GENTIL':        { fundo: '#fbd6d6', texto: '#8b1e1e' }, // vermelho
-  'JOÃO BATISTIOL': { fundo: '#c3daf5', texto: '#153a70' }, // azul mais escuro
+  'JOÃO BATISTOL': { fundo: '#c3daf5', texto: '#153a70' }, // azul mais escuro
   'MÁRCIO':        { fundo: '#f0e6d2', texto: '#8a6d1f' }, // bege/marrom
   'OUTROS':        { fundo: '#e5e5e5', texto: '#555555' }, // cinza
   'JOÃO LUÍS':     { fundo: '#dcdcdc', texto: '#3f3f3f' }  // cinza mais escuro
@@ -2138,6 +2175,10 @@ async function onEditarCelula_(e){
     if (item) item[campo] = valor;
     const item2 = entregasAtuais.find(d => String(d.linha) === String(linha));
     if (item2) item2[campo] = valor;
+
+    // blinda essa edição por 15s contra ser sobrescrita por uma busca
+    // automática que pegou um retrato desatualizado da planilha
+    marcarEdicaoRecente_(linha, campo, valor);
 
     // recolore a própria célula na hora — sem isso, ficaria com a cor
     // antiga até o próximo refresh automático (10s depois)
