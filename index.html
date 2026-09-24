@@ -943,6 +943,10 @@ let modoAtual = 'mapa';
 let clienteEncontrado = null;
 let enderecoAplicado = ''; // endereço já montado no padrão, depois de clicar "Aplicar"
 let motoristasDisponiveis = [];
+// Motoristas que já têm cor fixa (ver CORES_MOTORISTA_FIXAS_) — aparecem
+// sempre como opção pra escolher, mesmo que ainda não tenham nenhuma
+// entrega cadastrada (senão não tinha como escolher eles pela primeira vez).
+const MOTORISTAS_CONHECIDOS_ = ['JOÃO', 'GENTIL', 'JOÃO BATISTOL', 'MÁRCIO', 'OUTROS', 'JOÃO LUÍS'];
 let miniMap = null, miniMapMarker = null;
 let coordsAjustadasManualmente = null; // {lat, lng} — preenchido só se a pessoa arrastar o pino
 let fmtMiniMap = null, fmtMiniMapMarker = null;
@@ -1376,7 +1380,7 @@ function aplicarFiltros(ajustarZoom){
 function populaMotoristas(){
   const sel = document.getElementById('motoristaSelect');
   const atual = sel.value || window.__motoristaSalvo || '';
-  const nomes = [...new Set(todasEntregas.map(d=>d.motorista).filter(Boolean))].sort();
+  const nomes = [...new Set([...MOTORISTAS_CONHECIDOS_, ...todasEntregas.map(d=>d.motorista).filter(Boolean)])].sort();
   sel.innerHTML = '<option value="">Todos</option>' + nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
   sel.value = atual;
   window.__motoristaSalvo = ''; // só usa a preferência salva na primeira vez
@@ -2307,10 +2311,14 @@ async function carregarMotoristas(){
   if (!API_URL) return;
   try{
     const lista = await chamarAPI_GET_({ formato: 'motoristas' });
-    motoristasDisponiveis = Array.isArray(lista) ? lista : [];
+    const dinamicos = Array.isArray(lista) ? lista : [];
+    // sempre inclui os motoristas conhecidos (que já têm cor fixa), mesmo
+    // que ainda não tenham nenhuma entrega cadastrada
+    motoristasDisponiveis = [...new Set([...MOTORISTAS_CONHECIDOS_, ...dinamicos])].sort();
     popularSelectMotoristas_();
   }catch(err){
-    // segue sem a lista, campo fica só com "Selecione..."
+    motoristasDisponiveis = MOTORISTAS_CONHECIDOS_.slice();
+    popularSelectMotoristas_();
   }
 }
 
