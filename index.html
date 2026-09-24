@@ -511,12 +511,12 @@
 
   /* ---------- TABELA (sempre clara, independente do tema escuro do resto) ---------- */
   #tableView{
-    display:none; height:100vh; overflow:auto;  padding:0 20px 20px;
+    display:none; height:100vh; overflow:auto; padding:20px;
     background:#ffffff; color:#1f2430;
   }
   .tabela-toolbar{
     display:flex; justify-content:space-between; align-items:center;
-    flex-wrap:wrap; gap:10px; padding-top:20px;
+    flex-wrap:wrap; gap:10px;
     margin-bottom:12px;
   }
   .tabela-toolbar .contagem{
@@ -558,14 +558,14 @@
     border:1px solid rgba(0,0,0,.25);
   }
   .tabela-entregas{
-    width:100%; min-width:1100px; border-collapse:collapse; border-spacing: 0; font-size:11px;
+    width:100%; min-width:1100px; border-collapse:collapse; font-size:11px;
     background:#ffffff; border:1px solid #d5a6bd; table-layout:fixed;
   }
   .tabela-entregas.largura-percentual{min-width:0; width:100%;}
   .tabela-entregas th{
     text-align:left; padding:7px 8px; border:1px solid #d5a6bd;
     font-family:var(--font-mono); font-size:9px; letter-spacing:.06em;
-    text-transform:uppercase; color:#1f2430; position:sticky; top:0px; z-index:20;
+    text-transform:uppercase; color:#1f2430; position:sticky; top:0;
     background:#f0f0f0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
   .tabela-entregas td{
@@ -612,7 +612,6 @@
   .td-status-select{text-align:center; text-align-last:center;}
   .td-centro{text-align:center;}
   .td-centro select.td-input{text-align-last:center;}
-  .td-centro{text-align-last: left;}
 
   .td-input{
     width:100%; background:transparent; border:1px solid transparent;
@@ -632,7 +631,7 @@
   .btn-editar-endereco:hover{opacity:1; background:#f0f0f0;}
   .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:pointer;}
   .btn-remover{
-    background:none; border:none; color:#000000; cursor:pointer;
+    background:none; border:none; color:#c2c7cf; cursor:pointer;
     font-size:14px; padding:4px; border-radius:4px; line-height:1;
   }
   .btn-remover:hover{color:var(--fila); background:#fdecea;}
@@ -1723,15 +1722,22 @@ function corCelulaPeriodo_(d){
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
 
-// Cor da célula de Motorista — uma cor fixa e consistente por nome
-// (calculada a partir do texto, não sorteada de verdade), assim o mesmo
-// motorista sempre aparece com a mesma cor, sem precisar cadastrar cor
-// nenhuma na mão — funciona pra qualquer motorista, até os novos.
-// "GENTIL" é uma exceção: cor vermelha fixa, pedida especificamente.
+// Cor da célula de Motorista — motoristas conhecidos (da lista da
+// planilha original) têm cor fixa parecida com a de lá; qualquer outro
+// nome (inclusive motoristas novos, futuros) ganha uma cor calculada
+// automaticamente a partir do texto, sempre a mesma pro mesmo nome.
+const CORES_MOTORISTA_FIXAS_ = {
+  'JOÃO':          { fundo: '#d4e6f7', texto: '#1c4587' }, // azul
+  'GENTIL':        { fundo: '#fbd6d6', texto: '#8b1e1e' }, // vermelho
+  'JOÃO BATISTOL': { fundo: '#c3daf5', texto: '#153a70' }, // azul mais escuro
+  'MÁRCIO':        { fundo: '#f0e6d2', texto: '#8a6d1f' }, // bege/marrom
+  'OUTROS':        { fundo: '#e5e5e5', texto: '#555555' }, // cinza
+  'JOÃO LUÍS':     { fundo: '#dcdcdc', texto: '#3f3f3f' }  // cinza mais escuro
+};
 function estiloCelulaMotorista_(nome){
   const texto = String(nome || '').trim().toUpperCase();
   if (!texto) return null;
-  if (texto === 'GENTIL') return { fundo: '#fbd6d6', texto: '#8b1e1e' };
+  if (CORES_MOTORISTA_FIXAS_[texto]) return CORES_MOTORISTA_FIXAS_[texto];
   let hash = 0;
   for (let i = 0; i < texto.length; i++){
     hash = texto.charCodeAt(i) + ((hash << 5) - hash);
