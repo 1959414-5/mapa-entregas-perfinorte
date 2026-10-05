@@ -808,7 +808,7 @@ function corLinhaEntrega_(d){
   if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
   if (d.ok === true) return cor('OK', '#cfe2f3');
   // "Em andamento" não colore a linha inteira — só a célula de Status
-  if (status === 'EM FILA') return cor('EM FILA', '#e0c3e8');
+  if (status === 'EM FILA') return '#ead1dc';
   return '';
 }
 function corTextoLinhaEntrega_(d){
