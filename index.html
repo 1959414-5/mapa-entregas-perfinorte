@@ -1144,15 +1144,25 @@ function alternarSidebarDireito_(){
 
 function initMap(){
   map = L.map('map', { zoomControl:true }).setView([-23.42, -52.0], 8);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20
+
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, HERE, Garmin, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), (c) OpenStreetMap contributors, GIS User Community',
+    maxZoom: 20,
+    maxNativeZoom: 16
   }).addTo(map);
 
-  clusterManha = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('manha') });
-  clusterTarde = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('tarde') });
-  clusterIndefinido = L.markerClusterGroup({ iconCreateFunction: makeClusterIcon('indefinido') });
+  clusterManha = L.markerClusterGroup({
+    iconCreateFunction: makeClusterIcon('manha')
+  });
+
+  clusterTarde = L.markerClusterGroup({
+    iconCreateFunction: makeClusterIcon('tarde')
+  });
+
+  clusterIndefinido = L.markerClusterGroup({
+    iconCreateFunction: makeClusterIcon('indefinido')
+  });
+
   map.addLayer(clusterManha);
   map.addLayer(clusterTarde);
   map.addLayer(clusterIndefinido);
