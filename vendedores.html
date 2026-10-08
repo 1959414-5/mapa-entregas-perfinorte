@@ -373,11 +373,10 @@ let ordenacaoData = 'asc';
 let filtroPopupAberto = false;
 let coresStatus = {};
 
-async function chamarAPI_GET_(params){
+function chamarAPI_GET_(params){
   const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
   const qs = new URLSearchParams(comCacheBusting).toString();
-  const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
-  return await resp.json();
+  return fetch(API_URL + '?' + qs, { cache: 'no-store' }).then(r => r.json());
 }
 
 function mostrarToast(){} // sem toasts nesse painel — é só visualização
@@ -821,72 +820,29 @@ function corLinhaEntrega_(d){
     return coresStatus[chave] || reserva;
   };
 
-  // ============================================================
-  // PRIORIDADE DAS CORES
-  // ============================================================
-
-  // ENTREGUE = sempre verde, mesmo com OK marcado
-  if (status === 'ENTREGUE'){
-    return cor('ENTREGUE', '#d9ead3');
-  }
-
-  // Código vazio = atenção
-  if (codigoVazio){
-    return cor('ATENCAO', '#ea9999');
-  }
-
-  // Cancelar
-  if (status === 'CANCELAR'){
-    return cor('CANCELAR', '#f4cccc');
-  }
-
-  // EM ANDAMENTO = sempre amarelo
-  // com ou sem OK marcado
-  if (status === 'EM ANDAMENTO'){
-    return cor('EM ANDAMENTO', '#fff2cc');
-  }
-
-  // OK marcado nos demais status = azul
-  if (d.ok === true){
-    return cor('OK', '#cfe2f3');
-  }
-
-  // EM FILA sem OK = rosa
-  if (status === 'EM FILA'){
-    return '#ead1dc';
-  }
-
+  // Regra da linha:
+  // ENTREGUE = verde, com ou sem OK.
+  // EM ANDAMENTO = amarelo, com ou sem OK.
+  // OK marcado nos demais status = azul.
+  // EM FILA sem OK = rosa.
+  // Código vazio e CANCELAR mantêm as prioridades já existentes.
+  if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
+  if (codigoVazio) return cor('ATENCAO', '#ea9999');
+  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
+  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc');
+  if (d.ok === true) return cor('OK', '#cfe2f3');
+  if (status === 'EM FILA') return '#ead1dc';
   return '';
 }
 function corTextoLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
   const codigoVazio = !String(d.codigo || '').trim();
 
-  // ENTREGUE
-  if (status === 'ENTREGUE'){
-    return '#0c343d';
-  }
-
-  // Atenção
-  if (codigoVazio){
-    return '';
-  }
-
-  // EM ANDAMENTO = amarelo
-  if (status === 'EM ANDAMENTO'){
-    return '#7f6000';
-  }
-
-  // OK = azul
-  if (d.ok === true){
-    return '#1c4587';
-  }
-
-  // EM FILA = rosa
-  if (status === 'EM FILA'){
-    return '#4c1130';
-  }
-
+  if (status === 'ENTREGUE') return '#0c343d';
+  if (codigoVazio) return '';
+  if (status === 'EM ANDAMENTO') return '#7f6000';
+  if (d.ok === true) return '#1c4587';
+  if (status === 'EM FILA') return '#4c1130';
   return '';
 }
 function corCelulaStatus_(d){
