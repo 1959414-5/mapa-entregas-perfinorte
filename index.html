@@ -1751,87 +1751,50 @@ function corLinhaEntrega_(d){
     return coresStatus[chave] || reserva;
   };
 
-  // PRIORIDADE DAS CORES DA LINHA:
-  // 1. ENTREGUE -> verde, com ou sem OK
-  // 2. Código vazio -> atenção
-  // 3. CANCELAR -> vermelho claro
-  // 4. EM ANDAMENTO -> amarelo, com ou sem OK
-  // 5. OK marcado -> azul
-  // 6. EM FILA -> rosa
+  // PRIORIDADE:
+  // 1. ENTREGUE = verde, com ou sem OK
+  // 2. Código vazio = atenção
+  // 3. CANCELAR
+  // 4. EM ANDAMENTO = amarelo, com ou sem OK
+  // 5. OK marcado nos demais status = azul
+  // 6. EM FILA sem OK = rosa
   // 7. Sem cor
 
-  // ENTREGUE sempre permanece verde, mesmo com OK marcado.
-  if (status === 'ENTREGUE'){
-    return cor('ENTREGUE', '#d9ead3');
-  }
-
-  // Linhas sem código continuam sendo de atenção.
-  if (codigoVazio){
-    return cor('ATENCAO', '#ea9999');
-  }
-
-  if (status === 'CANCELAR'){
-    return cor('CANCELAR', '#f4cccc');
-  }
-
-  // EM ANDAMENTO sempre fica amarelo, independentemente do OK.
-  if (status === 'EM ANDAMENTO'){
-    return cor('EM ANDAMENTO', '#fff2cc');
-  }
-
-  // OK marcado, quando não for ENTREGUE nem EM ANDAMENTO, fica azul.
-  if (d.ok === true){
-    return cor('OK', '#cfe2f3');
-  }
-
-  if (status === 'EM FILA'){
-    return '#ead1dc';
-  }
+  if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
+  if (codigoVazio) return cor('ATENCAO', '#ea9999');
+  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
+  if (status === 'EM ANDAMENTO') return cor('EM ANDAMENTO', '#fff2cc');
+  if (d.ok === true) return cor('OK', '#cfe2f3');
+  if (status === 'EM FILA') return '#ead1dc';
 
   return '';
 }
 
 
-// Cor da fonte da linha, seguindo exatamente a mesma prioridade
+// Cor da FONTE da linha, seguindo exatamente a mesma prioridade
 // usada em corLinhaEntrega_().
 function corTextoLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
   const codigoVazio = !String(d.codigo || '').trim();
 
-  if (status === 'ENTREGUE'){
-    return '#0c343d';
-  }
-
-  if (codigoVazio){
-    return '';
-  }
-
-  if (status === 'EM ANDAMENTO'){
-    return '#7f6000';
-  }
-
-  if (d.ok === true){
-    return '#1c4587';
-  }
-
-  if (status === 'EM FILA'){
-    return '#4c1130';
-  }
+  if (status === 'ENTREGUE') return '#0c343d';
+  if (codigoVazio) return '';
+  if (status === 'EM ANDAMENTO') return '#7f6000';
+  if (d.ok === true) return '#1c4587';
+  if (status === 'EM FILA') return '#4c1130';
 
   return '';
 }
 
-// O fundo da CÉLULA de Status acompanha a cor da LINHA.
-// Isso evita que o select do Status esconda a cor geral da linha.
+// Cor específica só da CÉLULA de Status — usada quando o status é "Em
+// andamento" (não colore a linha inteira, só essa célula, pra facilitar
+// a visualização sem "gritar" na linha toda).
 function estiloCelulaStatus_(status){
   const s = String(status || '').trim().toUpperCase();
   if (s === 'EM ANDAMENTO') return { fundo: coresStatus['EM ANDAMENTO'] || '#fff2cc', texto: '#7f6000' };
   return null;
 }
 function corCelulaStatus_(d){
-  // Quando a linha já possui uma cor própria, deixa o fundo transparente
-  // para que a cor da linha apareça também dentro do select.
-  if (corLinhaEntrega_(d)) return '';
   const e = estiloCelulaStatus_(d.status);
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
@@ -1846,8 +1809,6 @@ function estiloCelulaPeriodo_(periodo){
   return null;
 }
 function corCelulaPeriodo_(d){
-  // Se a linha inteira já tem uma cor de status/OK, ela tem prioridade.
-  if (corLinhaEntrega_(d)) return '';
   const e = estiloCelulaPeriodo_(d.periodo);
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
@@ -1876,8 +1837,6 @@ function estiloCelulaMotorista_(nome){
   return { fundo: 'hsl(' + matiz + ',60%,88%)', texto: 'hsl(' + matiz + ',55%,26%)' };
 }
 function corCelulaMotorista_(d){
-  // Se a linha inteira já tem uma cor de status/OK, ela tem prioridade.
-  if (corLinhaEntrega_(d)) return '';
   const e = estiloCelulaMotorista_(d.motorista);
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
@@ -2293,9 +2252,31 @@ async function onEditarCelula_(e){
     marcarEdicaoRecente_(linha, campo, valor);
 
     // ============================================================
-    // REAPLICA A APARÊNCIA DA LINHA INTEIRA
+    // ATUALIZA A COR DA PRÓPRIA CÉLULA
     // ============================================================
 
+    const funcaoEstilo = {
+      periodo: estiloCelulaPeriodo_,
+      motorista: estiloCelulaMotorista_,
+      status: estiloCelulaStatus_
+    }[campo];
+
+    if (funcaoEstilo){
+      const estilo = funcaoEstilo(valor);
+
+      el.setAttribute(
+        'style',
+        estilo
+          ? 'background:' + estilo.fundo + ';color:' + estilo.texto + ';'
+          : ''
+      );
+    }
+
+    // ============================================================
+    // ATUALIZA A COR DA LINHA INTEIRA IMEDIATAMENTE
+    // ============================================================
+
+    // Usa o item atualizado em memória para calcular a nova cor.
     const itemAtualizado =
       todasEntregas.find(d => String(d.linha) === String(linha)) ||
       entregasAtuais.find(d => String(d.linha) === String(linha));
@@ -2304,46 +2285,24 @@ async function onEditarCelula_(e){
       const corLinha = corLinhaEntrega_(itemAtualizado);
       const corTexto = corTextoLinhaEntrega_(itemAtualizado);
 
-      // Atualiza a linha inteira.
+      // Limpa apenas a cor anterior da LINHA.
+      // As cores próprias do Motorista e do Período são preservadas,
+      // pois continuam aplicadas diretamente nos respectivos campos.
       tr.style.background = corLinha || '';
       tr.style.color = corTexto || '';
 
-      // Quando a linha tem uma cor própria, todas as células coloridas
-      // individualmente devem ficar transparentes para a cor da linha
-      // aparecer de ponta a ponta.
-      const temCorDeLinha = !!corLinha;
-
-      tr.querySelectorAll('[data-campo]').forEach(campoEl => {
-        if (temCorDeLinha){
-          campoEl.style.background = '';
-          campoEl.style.color = 'inherit';
-        }
-      });
-
-      // Se a linha não tiver cor geral, restaura as cores específicas
-      // das células que possuem regras próprias.
-      if (!temCorDeLinha){
-        const periodoEl = tr.querySelector('[data-campo="periodo"]');
-        const motoristaEl = tr.querySelector('[data-campo="motorista"]');
-        const statusEl = tr.querySelector('[data-campo="status"]');
-
-        const estiloPeriodo = estiloCelulaPeriodo_(itemAtualizado.periodo);
-        const estiloMotorista = estiloCelulaMotorista_(itemAtualizado.motorista);
+      // Recalcula somente a célula de Status.
+      // Assim, EM ANDAMENTO continua amarelo dentro da própria célula,
+      // sem remover as cores de Motorista e Período.
+      const celulaStatus = tr.querySelector('[data-campo="status"]');
+      if (celulaStatus){
         const estiloStatus = estiloCelulaStatus_(itemAtualizado.status);
+        celulaStatus.style.background = '';
+        celulaStatus.style.color = '';
 
-        if (periodoEl && estiloPeriodo){
-          periodoEl.style.background = estiloPeriodo.fundo;
-          periodoEl.style.color = estiloPeriodo.texto;
-        }
-
-        if (motoristaEl && estiloMotorista){
-          motoristaEl.style.background = estiloMotorista.fundo;
-          motoristaEl.style.color = estiloMotorista.texto;
-        }
-
-        if (statusEl && estiloStatus){
-          statusEl.style.background = estiloStatus.fundo;
-          statusEl.style.color = estiloStatus.texto;
+        if (estiloStatus){
+          celulaStatus.style.background = estiloStatus.fundo;
+          celulaStatus.style.color = estiloStatus.texto;
         }
       }
     }
