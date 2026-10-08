@@ -1752,18 +1752,20 @@ function corLinhaEntrega_(d){
   };
 
   // PRIORIDADE DAS CORES DA LINHA:
-  // 1. ENTREGUE
-  // 2. Código vazio / ATENÇÃO
-  // 3. CANCELAR
-  // 4. EM ANDAMENTO + OK marcado
-  // 5. OK marcado
-  // 6. EM FILA
+  // 1. ENTREGUE -> verde, com ou sem OK
+  // 2. Código vazio -> atenção
+  // 3. CANCELAR -> vermelho claro
+  // 4. EM ANDAMENTO -> amarelo, com ou sem OK
+  // 5. OK marcado -> azul
+  // 6. EM FILA -> rosa
   // 7. Sem cor
 
+  // ENTREGUE sempre permanece verde, mesmo com OK marcado.
   if (status === 'ENTREGUE'){
     return cor('ENTREGUE', '#d9ead3');
   }
 
+  // Linhas sem código continuam sendo de atenção.
   if (codigoVazio){
     return cor('ATENCAO', '#ea9999');
   }
@@ -1772,14 +1774,12 @@ function corLinhaEntrega_(d){
     return cor('CANCELAR', '#f4cccc');
   }
 
-  // NOVA REGRA:
-  // Se estiver EM ANDAMENTO e o OK estiver marcado,
-  // a linha inteira fica com o amarelo do EM ANDAMENTO.
-  if (status === 'EM ANDAMENTO' && d.ok === true){
+  // EM ANDAMENTO sempre fica amarelo, independentemente do OK.
+  if (status === 'EM ANDAMENTO'){
     return cor('EM ANDAMENTO', '#fff2cc');
   }
 
-  // Se tiver apenas OK marcado, continua azul.
+  // OK marcado, quando não for ENTREGUE nem EM ANDAMENTO, fica azul.
   if (d.ok === true){
     return cor('OK', '#cfe2f3');
   }
@@ -1806,8 +1806,7 @@ function corTextoLinhaEntrega_(d){
     return '';
   }
 
-  // EM ANDAMENTO + OK = texto na mesma lógica visual do amarelo
-  if (status === 'EM ANDAMENTO' && d.ok === true){
+  if (status === 'EM ANDAMENTO'){
     return '#7f6000';
   }
 
@@ -1822,15 +1821,17 @@ function corTextoLinhaEntrega_(d){
   return '';
 }
 
-// Cor específica só da CÉLULA de Status — usada quando o status é "Em
-// andamento" (não colore a linha inteira, só essa célula, pra facilitar
-// a visualização sem "gritar" na linha toda).
+// O fundo da CÉLULA de Status acompanha a cor da LINHA.
+// Isso evita que o select do Status esconda a cor geral da linha.
 function estiloCelulaStatus_(status){
   const s = String(status || '').trim().toUpperCase();
   if (s === 'EM ANDAMENTO') return { fundo: coresStatus['EM ANDAMENTO'] || '#fff2cc', texto: '#7f6000' };
   return null;
 }
 function corCelulaStatus_(d){
+  // Quando a linha já possui uma cor própria, deixa o fundo transparente
+  // para que a cor da linha apareça também dentro do select.
+  if (corLinhaEntrega_(d)) return '';
   const e = estiloCelulaStatus_(d.status);
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
@@ -1845,6 +1846,8 @@ function estiloCelulaPeriodo_(periodo){
   return null;
 }
 function corCelulaPeriodo_(d){
+  // Se a linha inteira já tem uma cor de status/OK, ela tem prioridade.
+  if (corLinhaEntrega_(d)) return '';
   const e = estiloCelulaPeriodo_(d.periodo);
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
@@ -1873,6 +1876,8 @@ function estiloCelulaMotorista_(nome){
   return { fundo: 'hsl(' + matiz + ',60%,88%)', texto: 'hsl(' + matiz + ',55%,26%)' };
 }
 function corCelulaMotorista_(d){
+  // Se a linha inteira já tem uma cor de status/OK, ela tem prioridade.
+  if (corLinhaEntrega_(d)) return '';
   const e = estiloCelulaMotorista_(d.motorista);
   return e ? ' style="background:' + e.fundo + ';color:' + e.texto + ';"' : '';
 }
@@ -2288,71 +2293,57 @@ async function onEditarCelula_(e){
     marcarEdicaoRecente_(linha, campo, valor);
 
     // ============================================================
-    // ATUALIZA A COR DA PRÓPRIA CÉLULA
+    // REAPLICA A APARÊNCIA DA LINHA INTEIRA
     // ============================================================
 
-    const funcaoEstilo = {
-      periodo: estiloCelulaPeriodo_,
-      motorista: estiloCelulaMotorista_,
-      status: estiloCelulaStatus_
-    }[campo];
-
-    if (funcaoEstilo){
-      const estilo = funcaoEstilo(valor);
-
-      el.setAttribute(
-        'style',
-        estilo
-          ? 'background:' + estilo.fundo + ';color:' + estilo.texto + ';'
-          : ''
-      );
-    }
-
-    // ============================================================
-    // ATUALIZA A COR DA LINHA INTEIRA IMEDIATAMENTE
-    // ============================================================
-
-    // Usa o item atualizado em memória para calcular a nova cor.
     const itemAtualizado =
       todasEntregas.find(d => String(d.linha) === String(linha)) ||
       entregasAtuais.find(d => String(d.linha) === String(linha));
 
     if (itemAtualizado){
-
       const corLinha = corLinhaEntrega_(itemAtualizado);
       const corTexto = corTextoLinhaEntrega_(itemAtualizado);
 
-      // Remove qualquer estilo antigo da linha
-      tr.style.background = '';
-      tr.style.color = '';
+      // Atualiza a linha inteira.
+      tr.style.background = corLinha || '';
+      tr.style.color = corTexto || '';
 
-      // Aplica a nova cor
-      if (corLinha){
-        tr.style.background = corLinha;
-      }
+      // Quando a linha tem uma cor própria, todas as células coloridas
+      // individualmente devem ficar transparentes para a cor da linha
+      // aparecer de ponta a ponta.
+      const temCorDeLinha = !!corLinha;
 
-      if (corTexto){
-        tr.style.color = corTexto;
-      }
+      tr.querySelectorAll('[data-campo]').forEach(campoEl => {
+        if (temCorDeLinha){
+          campoEl.style.background = '';
+          campoEl.style.color = 'inherit';
+        }
+      });
 
-      // ----------------------------------------------------------
-      // Caso seja status, mantém a própria célula de status
-      // com a formatação específica de EM ANDAMENTO.
-      // ----------------------------------------------------------
+      // Se a linha não tiver cor geral, restaura as cores específicas
+      // das células que possuem regras próprias.
+      if (!temCorDeLinha){
+        const periodoEl = tr.querySelector('[data-campo="periodo"]');
+        const motoristaEl = tr.querySelector('[data-campo="motorista"]');
+        const statusEl = tr.querySelector('[data-campo="status"]');
 
-      const celulaStatus = tr.querySelector('[data-campo="status"]');
+        const estiloPeriodo = estiloCelulaPeriodo_(itemAtualizado.periodo);
+        const estiloMotorista = estiloCelulaMotorista_(itemAtualizado.motorista);
+        const estiloStatus = estiloCelulaStatus_(itemAtualizado.status);
 
-      if (celulaStatus){
-        const estiloStatus = estiloCelulaStatus_(
-          itemAtualizado.status
-        );
+        if (periodoEl && estiloPeriodo){
+          periodoEl.style.background = estiloPeriodo.fundo;
+          periodoEl.style.color = estiloPeriodo.texto;
+        }
 
-        celulaStatus.style.background = '';
-        celulaStatus.style.color = '';
+        if (motoristaEl && estiloMotorista){
+          motoristaEl.style.background = estiloMotorista.fundo;
+          motoristaEl.style.color = estiloMotorista.texto;
+        }
 
-        if (estiloStatus){
-          celulaStatus.style.background = estiloStatus.fundo;
-          celulaStatus.style.color = estiloStatus.texto;
+        if (statusEl && estiloStatus){
+          statusEl.style.background = estiloStatus.fundo;
+          statusEl.style.color = estiloStatus.texto;
         }
       }
     }
