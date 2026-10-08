@@ -1747,31 +1747,78 @@ async function carregarCoresStatus_(){
 function corLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
   const codigoVazio = !String(d.codigo || '').trim();
-  const cor = function(chave, reserva){ return coresStatus[chave] || reserva; };
+  const cor = function(chave, reserva){
+    return coresStatus[chave] || reserva;
+  };
 
-  // Entregue é sempre prioridade máxima. Logo depois, código de cliente
-  // vazio (avisos/linhas de atenção, ou qualquer entrega sem código) é
-  // SEMPRE vermelho de atenção — não importa o status que tiver (Em fila,
-  // Em andamento, vazio, o que for), só perde pro Entregue mesmo.
-  // "Em andamento" NÃO colore a linha inteira — só a célula de Status
-  // (ver corCelulaStatus_), pra facilitar a visualização.
-  if (status === 'ENTREGUE') return cor('ENTREGUE', '#d9ead3');
-  if (codigoVazio) return cor('ATENCAO', '#ea9999');
-  if (status === 'CANCELAR') return cor('CANCELAR', '#f4cccc');
-  if (d.ok === true) return cor('OK', '#cfe2f3');
-  if (status === 'EM FILA') return '#ead1dc'; // rosa puxado pro roxo
+  // PRIORIDADE DAS CORES DA LINHA:
+  // 1. ENTREGUE
+  // 2. Código vazio / ATENÇÃO
+  // 3. CANCELAR
+  // 4. EM ANDAMENTO + OK marcado
+  // 5. OK marcado
+  // 6. EM FILA
+  // 7. Sem cor
+
+  if (status === 'ENTREGUE'){
+    return cor('ENTREGUE', '#d9ead3');
+  }
+
+  if (codigoVazio){
+    return cor('ATENCAO', '#ea9999');
+  }
+
+  if (status === 'CANCELAR'){
+    return cor('CANCELAR', '#f4cccc');
+  }
+
+  // NOVA REGRA:
+  // Se estiver EM ANDAMENTO e o OK estiver marcado,
+  // a linha inteira fica com o amarelo do EM ANDAMENTO.
+  if (status === 'EM ANDAMENTO' && d.ok === true){
+    return cor('EM ANDAMENTO', '#fff2cc');
+  }
+
+  // Se tiver apenas OK marcado, continua azul.
+  if (d.ok === true){
+    return cor('OK', '#cfe2f3');
+  }
+
+  if (status === 'EM FILA'){
+    return '#ead1dc';
+  }
+
   return '';
 }
 
-// Cor da FONTE da linha, combinando com o fundo — segue a mesma prioridade
-// de corLinhaEntrega_ pra sempre bater com a cor de fundo escolhida.
+
+// Cor da fonte da linha, seguindo exatamente a mesma prioridade
+// usada em corLinhaEntrega_().
 function corTextoLinhaEntrega_(d){
   const status = String(d.status || '').trim().toUpperCase();
   const codigoVazio = !String(d.codigo || '').trim();
-  if (status === 'ENTREGUE') return '#0c343d';        // fundo verde
-  if (codigoVazio) return '';                          // fundo vermelho de atenção — mantém a cor padrão
-  if (d.ok === true) return '#1c4587';                // fundo azul
-  if (status === 'EM FILA') return '#4c1130';         // fundo rosa
+
+  if (status === 'ENTREGUE'){
+    return '#0c343d';
+  }
+
+  if (codigoVazio){
+    return '';
+  }
+
+  // EM ANDAMENTO + OK = texto na mesma lógica visual do amarelo
+  if (status === 'EM ANDAMENTO' && d.ok === true){
+    return '#7f6000';
+  }
+
+  if (d.ok === true){
+    return '#1c4587';
+  }
+
+  if (status === 'EM FILA'){
+    return '#4c1130';
+  }
+
   return '';
 }
 
@@ -2202,36 +2249,122 @@ async function onEditarCelula_(e){
   el.classList.remove('erro-salvar');
 
   try{
-    const res = await chamarAPI_POST_({ acao: 'atualizarCampo', linha: linha, campo: campo, valor: valor });
+    const res = await chamarAPI_POST_({
+      acao: 'atualizarCampo',
+      linha: linha,
+      campo: campo,
+      valor: valor
+    });
+
     el.classList.remove('salvando');
+
     if (!res.ok){
       el.classList.add('erro-salvar');
       mostrarToast('Erro ao salvar: ' + res.erro, true);
       return;
     }
-    // atualiza em memória (nos dois arrays) sem precisar recarregar tudo
-    const item = todasEntregas.find(d => String(d.linha) === String(linha));
-    if (item) item[campo] = valor;
-    const item2 = entregasAtuais.find(d => String(d.linha) === String(linha));
-    if (item2) item2[campo] = valor;
 
-    // blinda essa edição por 15s contra ser sobrescrita por uma busca
-    // automática que pegou um retrato desatualizado da planilha
+    // ============================================================
+    // ATUALIZA EM MEMÓRIA
+    // ============================================================
+
+    const item = todasEntregas.find(
+      d => String(d.linha) === String(linha)
+    );
+
+    if (item){
+      item[campo] = valor;
+    }
+
+    const item2 = entregasAtuais.find(
+      d => String(d.linha) === String(linha)
+    );
+
+    if (item2){
+      item2[campo] = valor;
+    }
+
+    // Blinda essa edição por 15s contra atualização automática
     marcarEdicaoRecente_(linha, campo, valor);
 
-    // recolore a própria célula na hora — sem isso, ficaria com a cor
-    // antiga até o próximo refresh automático (10s depois)
-    const funcaoEstilo = { periodo: estiloCelulaPeriodo_, motorista: estiloCelulaMotorista_, status: estiloCelulaStatus_ }[campo];
+    // ============================================================
+    // ATUALIZA A COR DA PRÓPRIA CÉLULA
+    // ============================================================
+
+    const funcaoEstilo = {
+      periodo: estiloCelulaPeriodo_,
+      motorista: estiloCelulaMotorista_,
+      status: estiloCelulaStatus_
+    }[campo];
+
     if (funcaoEstilo){
       const estilo = funcaoEstilo(valor);
-      el.setAttribute('style', estilo ? 'background:' + estilo.fundo + ';color:' + estilo.texto + ';' : '');
+
+      el.setAttribute(
+        'style',
+        estilo
+          ? 'background:' + estilo.fundo + ';color:' + estilo.texto + ';'
+          : ''
+      );
+    }
+
+    // ============================================================
+    // ATUALIZA A COR DA LINHA INTEIRA IMEDIATAMENTE
+    // ============================================================
+
+    // Usa o item atualizado em memória para calcular a nova cor.
+    const itemAtualizado =
+      todasEntregas.find(d => String(d.linha) === String(linha)) ||
+      entregasAtuais.find(d => String(d.linha) === String(linha));
+
+    if (itemAtualizado){
+
+      const corLinha = corLinhaEntrega_(itemAtualizado);
+      const corTexto = corTextoLinhaEntrega_(itemAtualizado);
+
+      // Remove qualquer estilo antigo da linha
+      tr.style.background = '';
+      tr.style.color = '';
+
+      // Aplica a nova cor
+      if (corLinha){
+        tr.style.background = corLinha;
+      }
+
+      if (corTexto){
+        tr.style.color = corTexto;
+      }
+
+      // ----------------------------------------------------------
+      // Caso seja status, mantém a própria célula de status
+      // com a formatação específica de EM ANDAMENTO.
+      // ----------------------------------------------------------
+
+      const celulaStatus = tr.querySelector('[data-campo="status"]');
+
+      if (celulaStatus){
+        const estiloStatus = estiloCelulaStatus_(
+          itemAtualizado.status
+        );
+
+        celulaStatus.style.background = '';
+        celulaStatus.style.color = '';
+
+        if (estiloStatus){
+          celulaStatus.style.background = estiloStatus.fundo;
+          celulaStatus.style.color = estiloStatus.texto;
+        }
+      }
     }
 
     mostrarToast('Salvo!');
+
   }catch(err){
+
     el.classList.remove('salvando');
     el.classList.add('erro-salvar');
-    mostrarToast('Erro: ' + err, true);
+
+    mostrarToast('Erro ao salvar: ' + err, true);
   }
 }
 
