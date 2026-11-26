@@ -2796,6 +2796,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
   background:#173149;color:#fff;border-color:#173149;
   box-shadow:0 5px 14px rgba(23,49,73,.16);
 }
+.dashboard-tab-label{display:block;grid-column:2;grid-row:1;color:inherit;font-size:12px;line-height:1.2;}
 .dashboard-tab-icon{
   grid-row:1/3;width:28px;height:28px;display:grid;place-items:center;
   border-radius:8px;background:#e8f2f5;color:#247b8f;font-size:15px;
@@ -3152,11 +3153,11 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </header>
         <nav class="dashboard-mode-tabs" role="tablist" aria-label="Área do dashboard">
           <button id="tabDashboardEntregas" class="active" type="button" role="tab" aria-selected="true" aria-controls="dashEntregasSection" onclick="alternarPainelDashboard_('entregas')">
-            <span class="dashboard-tab-icon">↗</span> Entregas
+            <span class="dashboard-tab-icon">↗</span><span class="dashboard-tab-label">Entregas</span>
             <small>Comercial e expedição</small>
           </button>
           <button id="tabDashboardFrota" type="button" role="tab" aria-selected="false" aria-controls="dashFrotaSection" onclick="alternarPainelDashboard_('frota')">
-            <span class="dashboard-tab-icon">▣</span> Gestão de frota
+            <span class="dashboard-tab-icon">▣</span><span class="dashboard-tab-label">Gestão de frota</span>
             <small>Custos, capacidade e cadastro</small>
           </button>
         </nav>
@@ -5046,9 +5047,12 @@ function renderizarDashboardFrota_(){
   const composicao=document.getElementById('dashFrotaComposicao');
   if(composicao){
     const pctOwn=ativos.length?proprios.length/ativos.length*100:0;
+    const donutBackground=ativos.length
+      ?'conic-gradient(#16885d 0 '+pctOwn+'%,#e7a746 '+pctOwn+'% 100%)'
+      :'conic-gradient(#e7edf2 0 100%)';
     composicao.innerHTML=
       '<div class="fleet-donut-layout">'+
-        '<div class="fleet-donut" style="background:conic-gradient(#16885d 0 '+pctOwn+'%,#e7a746 '+pctOwn+'% 100%)"><div><strong>'+ativos.length+'</strong><small>veículos</small></div></div>'+
+        '<div class="fleet-donut" style="background:'+donutBackground+'"><div><strong>'+ativos.length+'</strong><small>veículos</small></div></div>'+
         '<div class="fleet-donut-legend">'+
           '<div><i class="fleet-dot own"></i><span>Frota própria</span><strong>'+proprios.length+' <small>('+Math.round(pctProprios)+'%)</small></strong></div>'+
           '<div><i class="fleet-dot third"></i><span>Terceirizados</span><strong>'+terceiros.length+' <small>('+Math.round(pctTerceiros)+'%)</small></strong></div>'+
