@@ -66,7 +66,10 @@
         if (supportsWebInstall) {
           try {
             // Chamada direta no clique para preservar a ativação do usuário.
-            await navigator.install();
+            await navigator.install({
+              manifest: new URL('./manifest.webmanifest', document.baseURI).href,
+              manifestId: 'https://1959414-5.github.io/mapa-entregas-perfinorte/'
+            });
             botao.hidden = true;
             mostrarMensagem('Perfinorte instalado ou já disponível como aplicativo.');
             return;
