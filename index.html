@@ -1587,6 +1587,324 @@ button,input,select,textarea{font-family:var(--font-ui);}
   #sidebar .brand-status-row .brand-updated{font-size:8.2px;}
 }
 </style>
+<style>
+
+/* ===== NOVA ENTREGA V2 · formulário em colunas e rodapé fixo ===== */
+#modalOverlay{padding:18px;align-items:center;}
+#modalOverlay .modal-new-delivery{
+  width:min(760px,96vw);max-width:96vw;max-height:calc(100dvh - 36px);
+  display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid #3a4d61;border-radius:16px;
+  background:#172330;box-shadow:0 28px 90px rgba(0,0,0,.58);
+}
+#modalOverlay .modal-header-delivery{
+  flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;
+  gap:18px;padding:19px 24px 16px;
+  background:linear-gradient(135deg,#1c2a39 0%,#172330 100%);
+  border-bottom:1px solid #2d4053;
+}
+#modalOverlay .modal-heading-copy{min-width:0;}
+#modalOverlay .modal-kicker{
+  margin-bottom:5px;color:#93a8bd;font-family:var(--font-mono);
+  font-size:9px;font-weight:500;letter-spacing:.15em;
+}
+#modalOverlay .modal-header-delivery h2{
+  margin:0;color:#f4f7fa;font-family:var(--font-ui);
+  font-size:21px;font-weight:800;letter-spacing:-.045em;line-height:1.2;
+}
+#modalOverlay .modal-heading-copy p{
+  margin:5px 0 0;color:#9eb0c2;font-family:var(--font-ui);
+  font-size:11px;font-weight:450;letter-spacing:-.01em;line-height:1.45;
+}
+#modalOverlay .modal-header-delivery .modal-close{
+  width:31px;height:31px;flex:0 0 31px;display:flex;align-items:center;justify-content:center;
+  margin-top:1px;border:1px solid #34485c;border-radius:9px;background:#202e3c;
+  color:#aebdcd;font-size:19px;transition:background .16s,color .16s,border-color .16s;
+}
+#modalOverlay .modal-header-delivery .modal-close:hover{background:#2b3d50;color:#fff;border-color:#50677e;}
+#modalOverlay .modo-toggle-delivery{
+  flex:0 0 auto;display:flex;gap:7px;margin:0;padding:12px 24px;
+  border-bottom:1px solid #2a3b4d;background:#15212d;
+}
+#modalOverlay .modo-toggle-delivery button{
+  min-height:39px;display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:8px 14px;border:1px solid #35495d;border-radius:9px;
+  background:#202d3b;color:#b8c7d6;font-family:var(--font-ui);
+  font-size:11px;font-weight:600;letter-spacing:-.015em;
+}
+#modalOverlay .modo-toggle-delivery button.active{
+  background:#2cabbc;border-color:#2cabbc;color:#09232a;
+  box-shadow:0 3px 10px rgba(44,171,188,.17);
+}
+#modalOverlay .modo-tab-icon{
+  width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:6px;background:rgba(255,255,255,.1);
+  font-family:var(--font-mono);font-size:9px;font-weight:600;
+}
+#modalOverlay .modal-delivery-body{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:19px 24px 20px;background:#172330;
+  display:block;scrollbar-width:thin;scrollbar-color:#3a4f64 transparent;
+}
+#modalOverlay #modoIndividual{display:block;}
+#modalOverlay .modal-client-step{margin-bottom:17px;}
+#modalOverlay .modal-section-heading{
+  display:flex;align-items:flex-start;gap:10px;margin:0 0 13px;
+}
+#modalOverlay .modal-step-number{
+  width:27px;height:27px;flex:0 0 27px;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(242,138,49,.45);border-radius:8px;
+  background:rgba(242,138,49,.11);color:#ffad67;
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+}
+#modalOverlay .modal-section-heading h3{
+  margin:0;color:#edf3f8;font-family:var(--font-ui);
+  font-size:13px;font-weight:750;letter-spacing:-.025em;line-height:1.35;
+}
+#modalOverlay .modal-section-heading p{
+  margin:3px 0 0;color:#91a4b8;font-family:var(--font-ui);
+  font-size:10px;font-weight:450;line-height:1.4;letter-spacing:-.005em;
+}
+#modalOverlay .modal-new-delivery .field{min-width:0;display:flex;flex-direction:column;gap:6px;}
+#modalOverlay .modal-new-delivery .field label{
+  display:block;margin:0;color:#b9c8d7;font-family:var(--font-ui);
+  font-size:10.5px;font-weight:650;letter-spacing:-.01em;line-height:1.35;
+}
+#modalOverlay .optional-label{
+  margin-left:4px;color:#8296aa;font-size:9px;font-weight:450;
+}
+#modalOverlay .modal-new-delivery input[type=text],
+#modalOverlay .modal-new-delivery input[type=date],
+#modalOverlay .modal-new-delivery select,
+#modalOverlay .modal-new-delivery textarea{
+  width:100%;min-width:0;min-height:39px;padding:9px 11px;
+  border:1px solid #3a4d61;border-radius:8px;background:#202d3b;
+  color:#edf3f8;font-family:var(--font-ui);font-size:11.5px;
+  font-weight:500;letter-spacing:-.01em;line-height:1.4;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.015);
+  transition:border-color .15s,background .15s,box-shadow .15s;
+}
+#modalOverlay .modal-new-delivery textarea{min-height:94px;resize:vertical;}
+#modalOverlay .modal-new-delivery input::placeholder,
+#modalOverlay .modal-new-delivery textarea::placeholder{color:#74889d;font-weight:400;opacity:1;}
+#modalOverlay .modal-new-delivery input:focus,
+#modalOverlay .modal-new-delivery select:focus,
+#modalOverlay .modal-new-delivery textarea:focus{
+  outline:none;border-color:#43b7c8;background:#223344;
+  box-shadow:0 0 0 3px rgba(67,183,200,.12);
+}
+#modalOverlay .client-search-row{display:flex;gap:8px;}
+#modalOverlay .client-search-row input{flex:1;}
+#modalOverlay .client-search-button{
+  min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid #3e566b;border-radius:8px;background:#26394a;
+  color:#e4edf5;font-family:var(--font-ui);font-size:11px;font-weight:650;
+}
+#modalOverlay .client-search-button:hover{background:#30475b;border-color:#57738c;}
+#modalOverlay .client-search-button span{font-size:17px;line-height:0;}
+#modalOverlay .busca-resultado{
+  margin-top:8px;padding:9px 11px;border:1px solid #35495c;border-radius:8px;
+  background:#202d3b;color:#aebdcd;font-family:var(--font-ui);
+  font-size:10.5px;line-height:1.45;
+}
+#modalOverlay .busca-resultado.ok{
+  border-color:rgba(54,179,126,.35);background:rgba(54,179,126,.1);
+  color:#66dda6;
+}
+#modalOverlay .busca-resultado.erro{
+  border-color:rgba(229,107,115,.4);background:rgba(229,107,115,.09);color:#f29a9f;
+}
+#modalOverlay .busca-resultado.carregando{border-color:#35495c;background:#1d2a37;color:#b9c8d7;}
+#modalOverlay .barra-progresso-wrap{height:6px;background:#334558;}
+#modalOverlay .barra-progresso-fill{background:linear-gradient(90deg,#2cabbc,#f28a31);}
+#modalOverlay .barra-progresso-texto{font-family:var(--font-ui);font-size:10px;letter-spacing:0;color:#b2c2d1;}
+#modalOverlay .modal-delivery-columns{
+  display:grid!important;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  align-items:start;gap:15px;
+}
+#modalOverlay #camposManuais[style*="display:none"],
+#modalOverlay #camposManuais[style*="display: none"]{display:none!important;}
+#modalOverlay .modal-section{
+  min-width:0;padding:15px 14px 14px;border:1px solid #304457;
+  border-radius:12px;background:linear-gradient(155deg,#1c2a38 0%,#192633 100%);
+}
+#modalOverlay .address-section .modal-section-heading,
+#modalOverlay .scheduling-section .modal-section-heading{margin-bottom:13px;}
+#modalOverlay .saved-addresses{margin:0 0 13px;}
+#modalOverlay .saved-addresses .memoria-titulo{
+  margin:0 0 7px;color:#9fb2c5;font-family:var(--font-ui);
+  font-size:9.5px;font-weight:650;letter-spacing:.01em;text-transform:none;line-height:1.4;
+}
+#modalOverlay .saved-addresses .memoria-endereco{
+  position:relative;display:block;width:100%;margin:0 0 6px;padding:9px 10px 9px 28px;
+  border:1px solid #3b5267;border-radius:8px;background:#202f3e;
+  color:#dbe5ee;font-family:var(--font-ui);font-size:10px;font-weight:500;
+  line-height:1.4;text-align:left;overflow-wrap:anywhere;
+}
+#modalOverlay .saved-addresses .memoria-endereco:before{
+  content:"⌖";position:absolute;left:10px;top:8px;color:#ffad67;font-size:12px;
+}
+#modalOverlay .saved-addresses .memoria-endereco:hover{
+  border-color:#43b7c8;background:#243849;
+}
+#modalOverlay .address-section .cep-field{margin-bottom:11px;}
+#modalOverlay .cep-search-row{display:flex;gap:8px;}
+#modalOverlay .cep-search-row input{flex:1;}
+#modalOverlay .btn-cep{
+  min-width:120px;min-height:39px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:7px 11px;border:1px solid #2cabbc;border-radius:8px;
+  background:#2cabbc;color:#09232a;font-family:var(--font-ui);
+  font-size:10px;font-weight:700;letter-spacing:-.01em;box-shadow:none;
+}
+#modalOverlay .btn-cep:hover{background:#40bdcc;}
+#modalOverlay .btn-cep span{font-size:16px;line-height:0;}
+#modalOverlay .address-fields-grid{
+  display:grid;grid-template-columns:minmax(0,1fr) 105px;
+  gap:10px 9px;align-items:end;
+}
+#modalOverlay .address-street-field{grid-column:1;}
+#modalOverlay .address-number-field{grid-column:2;}
+#modalOverlay .address-neighborhood-field{grid-column:1/-1;}
+#modalOverlay .address-city-field{grid-column:1;}
+#modalOverlay .address-state-field{grid-column:2;}
+#modalOverlay .btn-aplicar{
+  min-height:40px;margin-top:13px;padding:10px 13px;border:0;border-radius:8px;
+  background:linear-gradient(135deg,#ff9946,#f1812c);color:#26180d;
+  font-family:var(--font-ui);font-size:11px;font-weight:750;
+  letter-spacing:-.015em;box-shadow:0 4px 12px rgba(242,138,49,.15);
+}
+#modalOverlay .btn-aplicar:hover{background:#ffa357;}
+#modalOverlay .address-result{margin-top:8px;}
+#modalOverlay .address-result small{display:inline-block;margin-top:3px;line-height:1.45;color:#a9bdcc;}
+#modalOverlay .mini-map-panel{
+  margin-top:13px;padding-top:12px;border-top:1px solid #304457;
+}
+#modalOverlay .mini-map-heading{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+#modalOverlay .mini-map-heading-icon{
+  width:27px;height:27px;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;background:rgba(242,138,49,.12);color:#ffad67;font-size:16px;
+}
+#modalOverlay .mini-map-heading strong{
+  display:block;color:#dce6ef;font-family:var(--font-ui);font-size:10.5px;font-weight:700;
+}
+#modalOverlay .mini-map-heading small{
+  display:block;margin-top:2px;color:#8fa4b8;font-family:var(--font-ui);font-size:9px;
+}
+#modalOverlay #miniMap{
+  display:none;height:185px;margin:0;border:1px solid #3a4d61;
+  border-radius:9px;overflow:hidden;background:#e9edf0;cursor:grab;
+}
+#modalOverlay .mini-map-aviso{
+  margin-top:7px;color:#91a5b9;font-family:var(--font-ui);
+  font-size:9.5px;line-height:1.4;text-align:left;
+}
+#modalOverlay .scheduling-section>.field{margin-bottom:14px;}
+#modalOverlay .scheduling-section>.field:last-of-type{margin-bottom:0;}
+#modalOverlay .delivery-period-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;}
+#modalOverlay .delivery-period-toggle button{
+  min-height:39px;padding:8px 10px;border:1px solid #3b5064;border-radius:8px;
+  background:#202f3e;color:#b9c8d7;font-family:var(--font-ui);
+  font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;
+}
+#modalOverlay .delivery-period-toggle button.active{
+  border-color:#f28a31;background:rgba(242,138,49,.17);color:#ffc18d;
+  box-shadow:inset 0 0 0 1px rgba(242,138,49,.12);
+}
+#modalOverlay .delivery-summary-note{
+  display:flex;align-items:flex-start;gap:9px;margin-top:7px;padding:11px;
+  border:1px solid rgba(54,179,126,.22);border-radius:9px;background:rgba(54,179,126,.07);
+}
+#modalOverlay .delivery-summary-icon{
+  width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(54,179,126,.15);color:#58d99e;font-size:12px;font-weight:800;
+}
+#modalOverlay .delivery-summary-note strong{
+  display:block;color:#c9eadc;font-family:var(--font-ui);font-size:10px;font-weight:700;
+}
+#modalOverlay .delivery-summary-note p{
+  margin:3px 0 0;color:#91b9a7;font-family:var(--font-ui);font-size:9px;line-height:1.4;
+}
+#modalOverlay .modal-batch-mode{min-height:180px;}
+#modalOverlay .batch-help{
+  margin:0 0 14px;color:#9fb1c3;font-family:var(--font-ui);
+  font-size:10.5px;line-height:1.55;
+}
+#modalOverlay .batch-add-button{width:100%;min-height:38px;margin-top:9px;border-radius:8px;}
+#modalOverlay .modal-batch-mode .lote-linha{
+  grid-template-columns:minmax(75px,1fr) minmax(115px,1fr) minmax(125px,1.2fr) minmax(95px,.9fr) 30px;
+  gap:7px;margin-bottom:9px;
+}
+#modalOverlay .modal-batch-mode .lote-linha input,
+#modalOverlay .modal-batch-mode .lote-linha select{
+  min-width:0;min-height:38px;padding:7px 8px;border:1px solid #3a4d61;
+  border-radius:8px;background:#202d3b;color:#edf3f8;
+  font-family:var(--font-ui);font-size:10px;
+}
+#modalOverlay .modal-batch-mode .lote-linha .lote-remover{
+  width:30px;height:30px;border:1px solid #4d3a42;border-radius:7px;
+  background:rgba(229,107,115,.08);color:#e99ba0;
+}
+#modalOverlay #loteResultado .busca-resultado{display:block;}
+#modalOverlay .delivery-save-progress{flex:0 0 auto;margin:0 24px 10px;padding:0;}
+#modalOverlay .modal-footer-delivery{
+  flex:0 0 auto;position:relative;display:flex;justify-content:flex-end;gap:9px;
+  padding:13px 24px 17px;border-top:1px solid #304356;
+  background:#15212d;box-shadow:0 -8px 18px rgba(0,0,0,.08);
+}
+#modalOverlay .modal-footer-delivery .btn-secondary,
+#modalOverlay .modal-footer-delivery .btn-primary{
+  min-height:39px;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:9px 15px;border-radius:8px;font-family:var(--font-ui);
+  font-size:10.5px;font-weight:650;letter-spacing:-.015em;
+}
+#modalOverlay .modal-footer-delivery .btn-secondary{
+  border:1px solid #3b5064;background:#202f3e;color:#c6d2df;
+}
+#modalOverlay .modal-footer-delivery .btn-secondary:hover{background:#2a3d50;color:#fff;}
+#modalOverlay .modal-footer-delivery .btn-primary{
+  border:1px solid #f28a31;background:linear-gradient(135deg,#ff9946,#f1812c);
+  color:#24170e;box-shadow:0 4px 12px rgba(242,138,49,.14);
+}
+#modalOverlay .modal-footer-delivery .btn-primary:disabled{
+  border-color:#596575;background:#4a5562;color:#bac4ce;opacity:.55;cursor:not-allowed;box-shadow:none;
+}
+#modalOverlay .modal-footer-delivery .btn-primary span{font-size:15px;line-height:1;}
+#modalOverlay .modal-new-delivery .field input[type=date]{color-scheme:dark;}
+@media(max-width:760px){
+  #modalOverlay{padding:8px;align-items:center;}
+  #modalOverlay .modal-new-delivery{width:100%;max-width:100%;max-height:calc(100dvh - 16px);border-radius:13px;}
+  #modalOverlay .modal-header-delivery{padding:15px 16px 13px;}
+  #modalOverlay .modal-heading-copy p{max-width:280px;}
+  #modalOverlay .modo-toggle-delivery{padding:10px 16px;}
+  #modalOverlay .modal-delivery-body{padding:15px 14px;}
+  #modalOverlay .modal-delivery-columns{grid-template-columns:minmax(0,1fr);gap:12px;}
+  #modalOverlay .modal-section{padding:13px 12px;}
+  #modalOverlay .delivery-save-progress{margin:0 14px 8px;}
+  #modalOverlay .modal-footer-delivery{padding:11px 14px 13px;}
+}
+@media(max-width:480px){
+  #modalOverlay .modal-header-delivery h2{font-size:19px;}
+  #modalOverlay .modal-section-heading h3{font-size:12.5px;}
+  #modalOverlay .modal-new-delivery .field label{font-size:10px;}
+  #modalOverlay .modal-footer-delivery .btn-secondary,
+  #modalOverlay .modal-footer-delivery .btn-primary{flex:1;padding:8px 9px;font-size:10px;}
+  #modalOverlay .client-search-button{min-width:108px;padding:8px;}
+  #modalOverlay .cep-search-row{gap:6px;}
+  #modalOverlay .btn-cep{min-width:105px;padding:6px 8px;font-size:9.5px;}
+  #modalOverlay .modal-batch-mode .lote-linha{
+    grid-template-columns:1fr 1fr;gap:7px;padding:9px;
+    border:1px solid #34495d;border-radius:9px;background:#1b2937;
+  }
+  #modalOverlay .modal-batch-mode .lote-linha .lote-remover{grid-column:2;justify-self:end;}
+}
+@media(prefers-reduced-motion:reduce){
+  #modalOverlay .modal-header-delivery .modal-close,
+  #modalOverlay .modal-new-delivery input,
+  #modalOverlay .modal-new-delivery select,
+  #modalOverlay .modal-new-delivery textarea{transition:none!important;}
+}
+
+</style>
 </head>
 <body>
 <div id="loginScreen" hidden>
@@ -1799,95 +2117,177 @@ button,input,select,textarea{font-family:var(--font-ui);}
 </div>
 
 <div id="modalOverlay" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Nova entrega</h2>
-      <button class="modal-close" onclick="fecharModal()">&times;</button>
+  <div class="modal modal-new-delivery" role="dialog" aria-modal="true" aria-labelledby="tituloNovaEntrega">
+    <div class="modal-header modal-header-delivery">
+      <div class="modal-heading-copy">
+        <div class="modal-kicker">PERFINORTE · EXPEDIÇÃO</div>
+        <h2 id="tituloNovaEntrega">Nova entrega</h2>
+        <p>Cadastre o cliente, confirme o destino e programe a entrega.</p>
+      </div>
+      <button class="modal-close" onclick="fecharModal()" aria-label="Fechar modal">&times;</button>
     </div>
 
-    <div class="modo-toggle" id="modoNovaEntregaToggle">
-      <button type="button" data-modo="individual" class="active" onclick="alternarModoNovaEntrega_('individual')">Individual</button>
-      <button type="button" data-modo="lote" onclick="alternarModoNovaEntrega_('lote')">📋 Em lote</button>
+    <div class="modo-toggle modo-toggle-delivery" id="modoNovaEntregaToggle" role="tablist" aria-label="Modalidade de cadastro">
+      <button type="button" role="tab" aria-selected="true" data-modo="individual" class="active" onclick="alternarModoNovaEntrega_('individual')">
+        <span class="modo-tab-icon">01</span>Individual
+      </button>
+      <button type="button" role="tab" aria-selected="false" data-modo="lote" onclick="alternarModoNovaEntrega_('lote')">
+        <span class="modo-tab-icon">02</span>Em lote
+      </button>
     </div>
 
-    <div class="modal-body">
+    <div class="modal-body modal-delivery-body">
       <div id="modoIndividual">
-      <div class="field">
-        <label for="novoCodigo">Código do cliente</label>
-        <div class="busca-linha">
-          <input type="text" id="novoCodigo" placeholder="Ex: 2347" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCliente();}">
-          <button class="btn-secondary" onclick="buscarCliente()">Buscar</button>
+        <section class="modal-client-step" aria-labelledby="tituloIdentificacaoCliente">
+          <div class="modal-section-heading">
+            <span class="modal-step-number">01</span>
+            <div>
+              <h3 id="tituloIdentificacaoCliente">Identificação do cliente</h3>
+              <p>Informe o código para localizar o cadastro e os endereços utilizados.</p>
+            </div>
+          </div>
+          <div class="field client-code-field">
+            <label for="novoCodigo">Código do cliente</label>
+            <div class="busca-linha client-search-row">
+              <input type="text" id="novoCodigo" placeholder="Ex.: 2347" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCliente();}">
+              <button type="button" class="btn-secondary client-search-button" onclick="buscarCliente()">
+                <span aria-hidden="true">⌕</span> Buscar cliente
+              </button>
+            </div>
+            <div id="buscaResultado" class="busca-resultado"></div>
+          </div>
+        </section>
+
+        <div id="camposManuais" class="modal-delivery-columns" style="display:none; flex-direction:column; gap:14px;">
+          <section class="modal-section address-section" aria-labelledby="tituloEnderecoEntrega">
+            <div class="modal-section-heading">
+              <span class="modal-step-number">02</span>
+              <div>
+                <h3 id="tituloEnderecoEntrega">Endereço de entrega</h3>
+                <p>Escolha um endereço já utilizado ou informe um novo.</p>
+              </div>
+            </div>
+
+            <div id="enderecosMemoria" class="saved-addresses" style="display:none;"></div>
+
+            <div class="field cep-field">
+              <label for="novoCep">CEP <span class="optional-label">Opcional</span></label>
+              <div class="endereco-linha cep-search-row">
+                <input type="text" id="novoCep" placeholder="00000-000" maxlength="9" oninput="formatarCep_(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCep();}">
+                <button type="button" class="btn-cep" onclick="buscarCep()"><span aria-hidden="true">⌕</span> Buscar CEP</button>
+              </div>
+            </div>
+
+            <div class="address-fields-grid">
+              <div class="field address-street-field">
+                <label for="novaRua">Rua / Avenida</label>
+                <input type="text" id="novaRua" placeholder="Nome da rua" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+              </div>
+              <div class="field address-number-field">
+                <label for="novoNumero">Número</label>
+                <input type="text" id="novoNumero" placeholder="Nº / S/N" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+              </div>
+              <div class="field address-neighborhood-field">
+                <label for="novoBairro">Bairro</label>
+                <input type="text" id="novoBairro" placeholder="Nome do bairro" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+              </div>
+              <div class="field address-city-field">
+                <label for="novaCidade">Cidade</label>
+                <input type="text" id="novaCidade" placeholder="Cidade" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+              </div>
+              <div class="field address-state-field">
+                <label for="novoUf">UF</label>
+                <input type="text" id="novoUf" placeholder="UF" maxlength="2" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
+              </div>
+            </div>
+
+            <button type="button" class="btn-aplicar" onclick="aplicarEndereco()">
+              <span aria-hidden="true">✓</span> Aplicar endereço
+            </button>
+            <div id="enderecoResultado" class="busca-resultado address-result"></div>
+
+            <div class="mini-map-panel">
+              <div class="mini-map-heading">
+                <span class="mini-map-heading-icon">⌖</span>
+                <div>
+                  <strong>Localização no mapa</strong>
+                  <small>Confira o ponto antes de salvar</small>
+                </div>
+              </div>
+              <div id="miniMap"></div>
+              <div id="miniMapAviso" class="mini-map-aviso">O mapa será exibido após confirmar o endereço.</div>
+            </div>
+          </section>
+
+          <section class="modal-section scheduling-section" aria-labelledby="tituloProgramacaoEntrega">
+            <div class="modal-section-heading">
+              <span class="modal-step-number">03</span>
+              <div>
+                <h3 id="tituloProgramacaoEntrega">Programação</h3>
+                <p>Defina o responsável e a previsão de entrega.</p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="novoMotorista">Motorista</label>
+              <select id="novoMotorista">
+                <option value="">Selecione um motorista...</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="novaData">Data prevista</label>
+              <input type="date" id="novaData">
+            </div>
+            <div class="field">
+              <label>Período</label>
+              <div class="period-toggle delivery-period-toggle" id="novoPeriodoToggle">
+                <button type="button" data-p="MANHÃ">Manhã</button>
+                <button type="button" data-p="TARDE">Tarde</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="novaObs">Observações <span class="optional-label">Opcional</span></label>
+              <textarea id="novaObs" placeholder="Instruções para a entrega, referência do local..." rows="4"></textarea>
+            </div>
+
+            <div class="delivery-summary-note">
+              <span class="delivery-summary-icon">✓</span>
+              <div>
+                <strong>Conferência antes de salvar</strong>
+                <p>Confira o endereço, motorista, data e período selecionados.</p>
+              </div>
+            </div>
+          </section>
         </div>
-        <div id="buscaResultado" class="busca-resultado"></div>
-        <div id="enderecosMemoria" style="display:none;"></div>
       </div>
 
-      <div id="camposManuais" style="display:none; flex-direction:column; gap:14px;">
-        <div class="field">
-          <label>Endereço</label>
-          <div class="endereco-linha">
-            <input type="text" id="novoCep" placeholder="CEP (opcional)" maxlength="9" style="max-width:120px;" oninput="formatarCep_(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarCep();}">
-            <button type="button" class="btn-cep" onclick="buscarCep()">🔍 Buscar CEP</button>
-          </div>
-          <div class="endereco-linha" style="margin-top:6px;">
-            <input type="text" id="novaRua" placeholder="Rua/Avenida" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
-            <input type="text" id="novoNumero" placeholder="Nº (ou S/N)" oninput="forcarMaiusculo_(event)" style="max-width:100px; text-transform:uppercase;">
-          </div>
-          <div class="endereco-linha" style="margin-top:6px;">
-            <input type="text" id="novoBairro" placeholder="Bairro" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
-          </div>
-          <div class="endereco-linha" style="margin-top:6px;">
-            <input type="text" id="novaCidade" placeholder="Cidade" oninput="forcarMaiusculo_(event)" style="text-transform:uppercase;">
-            <input type="text" id="novoUf" placeholder="UF" maxlength="2" oninput="forcarMaiusculo_(event)" style="max-width:60px; text-transform:uppercase;">
-          </div>
-          <button type="button" class="btn-aplicar" onclick="aplicarEndereco()">✓ Aplicar endereço</button>
-          <div id="enderecoResultado" class="busca-resultado"></div>
-          <div id="miniMap"></div>
-          <div id="miniMapAviso" class="mini-map-aviso"></div>
-        </div>
-        <div class="field">
-          <label for="novoMotorista">Motorista</label>
-          <select id="novoMotorista">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="novaData">Data prevista</label>
-          <input type="date" id="novaData">
-        </div>
-        <div class="field">
-          <label>Período</label>
-          <div class="period-toggle" id="novoPeriodoToggle">
-            <button type="button" data-p="MANHÃ">MANHÃ</button>
-            <button type="button" data-p="TARDE">TARDE</button>
+      <div id="modoLote" class="modal-batch-mode" style="display:none;">
+        <div class="modal-section-heading">
+          <span class="modal-step-number">01</span>
+          <div>
+            <h3>Cadastro em lote</h3>
+            <p>Informe os dados de programação para cada código de cliente.</p>
           </div>
         </div>
-        <div class="field">
-          <label for="novaObs">Observações</label>
-          <input type="text" id="novaObs" placeholder="Opcional">
-        </div>
-      </div>
-      </div>
-
-      <div id="modoLote" style="display:none;">
-        <p style="font-size:11.5px; color:var(--paper-dim); margin:0 0 12px;">
-          Cada linha tem código, data, motorista e período próprios. Só entra
-          automaticamente quem já tem endereço padronizado na ROTAS_CLIENTES —
-          quem não tiver, aparece na lista de "não adicionados" pra completar
-          uma a uma pelo modo Individual.
+        <p class="batch-help">
+          Cada linha tem código, data, motorista e período próprios. Só entra automaticamente quem já tem endereço padronizado na ROTAS_CLIENTES. Quem não tiver endereço será listado para completar pelo modo Individual.
         </p>
         <div id="loteLinhas"></div>
-        <button type="button" class="btn-secondary" style="width:100%; margin-top:8px;" onclick="adicionarLinhaLote_()">+ Adicionar linha</button>
+        <button type="button" class="btn-secondary batch-add-button" onclick="adicionarLinhaLote_()">＋ Adicionar linha</button>
         <div id="loteResultado" style="display:none; margin-top:12px;"></div>
       </div>
     </div>
 
-    <div id="salvarProgresso" style="display:none; padding:0 20px 14px;"></div>
+    <div id="salvarProgresso" class="delivery-save-progress" style="display:none;"></div>
 
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-primary" id="btnSalvarNovo" onclick="salvarNova()" disabled>Salvar entrega</button>
-      <button class="btn-primary" id="btnSalvarLote" onclick="processarLote_()" style="display:none;">Adicionar todas</button>
+    <div class="modal-footer modal-footer-delivery">
+      <button type="button" class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnSalvarNovo" onclick="salvarNova()" disabled>
+        Salvar entrega <span aria-hidden="true">→</span>
+      </button>
+      <button type="button" class="btn-primary" id="btnSalvarLote" onclick="processarLote_()" style="display:none;">
+        Adicionar todas <span aria-hidden="true">→</span>
+      </button>
     </div>
   </div>
 </div>
@@ -4289,9 +4689,11 @@ function mostrarMiniMap_(lat, lng){
 
   if (!miniMap){
     miniMap = L.map('miniMap', { zoomControl:false, attributionControl:false }).setView([lat, lng], 16);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 20
-    }).addTo(miniMap);
+    L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a> and the GIS User Community',
+      maxZoom: 20,
+      maxNativeZoom: 16
+    }).addTo(miniMap);;
     miniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(miniMap);
     miniMapMarker.on('dragend', function(){
       const pos = miniMapMarker.getLatLng();
