@@ -52,3 +52,5 @@ O log completo fica na aba `Historico_Reprogramacoes`, com previsão anterior, n
 **Migração:** para linhas antigas, a previsão original começa com a data existente no momento da primeira inicialização. O sistema não tem como reconstruir reprogramações anteriores à implantação.
 
 **Critério inicial de atraso:** compara a data real da conclusão com a data original. Como ainda não foram definidos horários-limite para manhã e tarde, o atraso começa no dia seguinte à previsão original.
+
+**Registros que não são entregas:** linhas com `FA = AVISO` e `I` (código/ID da entrega) vazio são ignoradas na migração da auditoria e na lista retornada ao site. Elas não entram nos totais, atrasos, rankings ou gráficos e não geram reprogramações/conclusões na auditoria.
