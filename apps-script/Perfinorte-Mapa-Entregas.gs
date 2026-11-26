@@ -1670,6 +1670,421 @@ function obterPrecosCombustivel_(){
   }
 }
 
+
+/*******************************************************************************
+ * MÓDULO DE VIAGENS E RATEIO LOGÍSTICO
+ * Cada viagem reúne um veículo, motorista e várias entregas.
+ * O custo contratado do terceirizado é registrado uma vez por viagem e rateado
+ * igualmente apenas entre as entregas concluídas nessa viagem.
+ *******************************************************************************/
+const VIAGENS_SHEET_NAME_ = "CADASTRO_VIAGENS";
+const VIAGEM_ENTREGAS_SHEET_NAME_ = "VIAGEM_ENTREGAS";
+const VIAGEM_OCORRENCIAS_SHEET_NAME_ = "VIAGEM_OCORRENCIAS";
+
+const VIAGENS_HEADERS_ = [
+  "ID","NUMERO","DATA","PERIODO","VEICULO_ID","VEICULO_NOME","PLACA",
+  "VINCULO_FROTA","TRANSPORTADOR","MOTORISTA","STATUS","DISTANCIA_PREVISTA_KM",
+  "DURACAO_PREVISTA_MIN","CUSTO_KM_ESTIMADO","CUSTO_ESTIMADO","VALOR_NEGOCIADO",
+  "PEDAGIOS","DESPESAS_EXTRAS","HODOMETRO_INICIAL","HODOMETRO_FINAL",
+  "COMBUSTIVEL_REAL","CUSTO_TOTAL_FINAL","DISTANCIA_REAL_KM","OBSERVACOES",
+  "CRIADO_EM","ATUALIZADO_EM","ENCERRADO_EM"
+];
+const VIAGEM_ENTREGAS_HEADERS_ = [
+  "ID","VIAGEM_ID","ID_ENTREGA","LINHA_SNAPSHOT","ORDEM","CODIGO_CLIENTE",
+  "CLIENTE","ENDERECO","CIDADE","DATA_PREVISTA","PERIODO","NF_NUMEROS",
+  "STATUS","MOTIVO","OBSERVACOES","CUSTO_RATEADO","ENTREGUE_EM",
+  "CRIADO_EM","ATUALIZADO_EM"
+];
+const VIAGEM_OCORRENCIAS_HEADERS_ = [
+  "ID","VIAGEM_ID","ID_ENTREGA","TIPO","DESCRICAO","DATA_HORA","REGISTRADO_POR"
+];
+
+function getOrCreateLogisticaSheet_(nome,headers){
+  const ss=SpreadsheetApp.getActive();
+  let sh=ss.getSheetByName(nome);
+  if(!sh){
+    sh=ss.insertSheet(nome);
+    sh.getRange(1,1,1,headers.length).setValues([headers]);
+    sh.setFrozenRows(1);
+    sh.getRange(1,1,1,headers.length)
+      .setBackground("#183149").setFontColor("#ffffff").setFontWeight("bold");
+  }else if(sh.getLastRow()===0){
+    sh.getRange(1,1,1,headers.length).setValues([headers]);
+    sh.setFrozenRows(1);
+  }else{
+    const atuais=sh.getRange(1,1,1,Math.min(sh.getLastColumn(),headers.length)).getValues()[0];
+    if(String(atuais[0]||"")!==headers[0]){
+      throw new Error("A aba "+nome+" já existe, mas não tem o cabeçalho esperado. Confira antes de continuar.");
+    }
+  }
+  return sh;
+}
+
+function getOrCreateEstruturaViagens_(){
+  return {
+    viagens:getOrCreateLogisticaSheet_(VIAGENS_SHEET_NAME_,VIAGENS_HEADERS_),
+    entregas:getOrCreateLogisticaSheet_(VIAGEM_ENTREGAS_SHEET_NAME_,VIAGEM_ENTREGAS_HEADERS_),
+    ocorrencias:getOrCreateLogisticaSheet_(VIAGEM_OCORRENCIAS_SHEET_NAME_,VIAGEM_OCORRENCIAS_HEADERS_)
+  };
+}
+
+function listarLinhasViagens_(sheet){
+  const last=sheet.getLastRow();
+  return last<2?[]:sheet.getRange(2,1,last-1,sheet.getLastColumn()).getValues();
+}
+
+function viagemDataIso_(valor){
+  if(valor instanceof Date)return Utilities.formatDate(valor,Session.getScriptTimeZone(),"yyyy-MM-dd");
+  return _toIsoDateString(valor)||String(valor||"").trim();
+}
+
+function numeroLogistica_(valor){
+  if(valor===null||valor===undefined||valor==="")return null;
+  const n=Number(String(valor).replace(",","."));
+  return Number.isFinite(n)&&n>=0?n:null;
+}
+
+function precoCombustivelServidor_(veiculo){
+  const manual=numeroLogistica_(veiculo.precoCombustivelManual);
+  if(manual!==null&&manual>0)return manual;
+  const motor=String(veiculo.combustivelCalculo||"DIESEL").toUpperCase();
+  if(motor==="ETANOL")return null;
+  const pacote=obterPrecosCombustivel_();
+  if(!pacote||!pacote.ok||!pacote.precos)return null;
+  const grupo=motor==="GASOLINA"?pacote.precos.gasolina:pacote.precos.diesel;
+  const valor=grupo&&grupo[String(veiculo.uf||"PR").toLowerCase()];
+  return numeroLogistica_(valor);
+}
+
+function custoKmServidor_(veiculo){
+  const consumo=numeroLogistica_(veiculo.consumoKmL);
+  const preco=precoCombustivelServidor_(veiculo);
+  if(!consumo||!preco)return null;
+  return preco/consumo+(numeroLogistica_(veiculo.custoManutencaoKm)||0);
+}
+
+function mapearStopsViagens_(){
+  const estrutura=getOrCreateEstruturaViagens_();
+  const rows=listarLinhasViagens_(estrutura.entregas);
+  const mapa={};
+  rows.forEach(function(r,i){
+    const id=String(r[0]||"").trim();
+    const viagemId=String(r[1]||"").trim();
+    const entregaId=String(r[2]||"").trim();
+    if(!id||!viagemId||!entregaId)return;
+    const stop={
+      id:id,viagemId:viagemId,idEntrega:entregaId,linhaSnapshot:Number(r[3]||0),
+      ordem:Number(r[4]||0),codigo:String(r[5]||""),cliente:String(r[6]||""),
+      endereco:String(r[7]||""),cidade:String(r[8]||""),data:viagemDataIso_(r[9]),
+      periodo:String(r[10]||""),nfs:String(r[11]||""),status:String(r[12]||"PENDENTE"),
+      motivo:String(r[13]||""),observacoes:String(r[14]||""),
+      custoRateado:numeroLogistica_(r[15]),entregueEm:r[16] instanceof Date?r[16].toISOString():String(r[16]||""),
+      atualizadoEm:r[18] instanceof Date?r[18].getTime():new Date(r[18]||0).getTime(),
+      row:i+2
+    };
+    if(!mapa[entregaId])mapa[entregaId]=[];
+    mapa[entregaId].push(stop);
+  });
+  Object.keys(mapa).forEach(id=>mapa[id].sort((a,b)=>a.atualizadoEm-b.atualizadoEm));
+  return {rows:rows,mapa:mapa};
+}
+
+function listarDadosViagens_(){
+  const estrutura=getOrCreateEstruturaViagens_();
+  const tripRows=listarLinhasViagens_(estrutura.viagens);
+  const stopData=mapearStopsViagens_();
+  const veiculos=listarVeiculos_();
+  const motoristas=listarMotoristas();
+  const hist=SpreadsheetApp.getActive().getSheetByName(CFG.HIST);
+  const entregasBase=obterEntregasValidas_();
+  const entregas=entregasBase.map(function(d){
+    const audit=garantirAuditoriaLinha_(hist,d.linha);
+    return Object.assign({},d,{idEntrega:String(audit.id||"")});
+  }).filter(d=>d.idEntrega);
+
+  const viagens=tripRows.map(function(r,i){
+    const id=String(r[0]||"");
+    const stops=stopData.rows.filter(s=>String(s[1]||"")===id).map(function(s,j){
+      return {
+        id:String(s[0]||""),viagemId:id,idEntrega:String(s[2]||""),
+        linhaSnapshot:Number(s[3]||0),ordem:Number(s[4]||j+1),
+        codigo:String(s[5]||""),cliente:String(s[6]||""),endereco:String(s[7]||""),
+        cidade:String(s[8]||""),data:viagemDataIso_(s[9]),periodo:String(s[10]||""),
+        nfs:String(s[11]||""),status:String(s[12]||"PENDENTE"),motivo:String(s[13]||""),
+        observacoes:String(s[14]||""),custoRateado:numeroLogistica_(s[15]),
+        entregueEm:s[16] instanceof Date?s[16].toISOString():String(s[16]||"")
+      };
+    });
+    return {
+      id:id,numero:String(r[1]||("V-"+(i+1))),data:viagemDataIso_(r[2]),
+      periodo:String(r[3]||""),veiculoId:String(r[4]||""),veiculoNome:String(r[5]||""),
+      placa:String(r[6]||""),propriedade:String(r[7]||""),transportador:String(r[8]||""),
+      motorista:String(r[9]||""),status:String(r[10]||"PROGRAMADA"),
+      distanciaPrevistaKm:numeroLogistica_(r[11]),duracaoPrevistaMin:numeroLogistica_(r[12]),
+      custoKmEstimado:numeroLogistica_(r[13]),custoEstimado:numeroLogistica_(r[14]),
+      valorNegociado:numeroLogistica_(r[15]),pedagios:numeroLogistica_(r[16])||0,
+      despesasExtras:numeroLogistica_(r[17])||0,hodometroInicial:numeroLogistica_(r[18]),
+      hodometroFinal:numeroLogistica_(r[19]),combustivelReal:numeroLogistica_(r[20]),
+      custoTotalFinal:numeroLogistica_(r[21]),distanciaRealKm:numeroLogistica_(r[22]),
+      observacoes:String(r[23]||""),paradas:stops,
+      criadoEm:r[24] instanceof Date?r[24].toISOString():String(r[24]||""),
+      atualizadoEm:r[25] instanceof Date?r[25].toISOString():String(r[25]||""),
+      encerradoEm:r[26] instanceof Date?r[26].toISOString():String(r[26]||"")
+    };
+  }).sort((a,b)=>String(b.data).localeCompare(String(a.data))||String(b.criadoEm).localeCompare(String(a.criadoEm)));
+
+  const ultimaParada={};
+  Object.keys(stopData.mapa).forEach(id=>{
+    const arr=stopData.mapa[id];
+    if(arr.length)ultimaParada[id]=arr[arr.length-1];
+  });
+  const atribuidasAtivas=new Set();
+  Object.keys(ultimaParada).forEach(id=>{
+    const s=ultimaParada[id];
+    if(["PENDENTE","EM_ROTA"].indexOf(s.status)>=0)atribuidasAtivas.add(id);
+  });
+  const entregasDisponiveis=entregas.filter(function(d){
+    const status=String(d.status||"").trim().toUpperCase();
+    return d.codigo&&d.endereco&&status!=="ENTREGUE"&&!atribuidasAtivas.has(d.idEntrega);
+  }).map(function(d){
+    const ultima=ultimaParada[d.idEntrega];
+    return Object.assign({},d,{
+      podeReprogramar:!!ultima&&["REPROGRAMAR","NAO_ENTREGUE"].indexOf(ultima.status)>=0,
+      viagemAnterior:ultima?ultima.viagemId:""
+    });
+  });
+
+  return {
+    ok:true,viagens:viagens,veiculos:veiculos.filter(v=>v.ativo!==false),
+    motoristas:motoristas,entregasDisponiveis:entregasDisponiveis
+  };
+}
+
+function criarViagem_(dados){
+  if(!dados||typeof dados!=="object")return {ok:false,erro:"Dados da viagem não recebidos."};
+  const data=String(dados.data||"").trim();
+  const motorista=String(dados.motorista||"").trim();
+  const ids=Array.isArray(dados.entregas)?dados.entregas:[];
+  if(!data||!motorista)return {ok:false,erro:"Informe data e motorista."};
+  if(!ids.length)return {ok:false,erro:"Selecione ao menos uma entrega."};
+
+  const estrutura=getOrCreateEstruturaViagens_();
+  const veiculo=listarVeiculos_().find(v=>String(v.id)===String(dados.veiculoId||""));
+  if(!veiculo||veiculo.ativo===false)return {ok:false,erro:"Selecione um veículo ativo."};
+  const valorNegociado=numeroLogistica_(dados.valorNegociado)||0;
+  const terceiros=String(veiculo.propriedade).toUpperCase()==="TERCEIRIZADO";
+  if(terceiros&&valorNegociado<=0)return {ok:false,erro:"Informe o valor total negociado com o transportador para esta viagem."};
+
+  const hist=SpreadsheetApp.getActive().getSheetByName(CFG.HIST);
+  const validas=obterEntregasValidas_();
+  const porLinha={};
+  validas.forEach(d=>{
+    const audit=garantirAuditoriaLinha_(hist,d.linha);
+    d.idEntrega=String(audit.id||"");
+    porLinha[d.idEntrega]=d;
+  });
+  const stopData=mapearStopsViagens_();
+  const lock=LockService.getScriptLock();
+  lock.waitLock(10000);
+  try{
+    const selecionadas=[];
+    ids.forEach(function(item){
+      const id=String(item.idEntrega||"").trim();
+      const d=porLinha[id];
+      if(!d)throw new Error("Uma das entregas selecionadas não foi encontrada. Atualize a lista e tente novamente.");
+      if(String(d.status||"").trim().toUpperCase()==="ENTREGUE")throw new Error("A entrega "+d.cliente+" já está marcada como entregue.");
+      const historico=stopData.mapa[id]||[];
+      const ultima=historico.length?historico[historico.length-1]:null;
+      if(ultima&&["PENDENTE","EM_ROTA"].indexOf(ultima.status)>=0){
+        throw new Error("A entrega "+d.cliente+" já está vinculada a uma viagem em aberto.");
+      }
+      selecionadas.push({item:item,d:d,ordem:Number(item.ordem||selecionadas.length+1)});
+    });
+    const idViagem="VIAGEM-"+Utilities.getUuid();
+    const numero="V-"+Utilities.formatDate(new Date(),Session.getScriptTimeZone(),"yyMMdd")+"-"+String(estrutura.viagens.getLastRow()).padStart(3,"0");
+    const distancia=numeroLogistica_(dados.distanciaPrevistaKm);
+    const duracao=numeroLogistica_(dados.duracaoPrevistaMin);
+    const custoKm=terceiros?null:custoKmServidor_(veiculo);
+    const pedagios=numeroLogistica_(dados.pedagios)||0;
+    const extras=numeroLogistica_(dados.despesasExtras)||0;
+    const estimado=terceiros?valorNegociado+pedagios+extras:
+      (distancia!==null&&custoKm!==null?distancia*custoKm+pedagios+extras:null);
+    const agora=new Date();
+    estrutura.viagens.appendRow([
+      idViagem,numero,parseDataIsoParaDate_(data),String(dados.periodo||""),
+      veiculo.id,veiculo.nomeExibicao||[veiculo.marca,veiculo.modelo].filter(Boolean).join(" "),
+      veiculo.placa,String(veiculo.propriedade),veiculo.transportador||"",motorista,
+      "PROGRAMADA",distancia,duracao,custoKm,estimado,terceiros?valorNegociado:"",
+      pedagios,extras,numeroLogistica_(dados.hodometroInicial)||"",
+      "",numeroLogistica_(dados.combustivelReal)||"","",null,
+      String(dados.observacoes||""),agora,agora,""
+    ]);
+    selecionadas.forEach(function(x,i){
+      const d=x.d,item=x.item;
+      estrutura.entregas.appendRow([
+        "PARADA-"+Utilities.getUuid(),idViagem,d.idEntrega,d.linha,
+        x.ordem||i+1,d.codigo,d.cliente,d.endereco,d.cidade||"",
+        d.data?parseDataIsoParaDate_(d.data):"",d.periodo||"",
+        String(item.nfs||""),"PENDENTE","","", "", "",agora,agora
+      ]);
+    });
+    SpreadsheetApp.flush();
+    return {ok:true,id:idViagem,numero:numero,totalEntregas:selecionadas.length,custoEstimado:estimado};
+  }finally{lock.releaseLock();}
+}
+
+function atualizarParadaViagem_(dados){
+  if(!dados||!dados.id)return {ok:false,erro:"Parada não identificada."};
+  const estrutura=getOrCreateEstruturaViagens_();
+  const last=estrutura.entregas.getLastRow();
+  if(last<2)return {ok:false,erro:"Nenhuma parada cadastrada."};
+  const ids=estrutura.entregas.getRange(2,1,last-1,1).getValues().flat();
+  const idx=ids.findIndex(x=>String(x)===String(dados.id));
+  if(idx<0)return {ok:false,erro:"Parada não encontrada."};
+  const row=idx+2;
+  const viagemId=String(estrutura.entregas.getRange(row,2).getValue()||"");
+  const viagens=estrutura.viagens;
+  const lastV=viagens.getLastRow();
+  const tripIds=lastV>=2?viagens.getRange(2,1,lastV-1,1).getValues().flat():[];
+  const tripIdx=tripIds.findIndex(x=>String(x)===viagemId);
+  if(tripIdx<0)return {ok:false,erro:"Viagem não encontrada."};
+  const tripStatus=String(viagens.getRange(tripIdx+2,11).getValue()||"");
+  if(["CONCLUIDA","CONCLUIDA_PARCIAL","CANCELADA"].indexOf(tripStatus)>=0)
+    return {ok:false,erro:"Esta viagem já foi encerrada."};
+
+  const status=String(dados.status||"").toUpperCase();
+  const permitidos=["ENTREGUE","NAO_ENTREGUE","REPROGRAMAR","EM_ROTA","PENDENTE"];
+  if(permitidos.indexOf(status)<0)return {ok:false,erro:"Situação de parada inválida."};
+
+  if(status==="ENTREGUE"){
+    const idEntrega=String(estrutura.entregas.getRange(row,3).getValue()||"");
+    const hist=SpreadsheetApp.getActive().getSheetByName(CFG.HIST);
+    const historicoIds=hist.getRange(2,AUDITORIA_ENTREGAS_CFG_.COL_ID,Math.max(1,hist.getLastRow()-1),1).getValues().flat();
+    const histIdx=historicoIds.findIndex(x=>String(x)===idEntrega);
+    if(histIdx<0)return {ok:false,erro:"Não localizei a entrega original na planilha. Ela pode ter sido removida."};
+    const resultado=concluirEntrega(histIdx+2,dados.motivoAtraso||"",dados.observacoes||"");
+    if(!resultado||!resultado.ok)return resultado||{ok:false,erro:"Não foi possível atualizar a entrega."};
+    estrutura.entregas.getRange(row,17).setValue(new Date());
+  }
+  estrutura.entregas.getRange(row,13).setValue(status);
+  estrutura.entregas.getRange(row,14).setValue(String(dados.motivo||""));
+  estrutura.entregas.getRange(row,15).setValue(String(dados.observacoes||""));
+  estrutura.entregas.getRange(row,12).setValue(String(dados.nfs||estrutura.entregas.getRange(row,12).getValue()||""));
+  estrutura.entregas.getRange(row,19).setValue(new Date());
+  SpreadsheetApp.flush();
+  return {ok:true,id:dados.id,status:status};
+}
+
+function registrarOcorrenciaViagem_(dados){
+  if(!dados||!dados.viagemId||!String(dados.descricao||"").trim())
+    return {ok:false,erro:"Informe a viagem e descreva a ocorrência."};
+  const estrutura=getOrCreateEstruturaViagens_();
+  const last=estrutura.viagens.getLastRow();
+  if(last<2)return {ok:false,erro:"Viagem não encontrada."};
+  const ids=estrutura.viagens.getRange(2,1,last-1,1).getValues().flat();
+  const idx=ids.findIndex(x=>String(x)===String(dados.viagemId));
+  if(idx<0)return {ok:false,erro:"Viagem não encontrada."};
+  const tipo=String(dados.tipo||"OUTRA").toUpperCase();
+  const agora=new Date();
+  estrutura.ocorrencias.appendRow([
+    "OCORRENCIA-"+Utilities.getUuid(),dados.viagemId,String(dados.idEntrega||""),
+    tipo,String(dados.descricao).trim(),agora,String(dados.registradoPor||"Administrativo")
+  ]);
+  if(["PANE","ACIDENTE","VEICULO_INDISPONIVEL","BLOQUEIO"].indexOf(tipo)>=0){
+    estrutura.viagens.getRange(idx+2,11).setValue("INTERROMPIDA");
+    estrutura.viagens.getRange(idx+2,26).setValue(agora);
+  }
+  SpreadsheetApp.flush();
+  return {ok:true};
+}
+
+function atualizarStatusViagem_(dados){
+  if(!dados||!dados.id)return {ok:false,erro:"Viagem não identificada."};
+  const estrutura=getOrCreateEstruturaViagens_();
+  const last=estrutura.viagens.getLastRow();
+  if(last<2)return {ok:false,erro:"Viagem não encontrada."};
+  const ids=estrutura.viagens.getRange(2,1,last-1,1).getValues().flat();
+  const idx=ids.findIndex(x=>String(x)===String(dados.id));
+  if(idx<0)return {ok:false,erro:"Viagem não encontrada."};
+  const row=idx+2;
+  const atual=String(estrutura.viagens.getRange(row,11).getValue()||"PROGRAMADA");
+  const status=String(dados.status||"").toUpperCase();
+  if(status==="EM_ANDAMENTO"){
+    if(["PROGRAMADA","INTERROMPIDA"].indexOf(atual)<0)return {ok:false,erro:"Só é possível iniciar ou retomar uma viagem programada/interrompida."};
+    estrutura.viagens.getRange(row,11).setValue(status);
+    estrutura.viagens.getRange(row,26).setValue(new Date());
+    return {ok:true,status:status};
+  }
+  if(status==="INTERROMPIDA"){
+    if(atual!=="EM_ANDAMENTO")return {ok:false,erro:"Somente uma viagem em andamento pode ser interrompida."};
+    estrutura.viagens.getRange(row,11).setValue(status);
+    estrutura.viagens.getRange(row,26).setValue(new Date());
+    return {ok:true,status:status};
+  }
+  if(status!=="CONCLUIR")return {ok:false,erro:"Situação de viagem inválida."};
+  if(["EM_ANDAMENTO","INTERROMPIDA","PROGRAMADA"].indexOf(atual)<0)return {ok:false,erro:"Esta viagem não pode ser encerrada."};
+
+  const rows=listarLinhasViagens_(estrutura.entregas);
+  const idxs=[];
+  rows.forEach(function(r,i){if(String(r[1])===String(dados.id))idxs.push(i+2);});
+  if(!idxs.length)return {ok:false,erro:"Esta viagem não possui entregas vinculadas."};
+  const pendentes=idxs.filter(r=>["PENDENTE","EM_ROTA"].indexOf(String(estrutura.entregas.getRange(r,13).getValue()||""))>=0);
+  if(pendentes.length)return {ok:false,erro:"Antes de encerrar, marque as entregas restantes como reprogramar ou não entregues."};
+  const concluidas=idxs.filter(r=>String(estrutura.entregas.getRange(r,13).getValue()||"")==="ENTREGUE");
+  const veiculoId=String(estrutura.viagens.getRange(row,5).getValue()||"");
+  const veiculo=listarVeiculos_().find(v=>String(v.id)===veiculoId);
+  if(!veiculo)return {ok:false,erro:"Veículo vinculado não encontrado."};
+  const terceiros=String(veiculo.propriedade).toUpperCase()==="TERCEIRIZADO";
+  const valorNegociado=numeroLogistica_(estrutura.viagens.getRange(row,16).getValue())||0;
+  const pedagios=numeroLogistica_(dados.pedagios)!==null?numeroLogistica_(dados.pedagios):(numeroLogistica_(estrutura.viagens.getRange(row,17).getValue())||0);
+  const extras=numeroLogistica_(dados.despesasExtras)!==null?numeroLogistica_(dados.despesasExtras):(numeroLogistica_(estrutura.viagens.getRange(row,18).getValue())||0);
+  const hodIni=numeroLogistica_(dados.hodometroInicial)!==null?numeroLogistica_(dados.hodometroInicial):numeroLogistica_(estrutura.viagens.getRange(row,19).getValue());
+  const hodFim=numeroLogistica_(dados.hodometroFinal);
+  const kmReal=hodIni!==null&&hodFim!==null&&hodFim>=hodIni?hodFim-hodIni:null;
+  const kmPrev=numeroLogistica_(estrutura.viagens.getRange(row,12).getValue());
+  const kmAplicado=kmReal!==null?kmReal:kmPrev;
+  const combustivelReal=numeroLogistica_(dados.combustivelReal)!==null?numeroLogistica_(dados.combustivelReal):numeroLogistica_(estrutura.viagens.getRange(row,21).getValue());
+  const custoKm=numeroLogistica_(estrutura.viagens.getRange(row,14).getValue());
+  const manutencao=numeroLogistica_(veiculo.custoManutencaoKm)||0;
+  let custoTotal=null;
+  if(terceiros)custoTotal=valorNegociado+pedagios+extras;
+  else if(kmAplicado!==null){
+    const custoBase=combustivelReal!==null?combustivelReal+kmAplicado*manutencao:
+      (custoKm!==null?kmAplicado*custoKm:null);
+    if(custoBase!==null)custoTotal=custoBase+pedagios+extras;
+  }
+  const agora=new Date();
+  estrutura.viagens.getRange(row,17,1,6).setValues([[
+    pedagios,extras,hodIni===null?"":hodIni,hodFim===null?"":hodFim,
+    combustivelReal===null?"":combustivelReal,custoTotal===null?"":custoTotal
+  ]]);
+  estrutura.viagens.getRange(row,23).setValue(kmReal===null?"":kmReal);
+  estrutura.viagens.getRange(row,11).setValue(concluidas.length===idxs.length?"CONCLUIDA":"CONCLUIDA_PARCIAL");
+  estrutura.viagens.getRange(row,26).setValue(agora);
+  estrutura.viagens.getRange(row,27).setValue(agora);
+
+  if(custoTotal!==null&&concluidas.length){
+    const parcela=Math.floor((custoTotal/concluidas.length)*100)/100;
+    let acumulado=0;
+    concluidas.forEach(function(stopRow,i){
+      const rateio=i===concluidas.length-1?Math.round((custoTotal-acumulado)*100)/100:parcela;
+      acumulado+=rateio;
+      estrutura.entregas.getRange(stopRow,16).setValue(rateio);
+      estrutura.entregas.getRange(stopRow,19).setValue(agora);
+    });
+  }
+  SpreadsheetApp.flush();
+  return {
+    ok:true,status:concluidas.length===idxs.length?"CONCLUIDA":"CONCLUIDA_PARCIAL",
+    custoTotal:custoTotal,entregasConcluidas:concluidas.length,
+    entregasReprogramadas:idxs.length-concluidas.length,
+    kmReal:kmReal,rateioPorEntrega:concluidas.length&&custoTotal!==null?custoTotal/concluidas.length:null
+  };
+}
+
+function incluirViagemNoModulo_(e){return listarDadosViagens_();}
+
+
 function doGet(e) {
   const p = (e && e.parameter) ? e.parameter : {};
 
@@ -1681,6 +2096,8 @@ function doGet(e) {
       return doGetDados_(e);
     case "veiculos":
       return jsonOutput_(listarVeiculos_());
+    case "viagens":
+      return jsonOutput_(listarDadosViagens_());
     case "precosCombustivel":
       return jsonOutput_(obterPrecosCombustivel_());
     case "motoristas":
@@ -1756,6 +2173,14 @@ function doPost(e) {
         return jsonOutput_(salvarVeiculo_(body.veiculo));
       case "alterarSituacaoVeiculo":
         return jsonOutput_(alterarSituacaoVeiculo_(body.id,body.ativo));
+      case "criarViagem":
+        return jsonOutput_(criarViagem_(body.dados));
+      case "atualizarParadaViagem":
+        return jsonOutput_(atualizarParadaViagem_(body.dados));
+      case "atualizarStatusViagem":
+        return jsonOutput_(atualizarStatusViagem_(body.dados));
+      case "registrarOcorrenciaViagem":
+        return jsonOutput_(registrarOcorrenciaViagem_(body.dados));
       case "marcarEntregaMotorista":
         return jsonOutput_(marcarEntregaMotorista(body.linha, body.status, body.motorista));
       case "marcarEmAndamento":
