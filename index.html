@@ -988,6 +988,374 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
   #sidebarDireitoToggle{display:none;}
 }
 
+
+/* ===== LAYOUT V10 · referência operacional, mantendo Leaflet claro ===== */
+:root{
+  --shell:#0f1722;
+  --shell-2:#151f2b;
+  --shell-3:#1d2937;
+  --shell-line:#2b3949;
+  --accent:#f28a31;
+  --accent-soft:rgba(242,138,49,.13);
+  --success:#36d79a;
+  --warning:#f4bc40;
+  --danger:#ff6464;
+}
+#app{
+  grid-template-columns:72px 328px minmax(0,1fr) 394px;
+  background:var(--shell);
+  min-width:0;
+}
+#app.sidebar-colapsado{grid-template-columns:72px 0 minmax(0,1fr) 394px;}
+#app.sidebar-direito-colapsado{grid-template-columns:72px 328px minmax(0,1fr) 0;}
+#app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+#app.tabela-ativa{grid-template-columns:72px 328px minmax(0,1fr) 0;}
+#app.tabela-ativa.sidebar-colapsado{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+
+.app-rail{
+  grid-column:1;grid-row:1;min-width:0;height:100vh;position:relative;z-index:1600;
+  display:flex;flex-direction:column;align-items:center;gap:9px;padding:18px 9px 14px;
+  background:linear-gradient(180deg,#101925 0%,#111b27 100%);
+  border-right:1px solid #263444;
+}
+.rail-brand,.rail-link{
+  width:52px;height:52px;flex:0 0 52px;display:flex;align-items:center;justify-content:center;
+  border:1px solid transparent;border-radius:12px;background:transparent;color:#9bacc0;
+  text-decoration:none;cursor:pointer;position:relative;transition:background .16s,border-color .16s,color .16s;
+}
+.rail-brand{
+  width:52px;height:52px;background:linear-gradient(145deg,#ff9a3d,#ec6f16);
+  color:#fff;border-radius:50%;box-shadow:0 7px 18px rgba(235,111,22,.22);margin-bottom:3px;
+}
+.rail-brand svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.rail-link svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+.rail-link:hover{background:#202d3b;color:#f1f5f9;border-color:#344658;}
+.rail-link.active{background:#253343;color:#ff9b45;border-color:#35495d;}
+.rail-link.active:before{
+  content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);
+}
+.rail-divider{width:34px;height:1px;background:#29394a;margin:2px 0 4px;}
+.rail-spacer{flex:1;}
+.rail-logout{color:#8fa1b5;}
+
+#sidebar{
+  grid-column:2;grid-row:1;min-width:0;overflow-y:auto;overflow-x:hidden;
+  background:linear-gradient(180deg,#172330 0%,#121c27 100%);
+  border-right:1px solid #2a3949;
+  scrollbar-width:thin;scrollbar-color:#334558 transparent;
+}
+#sidebar>*{min-width:0!important;width:100%;}
+#app.sidebar-colapsado #sidebar{overflow:hidden;visibility:hidden;border:0;}
+.brand{
+  padding:17px 18px 14px;background:linear-gradient(180deg,#182432 0%,#17222e 100%);
+  border-bottom:1px solid #2b3a4a;position:relative;
+}
+.brand:after{display:none;}
+.brand-heading{padding-bottom:15px;border-bottom:1px solid #2b3949;}
+.brand .eyebrow{font-family:var(--font-mono);font-size:9px;letter-spacing:.15em;color:#9cacc0;}
+.brand h1{font-size:22px;line-height:1.2;letter-spacing:-.035em;margin:5px 0 10px;color:#f4f7fa;}
+.brand-live{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border:1px solid rgba(54,215,154,.28);border-radius:20px;background:rgba(54,215,154,.09);color:#70e8b2;font-size:10px;font-weight:650;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#3cdda0;box-shadow:0 0 0 3px rgba(60,221,160,.12);}
+.brand-updated{margin-top:8px;color:#a7b6c8;font-family:var(--font-mono);font-size:9px;letter-spacing:.02em;}
+.brand .secao-titulo{
+  font-family:var(--font-ui);font-size:12px;letter-spacing:0;text-transform:none;font-weight:750;
+  color:#e5edf5;border:0;padding:0;margin:14px 0 8px;
+}
+.brand .btn-nova{
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:39px;
+  margin:0 0 8px;padding:8px 10px;border:1px solid transparent;border-radius:8px;
+  background:linear-gradient(135deg,#ff963c,#ed741d);color:#1b160f;
+  font-family:var(--font-ui);font-size:12px;font-weight:750;letter-spacing:0;
+  box-shadow:0 4px 12px rgba(239,119,31,.16);
+}
+.brand .btn-nova:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.brand-action-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.brand .brand-action-row .btn-nova{
+  min-width:0;min-height:37px;margin:0 0 8px;padding:7px 6px;
+  background:#202d3b;color:#e0e8f1;border-color:#38495c;font-size:10px;
+  box-shadow:none;white-space:normal;line-height:1.2;
+}
+.brand .brand-action-row .btn-cliente-topo{color:#e0e8f1;background:#202d3b;border-color:#38495c;}
+.brand .btn-atencao-topo{
+  min-height:35px;margin:0;background:rgba(255,100,100,.08);
+  border-color:rgba(255,100,100,.65);color:#ff9c9c;box-shadow:none;
+}
+.brand .view-title{margin-top:17px;}
+.brand .view-toggle{display:flex;gap:7px;margin:0;}
+.brand .view-toggle button{
+  min-height:37px;border:1px solid #39495b;border-radius:8px!important;
+  background:#202d3b;color:#c1ccda;font-family:var(--font-ui);font-size:11px;
+  font-weight:650;letter-spacing:0;padding:8px 7px;
+}
+.brand .view-toggle button.active{background:#f0f4f8;color:#182432;border-color:#f0f4f8;}
+.brand-tools{margin-top:10px;padding-top:10px;border-top:1px solid #29394a;}
+.brand .brand-tools #rotaToolbar{display:flex;gap:7px;margin:0;}
+.brand .brand-tools #rotaToolbar button{
+  min-height:35px;flex:1;border:1px solid #39495b;border-radius:8px!important;
+  background:#202d3b;color:#d8e2ec;font-family:var(--font-ui);font-size:10px;
+  font-weight:650;letter-spacing:0;padding:7px 6px;
+}
+.brand .brand-tools .rota-info{font-family:var(--font-ui);font-size:10px;}
+.brand .btn-confirmacoes,.brand .btn-sair{
+  width:100%;min-height:35px;margin:8px 0 0;padding:8px 9px;border-radius:8px;
+  font-family:var(--font-ui);font-size:10px;letter-spacing:0;
+}
+.brand .btn-confirmacoes{background:#202d3b!important;border:1px solid #39495b!important;color:#d8e2ec!important;}
+.brand .btn-confirmacoes.tem-pendentes{background:rgba(255,100,100,.11)!important;color:#ffabab!important;border-color:#a95358!important;}
+.brand .btn-sair{background:rgba(255,100,100,.07);border-color:rgba(255,100,100,.3);}
+
+.controls{padding:15px 17px 22px;gap:10px;background:#121c27;border:0;}
+.controls .secao-titulo{
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--font-ui);font-size:12px;letter-spacing:0;text-transform:none;
+  font-weight:750;color:#e5edf5;border-bottom:1px solid #2b3949;padding:0 0 10px;margin:0 0 2px;
+}
+.controls .field{display:flex;flex-direction:column;gap:6px;padding:0;}
+.controls .field label{font-family:var(--font-ui);font-size:10px;letter-spacing:0;text-transform:none;color:#aebdcd;font-weight:650;margin:0;}
+.controls .date-range{gap:6px;}
+.controls .date-range input,.controls .field select{
+  min-width:0;min-height:36px;padding:8px 9px;background:#202d3b;border:1px solid #394b60;
+  color:#edf2f8;border-radius:8px;font-family:var(--font-ui);font-size:11px;
+}
+.controls .date-range-sep{color:#8495a9;}
+.controls .date-atalhos{gap:6px;margin:0;}
+.controls .date-atalhos button,.controls .period-toggle button{
+  min-height:32px;padding:7px 6px;background:#202d3b;border:1px solid #394b60;
+  border-radius:8px;color:#c0ccda;font-family:var(--font-ui);font-size:10px;letter-spacing:0;
+}
+.controls .period-toggle{gap:6px;}
+.controls .period-toggle button.active{background:#eef3f7!important;color:#172330!important;border-color:#eef3f7!important;}
+.controls .status-filtro-sidebar{padding:9px 10px;gap:7px;background:#1b2734;border:1px solid #34475a;border-radius:8px;}
+.controls .status-filtro-sidebar label{font-family:var(--font-ui);font-size:10.5px;color:#d5deea;letter-spacing:0;text-transform:none;}
+.controls .field select{color-scheme:dark;}
+.controls .field input[type=date]{color-scheme:dark;}
+.controls .field textarea{background:#202d3b;border-color:#394b60;border-radius:8px;color:#edf2f8;}
+.controls .field input:focus,.controls .field select:focus{outline:2px solid rgba(242,138,49,.48);outline-offset:1px;}
+
+#sidebarToggle{
+  left:400px;width:17px;height:42px;border:1px solid #35475b;background:#182532;
+  color:#b4c1d0;border-radius:0 8px 8px 0;z-index:1700;font-size:12px;
+}
+#app.sidebar-colapsado #sidebarToggle{left:72px;}
+#sidebarToggle:hover{color:#fff;background:#263748;}
+#sidebarDireito{
+  grid-column:4;grid-row:1;min-width:0;padding:0;overflow-y:auto;overflow-x:hidden;
+  display:flex;flex-direction:column;background:linear-gradient(180deg,#151f2b 0%,#111a25 100%);
+  border-left:1px solid #2a3949;
+}
+#sidebarDireito>*{min-width:0!important;width:auto;}
+#app.sidebar-direito-colapsado #sidebarDireito{overflow:hidden;border:0;}
+#sidebarDireitoToggle{
+  right:394px;width:17px;height:42px;border:1px solid #35475b;background:#182532;
+  color:#b4c1d0;border-radius:8px 0 0 8px;z-index:1700;font-size:12px;
+}
+#app.sidebar-direito-colapsado #sidebarDireitoToggle{right:0;}
+
+#mainContent{
+  grid-column:3;grid-row:1;display:flex;flex-direction:column;position:relative;
+  min-width:0;min-height:0;height:100vh;overflow:hidden;background:#f2efe9;
+}
+.map-toolbar{
+  height:66px;flex:0 0 66px;display:flex;align-items:center;gap:16px;
+  padding:0 18px;background:#111a25;border-bottom:1px solid #2a3949;z-index:900;
+}
+.map-search{
+  height:43px;min-width:100px;max-width:560px;flex:1;display:flex;align-items:center;gap:11px;
+  padding:0 13px;background:#202b38;border:1px solid #3a4a5d;border-radius:10px;
+  color:#dbe5ef;box-shadow:inset 0 1px 1px rgba(255,255,255,.025);
+}
+.map-search svg{width:19px;height:19px;flex:0 0 19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.map-search input{
+  width:100%;min-width:0;border:0;outline:0;background:transparent;color:#f1f5f9;
+  font-family:var(--font-ui);font-size:12px;
+}
+.map-search input::placeholder{color:#a7b4c3;opacity:1;}
+.map-search input::-webkit-search-cancel-button{display:none;}
+.search-clear{
+  width:22px;height:22px;flex:0 0 22px;border:0;border-radius:6px;background:transparent;
+  color:#9cabbc;font-size:18px;line-height:1;cursor:pointer;
+}
+.search-clear:hover{background:#314154;color:#fff;}
+.map-toolbar-actions{display:flex;align-items:center;gap:8px;}
+.toolbar-filter-button,.toolbar-icon-button{
+  height:42px;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  border:1px solid #3a4a5d;border-radius:10px;background:#1b2734;color:#e8eef5;
+  font-family:var(--font-ui);font-size:11px;font-weight:650;cursor:pointer;
+}
+.toolbar-filter-button{padding:0 12px;}
+.toolbar-filter-button svg,.toolbar-icon-button svg{
+  width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+}
+.toolbar-filter-button b{
+  min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+  padding:0 5px;border-radius:50%;background:#f47d22;color:#21170e;font-size:10px;
+}
+.toolbar-icon-button{width:42px;padding:0;}
+.toolbar-filter-button:hover,.toolbar-icon-button:hover{background:#28394b;border-color:#51667e;}
+.toolbar-icon-button.loading svg{animation:toolbar-spin .8s linear infinite;}
+@keyframes toolbar-spin{to{transform:rotate(360deg);}}
+
+#config-banner{top:76px;left:12px;right:12px;border-radius:9px;z-index:1200;}
+#map{flex:1 1 auto;width:100%;height:auto;min-height:0;background:#f2efe9;}
+#map .leaflet-container,.leaflet-container{background:#f2efe9!important;}
+#map .leaflet-tile{filter:none!important;}
+.leaflet-control-scale-line{border:2px solid #657181;border-top:0;background:rgba(255,255,255,.82);color:#253447;font-size:10px;}
+.leaflet-control-attribution{font-size:8px!important;}
+.map-legend{
+  position:absolute;top:82px;right:15px;z-index:650;display:flex;flex-direction:column;gap:9px;
+  min-width:150px;padding:13px 14px;background:rgba(255,255,255,.94);color:#273548;
+  border:1px solid #d5dde5;border-radius:10px;box-shadow:0 5px 18px rgba(28,42,58,.15);
+  font-size:10px;backdrop-filter:blur(6px);
+}
+.map-legend strong{font-size:11px;margin-bottom:2px;}
+.map-legend span{display:flex;align-items:center;gap:8px;color:#526174;}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 9px;}
+.legend-dot.entregue{background:#36b37e;}
+.legend-dot.andamento{background:#f28a31;}
+.legend-dot.fila{background:#d777ae;}
+.legend-dot.sem-geo{background:#9aa5b4;}
+.map-actions{
+  position:absolute;right:16px;bottom:18px;z-index:650;display:flex;gap:8px;
+}
+.map-actions button{
+  min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:0 12px;background:rgba(255,255,255,.95);border:1px solid #d4dce5;
+  border-radius:9px;color:#1e2b3a;box-shadow:0 4px 14px rgba(20,34,49,.14);
+  font-family:var(--font-ui);font-size:10px;font-weight:700;cursor:pointer;
+}
+.map-actions button:hover{background:#fff;border-color:#aebdcd;transform:translateY(-1px);}
+.map-actions svg{width:17px;height:17px;stroke:#e87822;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+#app.tabela-ativa #mapLegend,#app.tabela-ativa .map-actions{display:none;}
+#tableView{flex:1 1 auto;min-height:0;height:auto;overflow:auto;}
+#app.tabela-ativa #sidebarDireito{display:none;}
+#app.tabela-ativa #sidebarDireitoToggle{display:none;}
+
+#sidebarDireito .summary{
+  flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+  padding:17px 13px 15px;background:transparent;border-bottom:1px solid #263646;
+}
+#sidebarDireito .summary .stat{
+  min-width:0;min-height:104px;padding:11px 10px 9px;background:linear-gradient(145deg,#202c3a,#1a2531);
+  border:1px solid #394a5e;border-radius:11px;box-shadow:0 3px 10px rgba(0,0,0,.13);
+}
+#sidebarDireito .stat-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+#sidebarDireito .stat-icon{font-size:18px;font-weight:800;line-height:1;}
+#sidebarDireito .icon-green{color:#39d99a;}
+#sidebarDireito .icon-orange{color:#ff9b35;}
+#sidebarDireito .icon-red{color:#ff6868;}
+#sidebarDireito .summary .stat .n{font-family:var(--font-ui);font-size:25px;line-height:1;color:#f1f5f9;}
+#sidebarDireito .summary .stat .l{margin-top:4px;font-family:var(--font-ui);font-size:10px;letter-spacing:0;text-transform:none;color:#d8e1eb;}
+.stat-hint{margin-top:7px;color:#45d59a;font-size:9px;line-height:1.2;}
+.geo-warn .stat-hint{color:#9cacbd;}
+#sidebarDireito .deliveries-heading{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:13px 14px 9px;
+}
+.deliveries-heading h2{margin:0;color:#f0f4f8;font-size:14px;font-weight:750;letter-spacing:-.02em;}
+.deliveries-live{display:inline-flex;align-items:center;gap:6px;color:#91a2b6;font-size:9px;white-space:nowrap;}
+.deliveries-live i{width:6px;height:6px;border-radius:50%;background:#3bd69a;box-shadow:0 0 0 3px rgba(59,214,154,.1);}
+#sidebarDireito #list{
+  flex:1 1 auto;min-height:80px;overflow-y:auto;padding:1px 12px 12px;
+  scrollbar-width:thin;scrollbar-color:#34475b transparent;
+}
+#sidebarDireito .item{
+  display:block;margin:7px 0;padding:12px 11px 10px;border:1px solid #3a4b5f;
+  border-radius:10px;background:linear-gradient(145deg,#202d3b,#1a2531);
+  box-shadow:0 3px 10px rgba(0,0,0,.12);
+}
+#sidebarDireito .item:before{width:4px;background:#64748b;}
+#sidebarDireito .item:has(.status.EMANDAMENTO):before{background:#f4bc40;}
+#sidebarDireito .item:has(.status.ENTREGUE):before{background:#36d79a;}
+#sidebarDireito .item:has(.status.EMFILA):before{background:#df86b4;}
+#sidebarDireito .item .cliente{font-size:13px;line-height:1.3;color:#f0f4f8;}
+#sidebarDireito .item .badge{font-size:9px;padding:4px 7px;border-radius:6px;}
+#sidebarDireito .item .meta{margin-top:7px;padding-top:7px;border-top:1px solid rgba(157,177,198,.14);font-size:10px;color:#adbdce;}
+#sidebarDireito .item .status{display:inline-block;margin-top:7px;padding:4px 8px;border-radius:20px;background:rgba(244,188,64,.16);font-family:var(--font-ui);font-size:10px;letter-spacing:0;text-transform:none;color:#f4c74f;}
+#sidebarDireito .item .status.ENTREGUE{background:rgba(54,215,154,.13);color:#53dda7;}
+#sidebarDireito .item .status.EMFILA{background:rgba(223,134,180,.14);color:#e9a4c6;}
+#sidebarDireito .item .noaddr{font-family:var(--font-ui);font-size:10px;}
+
+.period-summary{
+  flex:0 0 auto;margin:10px 13px 15px;padding:13px 13px 12px;
+  background:linear-gradient(145deg,#1d2936,#17222d);border:1px solid #37495c;border-radius:11px;
+}
+.period-summary-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.period-summary-head strong{font-size:12px;color:#eaf0f6;}
+.period-summary-head span{font-size:9px;color:#9daec0;}
+.period-progress{height:9px;margin:13px 0 12px;overflow:hidden;background:#303e4d;border-radius:12px;}
+.period-progress>div{width:0;height:100%;border-radius:12px;background:linear-gradient(90deg,#f5b83c,#f28a31);transition:width .2s;}
+.period-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}
+.period-stat{min-width:0;display:grid;grid-template-columns:24px 1fr;grid-template-rows:auto auto;column-gap:5px;align-items:center;padding:0 7px;border-right:1px solid #364658;}
+.period-stat:first-child{padding-left:0;}
+.period-stat:last-child{padding-right:0;border-right:0;}
+.period-stat-icon{grid-row:1 / span 2;font-size:17px;font-weight:800;}
+.period-stat-icon.delivered{color:#36d79a;font-size:21px;}
+.period-stat-icon.in-progress{color:#ffb52e;}
+.period-stat-icon.queued{color:#d68be5;}
+.period-stat strong{font-size:17px;line-height:1.1;color:#f2f6fa;}
+.period-stat>span:last-child{font-size:9px;line-height:1.25;color:#c0ccd9;white-space:normal;}
+
+#app[hidden]{display:none!important;}
+@media(max-width:1320px){
+  #app{grid-template-columns:60px 292px minmax(0,1fr) 318px;}
+  #app.sidebar-colapsado{grid-template-columns:60px 0 minmax(0,1fr) 318px;}
+  #app.sidebar-direito-colapsado{grid-template-columns:60px 292px minmax(0,1fr) 0;}
+  #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:60px 0 minmax(0,1fr) 0;}
+  #app.tabela-ativa{grid-template-columns:60px 292px minmax(0,1fr) 0;}
+  #app.tabela-ativa.sidebar-colapsado{grid-template-columns:60px 0 minmax(0,1fr) 0;}
+  #sidebarToggle{left:352px;}
+  #app.sidebar-colapsado #sidebarToggle{left:60px;}
+  #sidebarDireitoToggle{right:318px;}
+  #app.sidebar-direito-colapsado #sidebarDireitoToggle{right:0;}
+  .app-rail{padding-left:4px;padding-right:4px;}
+  .rail-brand,.rail-link{width:48px;height:48px;flex-basis:48px;}
+}
+@media(max-width:1050px){
+  #app{grid-template-columns:58px 280px minmax(0,1fr) 0;}
+  #sidebarDireito{display:none;}
+  #sidebarDireitoToggle{display:none;}
+  #app.sidebar-colapsado{grid-template-columns:58px 0 minmax(0,1fr) 0;}
+  #app.sidebar-direito-colapsado{grid-template-columns:58px 280px minmax(0,1fr) 0;}
+  #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:58px 0 minmax(0,1fr) 0;}
+  #app.tabela-ativa{grid-template-columns:58px 280px minmax(0,1fr) 0;}
+  #app.tabela-ativa.sidebar-colapsado{grid-template-columns:58px 0 minmax(0,1fr) 0;}
+  #sidebarToggle{left:338px;}
+  #app.sidebar-colapsado #sidebarToggle{left:58px;}
+  .map-toolbar{padding:0 12px;gap:10px;}
+  .map-search{max-width:none;}
+  .map-legend{top:78px;right:10px;}
+}
+@media(max-width:700px){
+  #app{grid-template-columns:54px minmax(0,1fr);}
+  #sidebar{
+    position:absolute;left:54px;top:0;bottom:0;width:min(310px,calc(100vw - 54px));
+    z-index:1500;box-shadow:12px 0 28px rgba(0,0,0,.28);
+  }
+  #sidebar>*{width:100%;min-width:0!important;}
+  #app.sidebar-colapsado #sidebar{display:none;}
+  #app #mainContent{grid-column:2;grid-row:1;}
+  #app #sidebarDireito{display:none;}
+  #sidebarToggle{left:min(calc(54px + min(310px, 100vw - 54px)),364px);z-index:1700;}
+  #app.sidebar-colapsado #sidebarToggle{left:54px;}
+  .app-rail{grid-column:1;padding:12px 3px;}
+  .rail-brand,.rail-link{width:46px;height:46px;flex-basis:46px;}
+  .map-toolbar{height:auto;min-height:62px;flex-wrap:wrap;padding:9px 10px;gap:8px;}
+  .map-search{height:39px;flex:1 1 100%;max-width:none;}
+  .map-toolbar-actions{width:100%;justify-content:flex-end;}
+  .toolbar-filter-button{margin-right:auto;}
+  .toolbar-filter-button,.toolbar-icon-button{height:35px;}
+  .toolbar-icon-button{width:36px;}
+  #map{min-height:240px;}
+  .map-legend{top:132px;right:8px;min-width:130px;padding:10px;font-size:9px;}
+  .map-actions{right:8px;bottom:10px;gap:5px;}
+  .map-actions button{min-height:34px;padding:0 8px;font-size:9px;}
+  .brand{padding:14px;}
+  .controls{padding:13px 14px 18px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .rail-link,.brand .btn-nova,.toolbar-icon-button,.toolbar-filter-button,.map-actions button,.period-progress>div{transition:none!important;}
+}
+
 </style>
 </head>
 <body>
@@ -1015,30 +1383,67 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
       <div class="loading-dados-status">AGUARDE · SINCRONIZANDO DADOS</div>
     </div>
   </div>
+  <nav id="appRail" class="app-rail" aria-label="Navegação principal">
+    <a class="rail-brand" href="index.html" title="Perfinorte · Mapa de entregas" aria-label="Perfinorte">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
+    </a>
+    <span class="rail-divider"></span>
+    <a class="rail-link active" href="index.html" title="Mapa de entregas" aria-label="Mapa de entregas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8.5 4l7 2.5L21 4v13.5L15.5 20l-7-2.5L3 20zM8.5 4v13.5M15.5 6.5V20"/></svg>
+    </a>
+    <a class="rail-link" href="motorista.html" title="Área do motorista" aria-label="Área do motorista">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
+    </a>
+    <button class="rail-link" type="button" onclick="mostrarView('tabela')" title="Tabela de entregas" aria-label="Tabela de entregas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M4 9h16M4 14.5h16M9.5 9v11.5M15 9v11.5"/></svg>
+    </button>
+    <a class="rail-link" href="vendedores.html" title="Área comercial" aria-label="Área comercial">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.5-3.2 2.5-5 6-5s5.5 1.8 6 5M16 5.5a3 3 0 0 1 0 5.8M17 15c2.4.4 3.7 2.1 4 5"/></svg>
+    </a>
+    <button class="rail-link" type="button" onclick="abrirModalConfirmacoes()" title="Confirmações do motorista" aria-label="Confirmações do motorista">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 4V2.8h8V4M8 12l2.5 2.5L16 9"/></svg>
+    </button>
+    <span class="rail-spacer"></span>
+    <button class="rail-link rail-logout" type="button" onclick="encerrarSessao_()" title="Sair da sessão" aria-label="Sair da sessão">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M15 8l4 4-4 4M19 12H9"/></svg>
+    </button>
+  </nav>
   <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
   <aside id="sidebar">
     <div class="brand">
-      <div class="eyebrow">Perfinorte · Expedição · <span id="ultimaAtualizacao"></span></div>
-      <h1>Mapa de Entregas</h1>
-      <button class="btn-nova" onclick="abrirModal()">+ Nova entrega</button>
-      <button class="btn-nova btn-formatar" onclick="abrirModalFormatarEndereco()">📍 Formatar endereço</button>
-      <button class="btn-nova btn-cliente-topo" onclick="abrirModalNovoCliente()">🧾 Novo cliente</button>
+      <div class="brand-heading">
+        <div class="eyebrow">PERFINORTE · EXPEDIÇÃO</div>
+        <h1>Mapa de Entregas</h1>
+        <div class="brand-live"><span class="live-dot"></span>Sistema conectado</div>
+        <div class="brand-updated"><span id="ultimaAtualizacao">Sincronizando...</span></div>
+      </div>
+
+      <div class="secao-titulo operation-title">Operação</div>
+      <button class="btn-nova" onclick="abrirModal()">＋ Nova entrega</button>
+      <div class="brand-action-row">
+        <button class="btn-nova btn-formatar" onclick="abrirModalFormatarEndereco()">⌖ Formatar endereço</button>
+        <button class="btn-nova btn-cliente-topo" onclick="abrirModalNovoCliente()">＋ Novo cliente</button>
+      </div>
       <button class="btn-nova btn-atencao-topo" onclick="abrirModalAtencao()">⚠ Linha de atenção</button>
+
+      <div class="secao-titulo view-title">Visualização</div>
       <div class="view-toggle">
-        <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
-        <button id="btnVerTabela" onclick="mostrarView('tabela')">📋 Tabela</button>
+        <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">▧ Mapa</button>
+        <button id="btnVerTabela" onclick="mostrarView('tabela')">▦ Tabela</button>
       </div>
-      <div class="view-toggle" id="rotaToolbar">
-        <button onclick="sugerirRota()">🧭 Sugerir rota</button>
-        <button id="btnLimparRota" onclick="limparRotaSugerida()" style="display:none;">✕ Limpar rota</button>
+      <div class="brand-tools">
+        <div class="view-toggle" id="rotaToolbar">
+          <button onclick="sugerirRota()">⌁ Sugerir rota</button>
+          <button id="btnLimparRota" onclick="limparRotaSugerida()" style="display:none;">× Limpar rota</button>
+        </div>
+        <div id="rotaInfo" class="rota-info" style="display:none;"></div>
+        <button class="btn-confirmacoes" id="btnConfirmacoes" onclick="abrirModalConfirmacoes()">▣ Confirmações do motorista</button>
+        <button class="btn-sair" id="btnSair" onclick="encerrarSessao_()">↪ Sair da sessão</button>
       </div>
-      <div id="rotaInfo" class="rota-info" style="display:none;"></div>
-      <button class="btn-confirmacoes" id="btnConfirmacoes" onclick="abrirModalConfirmacoes()">🚚 Confirmações do motorista</button>
-      <button class="btn-sair" id="btnSair" onclick="encerrarSessao_()">↪ Sair da sessão</button>
     </div>
 
     <div class="controls">
-      <div class="secao-titulo">Filtros</div>
+      <div class="secao-titulo filters-title">Filtros</div>
       <div class="field">
         <label>Data (previsão)</label>
         <div class="date-range">
@@ -1084,22 +1489,93 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
     </div>
   </aside>
 
-  <main style="position:relative;">
+  <main id="mainContent">
+    <div class="map-toolbar">
+      <label class="map-search" for="buscaGlobal">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+        <input id="buscaGlobal" type="search" placeholder="Buscar por cliente, cidade, pedido ou motorista..." autocomplete="off" oninput="filtrarBuscaGlobal_(this.value)">
+        <button type="button" class="search-clear" title="Limpar busca" aria-label="Limpar busca" onclick="document.getElementById('buscaGlobal').value='';filtrarBuscaGlobal_('')">×</button>
+      </label>
+      <div class="map-toolbar-actions">
+        <button id="btnFiltrosAtivos" class="toolbar-filter-button" type="button" onclick="focarFiltros_()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>
+          <span>Filtros ativos</span>
+          <b id="contagemFiltros">1</b>
+        </button>
+        <button id="btnAtualizar" class="toolbar-icon-button" type="button" onclick="atualizarPainelManual_()" title="Atualizar dados" aria-label="Atualizar dados">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.5-3"/></svg>
+        </button>
+        <button id="btnTelaCheia" class="toolbar-icon-button" type="button" onclick="alternarTelaCheia_()" title="Tela cheia" aria-label="Tela cheia">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg>
+        </button>
+      </div>
+    </div>
     <div id="config-banner">
       Configure a URL da API no início do arquivo (constante <code>API_URL</code>) para carregar dados reais.
     </div>
     <div id="map"></div>
+    <div id="mapLegend" class="map-legend">
+      <strong>Status das entregas</strong>
+      <span><i class="legend-dot entregue"></i>Entregue</span>
+      <span><i class="legend-dot andamento"></i>Em andamento</span>
+      <span><i class="legend-dot fila"></i>Em fila</span>
+      <span><i class="legend-dot sem-geo"></i>Não localizado</span>
+    </div>
+    <div class="map-actions">
+      <button type="button" onclick="centralizarEntregas_()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        Centralizar entregas
+      </button>
+      <button type="button" onclick="centralizarBase_()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3zM9 21v-7h6v7"/></svg>
+        Perfinorte
+      </button>
+    </div>
     <div id="tableView"><div id="tabelaContainer"></div></div>
   </main>
 
   <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
   <aside id="sidebarDireito">
     <div class="summary">
-      <div class="stat"><div class="n" id="statTotal">–</div><div class="l">Entregas</div></div>
-      <div class="stat"><div class="n" id="statCidades">–</div><div class="l">Cidades</div></div>
-      <div class="stat geo-warn"><div class="n" id="statSemGeo">–</div><div class="l">Sem endereço</div></div>
+      <div class="stat">
+        <div class="stat-top"><span class="stat-icon icon-green">↗</span><div class="n" id="statTotal">–</div></div>
+        <div class="l">Entregas</div><div class="stat-hint" id="statTotalHint">Acompanhamento ativo</div>
+      </div>
+      <div class="stat">
+        <div class="stat-top"><span class="stat-icon icon-orange">⌖</span><div class="n" id="statCidades">–</div></div>
+        <div class="l">Cidades</div><div class="stat-hint" id="statCidadesHint">Destinos</div>
+      </div>
+      <div class="stat geo-warn">
+        <div class="stat-top"><span class="stat-icon icon-red">△</span><div class="n" id="statSemGeo">–</div></div>
+        <div class="l">Sem endereço</div><div class="stat-hint" id="statSemGeoHint">Tudo em ordem</div>
+      </div>
+    </div>
+    <div class="deliveries-heading">
+      <h2 id="tituloListaEntregas">Entregas de hoje (0)</h2>
+      <span class="deliveries-live"><i></i>Lista sincronizada</span>
     </div>
     <div id="list"><div class="loading"><div class="big">⏳</div>Carregando entregas…</div></div>
+    <div class="period-summary">
+      <div class="period-summary-head">
+        <strong>Resumo do período</strong>
+        <span id="periodSummaryTotal">0 de 0 entregas</span>
+      </div>
+      <div class="period-progress"><div id="periodProgress"></div></div>
+      <div class="period-stats">
+        <div class="period-stat">
+          <span class="period-stat-icon delivered">✓</span>
+          <strong id="periodEntregues">0</strong><span>Entregues</span>
+        </div>
+        <div class="period-stat">
+          <span class="period-stat-icon in-progress">🚚</span>
+          <strong id="periodAndamento">0</strong><span>Em andamento</span>
+        </div>
+        <div class="period-stat">
+          <span class="period-stat-icon queued">◷</span>
+          <strong id="periodFila">0</strong><span>Em fila</span>
+        </div>
+      </div>
+    </div>
   </aside>
 </div>
 
@@ -1396,7 +1872,8 @@ let fmtMiniMap = null, fmtMiniMapMarker = null;
 let fmtEnderecoTexto = ''; // texto formatado atual da ferramenta "Formatar endereço"
 let fmtLinhaAlvo = null; // se veio do lápis de editar numa linha da tabela, guarda o número dela
 let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
-let filtroOkSidebar = ''; // '' = todos, 'sim' = só prontos, 'nao' = só não prontos — só afeta o mapa
+let filtroOkSidebar = '';
+let termoBuscaGlobal = ''; // busca rápida no painel do mapa // '' = todos, 'sim' = só prontos, 'nao' = só não prontos — só afeta o mapa
 
 function alternarStatusSidebar_(chk){
   if (chk.checked) filtroStatusSidebar.add(chk.value); else filtroStatusSidebar.delete(chk.value);
@@ -1543,6 +2020,7 @@ function initMap(){
   map.addLayer(clusterManha);
   map.addLayer(clusterTarde);
   map.addLayer(clusterIndefinido);
+  L.control.scale({ imperial:false, metric:true, maxWidth:100, position:'bottomleft' }).addTo(map);
 }
 
 function makeClusterIcon(kind){
@@ -1825,12 +2303,17 @@ function aplicarFiltros(ajustarZoom){
     if (!filtroStatusSidebar.has(chaveStatus)) return false;
     if (filtroOkSidebar === 'sim' && d.ok !== true) return false;
     if (filtroOkSidebar === 'nao' && d.ok === true) return false;
+    if (termoBuscaGlobal){
+      const camposBusca = [d.cliente, d.cidade, d.motorista, d.codigo, d.pedido, d.endereco, d.observacoes, d.linha].join(' ');
+      if (!normalizarTextoBusca_(camposBusca).includes(termoBuscaGlobal)) return false;
+    }
     return true;
   });
 
   entregasParaTabela = todasEntregas;
 
   salvarPreferencias();
+  atualizarBadgeFiltros_();
   if (modoAtual === 'tabela') renderTabela(ajustarZoom === false); else render(ajustarZoom);
 }
 
@@ -1908,6 +2391,7 @@ function render(ajustarZoom){
   document.getElementById('statTotal').textContent = totalComCodigo;
   document.getElementById('statCidades').textContent = cidades.size;
   document.getElementById('statSemGeo').textContent = semGeo;
+  atualizarResumoVisual_(totalComCodigo, cidades.size, semGeo);
 
   // desenha (ou apaga) a rota sugerida: usa o caminho real pelas ruas
   // (geometria do OpenRouteService) quando disponível; se não vier por
@@ -3815,6 +4299,127 @@ function criarBarraProgresso_(containerEl, textoBase){
     }
   };
 }
+
+/* ===== CONTROLES DA NOVA INTERFACE (sem alterar as chamadas da API) ===== */
+function normalizarTextoBusca_(valor){
+  return String(valor == null ? '' : valor)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g,'')
+    .trim();
+}
+
+function filtrarBuscaGlobal_(valor){
+  termoBuscaGlobal = normalizarTextoBusca_(valor);
+  aplicarFiltros(false);
+}
+
+function atualizarBadgeFiltros_(){
+  const badge = document.getElementById('contagemFiltros');
+  if (!badge) return;
+  let total = 0;
+  const dataDe = document.getElementById('dataDeInput').value;
+  const dataAte = document.getElementById('dataAteInput').value;
+  if (dataDe || dataAte) total++;
+  if (filtroPeriodo) total++;
+  if (document.getElementById('motoristaSelect').value) total++;
+  if (filtroStatusSidebar.size < 3) total++;
+  if (filtroOkSidebar) total++;
+  if (termoBuscaGlobal) total++;
+  badge.textContent = total;
+  document.getElementById('btnFiltrosAtivos')?.setAttribute('aria-label', total + ' filtro(s) ativo(s). Abrir filtros');
+}
+
+function focarFiltros_(){
+  const app = document.getElementById('app');
+  if (app.classList.contains('sidebar-colapsado')) alternarSidebar();
+  setTimeout(function(){
+    const area = document.querySelector('#sidebar .controls');
+    if (area) area.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 80);
+}
+
+function atualizarPainelManual_(){
+  const botao = document.getElementById('btnAtualizar');
+  if (botao) botao.classList.add('loading');
+  const tarefas = [
+    carregarEntregas(),
+    carregarLocalizacoesMotoristas(),
+    carregarConfirmacoesPendentes()
+  ];
+  Promise.allSettled(tarefas).finally(function(){
+    if (botao) botao.classList.remove('loading');
+  });
+}
+
+function alternarTelaCheia_(){
+  if (!document.fullscreenElement){
+    const alvo = document.getElementById('app');
+    if (alvo.requestFullscreen){
+      const pedido = alvo.requestFullscreen();
+      if (pedido && pedido.catch) pedido.catch(function(){ mostrarToast('Não foi possível ativar a tela cheia.', true); });
+    } else mostrarToast('Tela cheia não disponível neste navegador.', true);
+  } else if (document.exitFullscreen){
+    const saida = document.exitFullscreen();
+    if (saida && saida.catch) saida.catch(function(){ mostrarToast('Não foi possível sair da tela cheia.', true); });
+  }
+}
+
+function centralizarEntregas_(){
+  if (!map) return;
+  const pontos = entregasAtuais
+    .filter(function(d){ return d.lat != null && d.lng != null; })
+    .map(function(d){ return [Number(d.lat), Number(d.lng)]; });
+  if (!pontos.length){
+    mostrarToast('Não há entregas localizadas neste filtro.', true);
+    return;
+  }
+  if (pontos.length === 1) map.setView(pontos[0], Math.max(map.getZoom(), 13));
+  else map.fitBounds(L.latLngBounds(pontos), {padding:[48,48], maxZoom:13});
+}
+
+function centralizarBase_(){
+  if (!map) return;
+  if (marcadorPerfinorteFixo){
+    const ponto = marcadorPerfinorteFixo.getLatLng();
+    map.setView([ponto.lat,ponto.lng], Math.max(map.getZoom(),12));
+    marcadorPerfinorteFixo.openPopup();
+    return;
+  }
+  carregarMarcadorPerfinorte_().then(function(){
+    if (marcadorPerfinorteFixo){
+      const ponto = marcadorPerfinorteFixo.getLatLng();
+      map.setView([ponto.lat,ponto.lng], 12);
+    } else mostrarToast('Localização da Perfinorte indisponível.', true);
+  });
+}
+
+function atualizarResumoVisual_(total, cidades, semGeo){
+  const lista = entregasAtuais.filter(function(d){ return String(d.codigo || '').trim(); });
+  const entregue = lista.filter(function(d){ return String(d.status || '').trim().toUpperCase() === 'ENTREGUE'; }).length;
+  const andamento = lista.filter(function(d){ return String(d.status || '').trim().toUpperCase() === 'EM ANDAMENTO'; }).length;
+  const fila = lista.filter(function(d){ return String(d.status || '').trim().toUpperCase() === 'EM FILA'; }).length;
+  const hoje = new Date().toISOString().slice(0,10);
+  const dataDe = document.getElementById('dataDeInput').value;
+  const dataAte = document.getElementById('dataAteInput').value;
+  const titulo = document.getElementById('tituloListaEntregas');
+  if (titulo){
+    const prefixo = dataDe === hoje && dataAte === hoje ? 'Entregas de hoje' : 'Entregas do período';
+    titulo.textContent = prefixo + ' (' + total + ')';
+  }
+  const totalEl = document.getElementById('periodSummaryTotal');
+  const progresso = document.getElementById('periodProgress');
+  const percentual = total ? Math.round(entregue / total * 100) : 0;
+  if (totalEl) totalEl.textContent = entregue + ' de ' + total + ' entrega' + (total === 1 ? '' : 's');
+  if (progresso) progresso.style.width = percentual + '%';
+  document.getElementById('periodEntregues').textContent = entregue;
+  document.getElementById('periodAndamento').textContent = andamento;
+  document.getElementById('periodFila').textContent = fila;
+  document.getElementById('statTotalHint').textContent = andamento ? andamento + ' em andamento' : (total ? 'Acompanhamento ativo' : 'Sem entregas');
+  document.getElementById('statCidadesHint').textContent = cidades ? 'Destinos mapeados' : 'Sem destinos';
+  document.getElementById('statSemGeoHint').textContent = semGeo ? 'Verificar localização' : 'Tudo em ordem';
+}
+
 </script>
 </body>
 </html>
