@@ -2495,7 +2495,7 @@ carregarLocalizacoesMotoristas();
 // interrompe se você estiver editando um campo da tabela na hora (só pula
 // aquela rodada e tenta de novo em 10s). Pode ajustar o número abaixo se
 // quiser mais ou menos frequente.
-const INTERVALO_ATUALIZACAO_MS = 10000;
+
 iniciarAtualizacaoAutomatica_();
 }
 function encerrarSessao_(){
@@ -2517,6 +2517,7 @@ async function validarSessao_(){
     return j.valid === true;
   } catch(e) { return false; }
 }
+const INTERVALO_ATUALIZACAO_MS = 10000;
 let loginEmAndamento_ = false;
 let mapaJaInicializado_ = false;
 let timerEntregas_ = null;
