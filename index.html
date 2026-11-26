@@ -548,6 +548,17 @@
   #dashboardGeradoEm{font:10px var(--font-mono);color:#788397;}
   .dashboard-export{border:0;border-radius:8px;padding:10px 15px;background:#18283a;color:#fff;font-size:12px;font-weight:700;cursor:pointer;}
   .dashboard-export:hover{background:#263d56;}
+  .dashboard-reason-toggle{display:inline-flex;align-items:center;gap:9px;padding:6px 10px;border:1px solid #dce3eb;border-radius:9px;background:#fff;cursor:pointer;user-select:none;}
+  .dashboard-reason-copy{display:flex;flex-direction:column;gap:2px;}
+  .dashboard-reason-copy strong{font-size:10px;color:#354258;white-space:nowrap;}
+  .dashboard-reason-copy small{font-size:9px;color:#7d899b;}
+  .dashboard-reason-toggle input{position:absolute;opacity:0;width:1px;height:1px;}
+  .dashboard-reason-switch{position:relative;width:30px;height:17px;border-radius:99px;background:#b8c1cd;transition:background .18s;flex:none;}
+  .dashboard-reason-switch::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .18s;}
+  .dashboard-reason-toggle input:checked + .dashboard-reason-switch{background:#579b78;}
+  .dashboard-reason-toggle input:checked + .dashboard-reason-switch::after{transform:translateX(13px);}
+  .dashboard-reason-toggle input:focus-visible + .dashboard-reason-switch{outline:2px solid #6688b8;outline-offset:3px;}
+  .dashboard-reason-toggle input:disabled + .dashboard-reason-switch{opacity:.55;}
   .dashboard-filters{display:flex;align-items:end;gap:10px;flex-wrap:wrap;padding:14px 16px;margin-bottom:18px;background:#fff;border:1px solid #e1e6ed;border-radius:12px;}
   .dashboard-filters label{display:flex;flex-direction:column;gap:5px;min-width:120px;font-size:10px;font-weight:700;color:#748094;}
   .dashboard-filters input,.dashboard-filters select{height:36px;min-width:120px;padding:0 9px;border:1px solid #d8dee7;border-radius:7px;background:#fff;color:#243044;font:11px var(--font-ui);}
@@ -2418,6 +2429,11 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </div>
           <div class="dashboard-header-actions">
             <span id="dashboardGeradoEm"></span>
+            <label class="dashboard-reason-toggle" title="Ativa ou desativa a exigência de justificativa ao concluir uma entrega atrasada">
+              <span class="dashboard-reason-copy"><strong>Motivos de atraso</strong><small id="statusMotivoAtraso">Ativado</small></span>
+              <input id="toggleMotivoAtraso" type="checkbox" checked onchange="alternarExigenciaMotivoAtraso_(this)" aria-label="Exigir justificativa para entregas atrasadas">
+              <span class="dashboard-reason-switch" aria-hidden="true"></span>
+            </label>
             <button type="button" class="dashboard-export" onclick="exportarDashboardPDF_()">Exportar PDF</button>
           </div>
         </header>
@@ -4535,6 +4551,7 @@ async function enviarLogin_(e){
     localStorage.setItem('mapa_entregas_token', TOKEN_SESSAO);
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
+    await carregarConfigMotivoAtraso_();
     iniciarMapaUmaVez_();
   } catch(err) {
     msg.textContent = err.message || 'Não foi possível entrar.';
@@ -4548,6 +4565,7 @@ async function iniciarAutenticacao_(){
   if (await validarSessao_()) {
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
+    await carregarConfigMotivoAtraso_();
     iniciarMapaUmaVez_();
   } else {
     TOKEN_SESSAO = '';
@@ -5836,6 +5854,8 @@ function exportarDashboardPDF_(){
 }
 
 /* ===== CONCLUSÃO FORA DO PRAZO ===== */
+let exigirMotivoAtrasoAtivo_ = true;
+
 const MOTIVOS_ATRASO_UI_=[
   ['Atraso na produção','Pedido não ficou pronto dentro do prazo.'],
   ['Falta de matéria-prima ou estoque','Material indisponível para produção.'],
@@ -5850,6 +5870,41 @@ const MOTIVOS_ATRASO_UI_=[
   ['Erro no planejamento do prazo','Prazo estimado inadequadamente.'],
   ['Outros','Situação não contemplada nas opções anteriores.']
 ];
+
+function atualizarToggleMotivoAtrasoUI_(){
+  const toggle=document.getElementById('toggleMotivoAtraso');
+  const status=document.getElementById('statusMotivoAtraso');
+  if(toggle)toggle.checked=exigirMotivoAtrasoAtivo_;
+  if(status)status.textContent=exigirMotivoAtrasoAtivo_?'Ativado':'Desativado';
+}
+async function carregarConfigMotivoAtraso_(){
+  atualizarToggleMotivoAtrasoUI_();
+  if(!API_URL)return;
+  try{
+    const res=await chamarAPI_POST_({acao:'obterConfigMotivoAtraso'});
+    if(res&&res.ok)exigirMotivoAtrasoAtivo_=res.ativo!==false;
+  }catch(err){
+    console.warn('Não foi possível carregar a configuração de motivos de atraso:',err);
+  }
+  atualizarToggleMotivoAtrasoUI_();
+}
+async function alternarExigenciaMotivoAtraso_(toggle){
+  if(!toggle)return;
+  const desejado=toggle.checked;
+  toggle.disabled=true;
+  try{
+    const res=await chamarAPI_POST_({acao:'salvarConfigMotivoAtraso',ativo:desejado});
+    if(!res||!res.ok)throw new Error((res&&res.erro)||'Não foi possível salvar a configuração.');
+    exigirMotivoAtrasoAtivo_=res.ativo===true;
+    mostrarToast(exigirMotivoAtrasoAtivo_?'Exigência de motivos de atraso ativada.':'Exigência de motivos de atraso desativada.');
+  }catch(err){
+    exigirMotivoAtrasoAtivo_=!desejado;
+    mostrarToast('Erro ao alterar configuração: '+err,true);
+  }finally{
+    toggle.disabled=false;
+    atualizarToggleMotivoAtrasoUI_();
+  }
+}
 
 function abrirModalJustificativaAtraso_(entrega,statusAnterior,previsaoOriginal){
   if(!entrega)return;
