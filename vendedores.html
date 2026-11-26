@@ -214,8 +214,25 @@
   .th-filtro-popup label{display:flex; align-items:center; gap:6px; padding:4px 0; font-family:var(--font-ui); font-size:11.5px; text-transform:none; letter-spacing:normal; font-weight:400; color:#1f2430; white-space:nowrap; cursor:pointer;}
   .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:not-allowed;}
 </style>
+<style>
+#loadingDadosPublico{position:fixed;inset:0;z-index:5000;background:#12161b;display:flex;align-items:center;justify-content:center;padding:24px}
+#loadingDadosPublico[hidden]{display:none!important}
+.loading-publico-card{width:min(390px,92vw);background:#181d24;border:1px solid #2a313c;border-radius:12px;padding:28px 26px;text-align:center;box-shadow:0 18px 55px rgba(0,0,0,.4)}
+.loading-publico-brand{font-family:Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#aab3bf}
+.loading-publico-titulo{font-size:21px;font-weight:700;margin:14px 0 7px;color:#eef1f4}
+.loading-publico-desc{font-size:13px;color:#aab3bf;margin:0;line-height:1.5}
+.loading-publico-spinner{width:34px;height:34px;border:3px solid #2a313c;border-top-color:#e07b39;border-radius:50%;margin:22px auto 0;animation:loadingPublicoGiro .8s linear infinite}
+@keyframes loadingPublicoGiro{to{transform:rotate(360deg)}}
+.loading-publico-barra{height:4px;background:#2a313c;border-radius:10px;overflow:hidden;margin-top:22px}
+.loading-publico-barra:after{content:"";display:block;width:36%;height:100%;background:#e07b39;border-radius:10px;animation:loadingPublicoFluxo 1.35s ease-in-out infinite}
+@keyframes loadingPublicoFluxo{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+.loading-publico-status{margin-top:12px;font-family:Consolas,monospace;font-size:10px;letter-spacing:.08em;color:#aab3bf}
+.loading-publico-erro{color:#e8a2a2;font-size:12px;line-height:1.5;margin-top:12px;word-break:break-word}
+.loading-publico-retry{margin-top:14px;border:1px solid #e07b39;background:#e07b39;color:#1a1305;font-weight:700;border-radius:5px;padding:8px 14px;cursor:pointer}
+</style>
 </head>
 <body>
+<div id="loadingDadosPublico" aria-live="polite" aria-busy="true"><div class="loading-publico-card"><div class="loading-publico-brand">PERFINORTE · EXPEDIÇÃO</div><div class="loading-publico-spinner" aria-hidden="true"></div><div class="loading-publico-titulo">Preparando o mapa</div><p class="loading-publico-desc">Carregando entregas e organizando as informações…</p><div class="loading-publico-barra" aria-hidden="true"></div><div class="loading-publico-status">AGUARDE · SINCRONIZANDO DADOS</div></div></div>
 <div id="app">
   <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
   <aside id="sidebar">
@@ -373,10 +390,13 @@ let ordenacaoData = 'asc';
 let filtroPopupAberto = false;
 let coresStatus = {};
 
-function chamarAPI_GET_(params){
+async function chamarAPI_GET_(params){
   const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
   const qs = new URLSearchParams(comCacheBusting).toString();
-  return fetch(API_URL + '?' + qs, { cache: 'no-store' }).then(r => r.json());
+  const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
+  const texto = await resp.text();
+  if (!resp.ok) throw new Error('API HTTP ' + resp.status + ': ' + (texto || resp.statusText).slice(0,240));
+  try { return JSON.parse(texto); } catch(e) { throw new Error('Resposta inválida da API: ' + texto.slice(0,240)); }
 }
 
 function mostrarToast(){} // sem toasts nesse painel — é só visualização
@@ -587,25 +607,33 @@ function formatarDataBR_(iso){
 }
 function escapeAttr_(s){ return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-async function carregarEntregas(){
+function mostrarLoadingPublico_(){
+  const el=document.getElementById('loadingDadosPublico');
+  if(el){el.hidden=false;el.innerHTML='<div class="loading-publico-card"><div class="loading-publico-brand">PERFINORTE · EXPEDIÇÃO</div><div class="loading-publico-spinner" aria-hidden="true"></div><div class="loading-publico-titulo">Preparando o mapa</div><p class="loading-publico-desc">Carregando entregas e organizando as informações…</p><div class="loading-publico-barra" aria-hidden="true"></div><div class="loading-publico-status">AGUARDE · SINCRONIZANDO DADOS</div></div>';}
+}
+function ocultarLoadingPublico_(){const el=document.getElementById('loadingDadosPublico');if(el)el.hidden=true;}
+function erroLoadingPublico_(erro){
+  const el=document.getElementById('loadingDadosPublico');
+  if(!el)return;
+  el.hidden=false;
+  el.innerHTML='<div class="loading-publico-card"><div class="loading-publico-brand">PERFINORTE · EXPEDIÇÃO</div><div class="loading-publico-titulo">Falha ao carregar</div><p class="loading-publico-desc">Não foi possível conectar à API de entregas.</p><div class="loading-publico-erro"></div><button class="loading-publico-retry" onclick="carregarEntregas(true)">Tentar novamente</button>';
+  el.querySelector('.loading-publico-erro').textContent=String(erro||'Erro desconhecido');
+}
+async function carregarEntregas(retry){
   const primeiraCarga = todasEntregas.length === 0;
-  if (primeiraCarga){
-    document.getElementById('list').innerHTML = '<div class="loading"><div class="big">⏳</div>Carregando entregas…</div>';
-  }
-  if (!API_URL){
-    document.getElementById('config-banner').style.display = 'block';
-    return;
-  }
+  if (primeiraCarga) mostrarLoadingPublico_();
+  if (!API_URL){document.getElementById('config-banner').style.display='block';ocultarLoadingPublico_();return;}
   try{
     const dados = await chamarAPI_GET_({ formato: 'dados' });
-    todasEntregas = Array.isArray(dados) ? dados : [];
+    if(!Array.isArray(dados)) throw new Error('A API retornou um formato inesperado.');
+    todasEntregas = dados;
     document.getElementById('ultimaAtualizacao').textContent = 'atualizado ' + new Date().toLocaleTimeString('pt-BR');
     populaMotoristas();
     aplicarFiltros(primeiraCarga);
+    if(primeiraCarga) ocultarLoadingPublico_();
   }catch(err){
-    if (primeiraCarga){
-      document.getElementById('list').innerHTML = '<div class="empty"><div class="big">⚠</div>Não foi possível carregar os dados.</div>';
-    }
+    if(primeiraCarga) erroLoadingPublico_(err.message||err);
+    else console.error('Atualização automática falhou:',err);
   }
 }
 
