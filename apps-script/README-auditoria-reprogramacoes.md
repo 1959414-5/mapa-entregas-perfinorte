@@ -72,3 +72,17 @@ Para ativar a integração do toggle:
 4. Salve e publique uma nova versão do Web App.
 
 O site lê a configuração ao autenticar e salva cada alteração diretamente no Apps Script. A preferência permanece após fechar o navegador ou entrar em outro computador.
+
+
+## Arquivo consolidado do Apps Script
+
+A versão integral e consolidada do projeto está em [Perfinorte-Mapa-Entregas.gs](Perfinorte-Mapa-Entregas.gs). Ela reúne o código principal, auditoria, filtros de avisos sem código e toggle de motivos de atraso (desativado por padrão).
+
+**Para atualizar o projeto:** substitua o conteúdo do arquivo principal atual no editor do Apps Script pelo conteúdo desse arquivo. Não adicione o arquivo como um segundo arquivo com as mesmas funções, pois o projeto já possui declarações existentes.
+
+**Propriedades do script necessárias:** antes de implantar, configure em Configurações do projeto > Propriedades do script:
+- `GOOGLE_GEOCODING_KEY`: sua chave atual do Google Geocoding.
+- `ORS_API_KEY`: sua chave atual do OpenRouteService.
+- `MAPA_WORKER_SECRET`: mantenha o valor que já está configurado para autenticar as chamadas do Cloudflare Worker.
+
+As chaves de API não ficam gravadas neste arquivo do Git. Se elas ainda estiverem apenas no código antigo, copie os valores para as Propriedades do script antes de substituir o arquivo. Não publique essas chaves no repositório.
