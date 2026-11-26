@@ -1596,6 +1596,24 @@ button,input,select,textarea{font-family:var(--font-ui);}
   #sidebar .brand-status-row{gap:6px;}
   #sidebar .brand-status-row .brand-updated{font-size:8.2px;}
 }
+/* Ação de instalação PWA */
+.toolbar-install-button{
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:0 12px;border:1px solid #f28a31;border-radius:10px;
+  background:linear-gradient(135deg,#ff9946,#f1812c);color:#25180f;
+  font-family:var(--font-ui);font-size:10.5px;font-weight:750;letter-spacing:-.02em;
+  white-space:nowrap;cursor:pointer;box-shadow:0 3px 10px rgba(242,138,49,.14);
+  transition:filter .15s,transform .15s;
+}
+.toolbar-install-button:hover{filter:brightness(1.07);transform:translateY(-1px);}
+.toolbar-install-button svg{
+  width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.toolbar-install-button[hidden]{display:none!important;}
+@media(max-width:700px){
+  .toolbar-install-button{height:35px;min-height:35px;padding:0 10px;font-size:10px;}
+}
 </style>
 <style>
 
@@ -2226,6 +2244,10 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </button>
         <button id="btnTelaCheia" class="toolbar-icon-button" type="button" onclick="alternarTelaCheia_()" title="Tela cheia" aria-label="Tela cheia">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg>
+        </button>
+        <button id="btnInstalarApp" class="toolbar-install-button" type="button" hidden aria-label="Instalar aplicativo Perfinorte">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M4 16v4h16v-4"/></svg>
+          <span>Instalar app</span>
         </button>
       </div>
     </div>
