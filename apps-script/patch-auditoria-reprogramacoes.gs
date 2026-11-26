@@ -385,6 +385,17 @@ function atualizarCampoEntrega(linha, campo, valor) {
 
     if (campo === "ok") valorFinal = (valor === true || valor === "true");
 
+    // Se retirar o status ENTREGUE, limpa os metadados da conclusão.
+    // A previsão original e o histórico de reprogramações permanecem intactos.
+    if (campo === "status" && String(valor || "").trim().toUpperCase() !== "ENTREGUE") {
+      hist.getRange(
+        linhaNum,
+        AUDITORIA_ENTREGAS_CFG_.COL_CONCLUSAO,
+        1,
+        3
+      ).clearContent();
+    }
+
     hist.getRange(linhaNum, coluna).setValue(valorFinal);
     SpreadsheetApp.flush();
 
