@@ -2760,7 +2760,7 @@ let fmtEnderecoTexto = ''; // texto formatado atual da ferramenta "Formatar ende
 let fmtLinhaAlvo = null; // se veio do lápis de editar numa linha da tabela, guarda o número dela
 let filtroStatusSidebar = new Set(['ENTREGUE','EM ANDAMENTO','EM FILA']); // todos marcados por padrão — só afeta o mapa
 let filtroOkSidebar = '';
-let termoBuscaGlobal = ''; // busca rápida no painel do mapa // '' = todos, 'sim' = só prontos, 'nao' = só não prontos — só afeta o mapa
+let termoBuscaGlobal = ''; // busca rápida compartilhada pelo mapa e pela tabela
 
 function alternarStatusSidebar_(chk){
   if (chk.checked) filtroStatusSidebar.add(chk.value); else filtroStatusSidebar.delete(chk.value);
@@ -3205,10 +3205,7 @@ function aplicarFiltros(ajustarZoom){
     if (!filtroStatusSidebar.has(chaveStatus)) return false;
     if (filtroOkSidebar === 'sim' && d.ok !== true) return false;
     if (filtroOkSidebar === 'nao' && d.ok === true) return false;
-    if (termoBuscaGlobal){
-      const camposBusca = [d.cliente, d.cidade, d.motorista, d.codigo, d.pedido, d.endereco, d.observacoes, d.linha].join(' ');
-      if (!normalizarTextoBusca_(camposBusca).includes(termoBuscaGlobal)) return false;
-    }
+    if (!entregaCorrespondeBuscaGlobal_(d)) return false;
     return true;
   });
 
@@ -3814,6 +3811,7 @@ function renderTabela(ehAtualizacaoAutomatica){
     // aparecendo (pedido dela: status/data vazios não podem sumir da tabela)
     if (filtroDataDeTabela && d.data && d.data < filtroDataDeTabela) return false;
     if (filtroDataAteTabela && d.data && d.data > filtroDataAteTabela) return false;
+    if (!entregaCorrespondeBuscaGlobal_(d)) return false;
     return true;
   });
 
@@ -5494,6 +5492,13 @@ function normalizarTextoBusca_(valor){
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'')
     .trim();
+}
+
+// Mantém exatamente os mesmos campos e a mesma normalização na busca do mapa e da tabela.
+function entregaCorrespondeBuscaGlobal_(d){
+  if (!termoBuscaGlobal) return true;
+  const camposBusca = [d.cliente, d.cidade, d.motorista, d.codigo, d.pedido, d.endereco, d.observacoes, d.linha].join(' ');
+  return normalizarTextoBusca_(camposBusca).includes(termoBuscaGlobal);
 }
 
 function filtrarBuscaGlobal_(valor){
