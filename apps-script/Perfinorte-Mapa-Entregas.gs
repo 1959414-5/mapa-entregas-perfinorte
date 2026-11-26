@@ -1458,6 +1458,195 @@ function geocodificarAoEditarEndereco_(e) {
  * POST { acao: "confirmarEntrega", linha }
  * POST { acao: "confirmarTodas" }
  *************************************/
+
+/*******************************************************************************
+ * CADASTRO DE VEÍCULOS E REFERÊNCIA DE PREÇOS DE COMBUSTÍVEL
+ * ---------------------------------------------------------------------------
+ * O cadastro fica numa aba própria do Google Sheets. A frota própria e os
+ * transportadores terceirizados são identificados separadamente.
+ * O primeiro acesso sem dados importa os veículos da planilha veiculos.xlsx.
+ *******************************************************************************/
+const VEICULOS_SHEET_NAME_ = "CADASTRO_VEICULOS";
+const VEICULOS_HEADERS_ = [
+  "ID","VINCULO_FROTA","COD_TRANSPORTADOR","TRANSPORTADOR","NOME_EXIBICAO",
+  "PLACA","UF","MARCA","MODELO","ANO","COR","TIPO_VEICULO","PESO_MAXIMO_KG",
+  "COMBUSTIVEL_MOTOR","COMBUSTIVEL_CALCULO","CONSUMO_KM_L",
+  "PRECO_COMBUSTIVEL_MANUAL","CUSTO_MANUTENCAO_KM","ATIVO","OBSERVACOES",
+  "ATUALIZADO_EM"
+];
+
+function obterVeiculosIniciais_(){
+  const perfinorte = "PERFINORTE INDÚSTRIA E COMÉRCIO DE PERFILADOS LTDA.";
+  return [
+    ["FROTA-001","TERCEIRIZADO","4","JOAO BATISTIOL","Ford F4000","ABT6773","PR","FORD","F4000","1984","MARROM","CAR/CAMINHAO/C. ABERTA",6000,"DIESEL","DIESEL","","","",true,"Transportador terceirizado conforme planilha veiculos.xlsx.",new Date()],
+    ["FROTA-002","TERCEIRIZADO","4","JOAO BATISTIOL","Mercedes-Benz L1113 · João Batistiol","ACG5235","PR","MERCEDES BENZ","L1113","1974","VERMELHA","CAR/CAMINHAO/C. ABERTA",0,"DIESEL","DIESEL","","","",true,"Transportador terceirizado conforme planilha veiculos.xlsx. Peso máximo não importado: o arquivo apresenta 999999999,99, valor inválido para capacidade.",new Date()],
+    ["FROTA-003","PROPRIO","13",perfinorte,"F1000","ACJ2991","PR","FORD","F1000S","1984","PRETA","CAR/CAMIONETE/C. ABERTA",800,"DIESEL","DIESEL","","","",true,"Importado da planilha veiculos.xlsx.",new Date()],
+    ["FROTA-004","PROPRIO","13",perfinorte,"Caminhão vermelho · Mercedes-Benz L1113","AIJ0E34","PR","MERCEDES BENZ","L1113","1979","VERMELHA","CAR/CAMINHAO/C. ABERTA",11000,"DIESEL","DIESEL","","","",true,"A planilha anexada identifica este caminhão como Mercedes-Benz L1113 vermelho. Confirmar divergência com a descrição informada de caminhão Volkswagen vermelho.",new Date()],
+    ["FROTA-005","PROPRIO","13",perfinorte,"Volkswagen 15.180","ASZ4656","PR","VOLKSWAGEN","15.180","2010","BRANCA","CAR/CAMINHAO/C. ABERTA",15000,"DIESEL","DIESEL","","","",true,"A planilha anexada informa Volkswagen 15.180 na cor branca. Confirmar se há outro caminhão Volkswagen vermelho.",new Date()],
+    ["FROTA-006","PROPRIO","13",perfinorte,"Strada Working","AVC0284","PR","FIAT","STRADA WORKING","2012","BRANCA","CAR/CAMIONETE/C. ABERTA",700,"FLEX","GASOLINA","","","",true,"Modelo adicional identificado na planilha veiculos.xlsx.",new Date()],
+    ["FROTA-007","PROPRIO","13",perfinorte,"Strada Freedom","RHO8D30","PR","FIAT","STRADA FREEDOM 13CS","2021/2022","BRANCA","CAR/CAMIONETE/C. ABERTA",720,"FLEX","GASOLINA","","","",true,"Modelo solicitado e identificado na planilha veiculos.xlsx. Referência inicial de custo em gasolina; alterável no cadastro.",new Date()],
+    ["FROTA-008","PROPRIO","13",perfinorte,"HR HDB","TBQ5F75","PR","HYUNDAI","HR HDB","2024/2025","BRANCA","CAR/CAMIONETE/C. ABERTA",1300,"DIESEL","DIESEL","","","",true,"Modelo solicitado e identificado na planilha veiculos.xlsx.",new Date()]
+  ];
+}
+
+function getOrCreateVeiculosSheet_(){
+  const ss=SpreadsheetApp.getActive();
+  let sh=ss.getSheetByName(VEICULOS_SHEET_NAME_);
+  if(!sh){
+    sh=ss.insertSheet(VEICULOS_SHEET_NAME_);
+    sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setValues([VEICULOS_HEADERS_]);
+    sh.setFrozenRows(1);
+    sh.getRange(1,1,1,VEICULOS_HEADERS_.length)
+      .setBackground("#1b2b3d").setFontColor("#ffffff").setFontWeight("bold");
+    sh.setColumnWidth(1,110);
+    sh.setColumnWidth(4,260);
+    sh.setColumnWidth(5,220);
+    sh.setColumnWidth(20,420);
+  }else if(sh.getLastRow()===0){
+    sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setValues([VEICULOS_HEADERS_]);
+    sh.setFrozenRows(1);
+  }
+  if(sh.getLastRow()<2){
+    const iniciais=obterVeiculosIniciais_();
+    sh.getRange(2,1,iniciais.length,VEICULOS_HEADERS_.length).setValues(iniciais);
+  }
+  return sh;
+}
+
+function numeroVeiculoSheet_(valor){
+  if(valor===null||valor===undefined||valor==="")return "";
+  const n=Number(String(valor).replace(",","."));
+  return Number.isFinite(n)&&n>0?n:"";
+}
+
+function listarVeiculos_(){
+  const sh=getOrCreateVeiculosSheet_();
+  const last=sh.getLastRow();
+  if(last<2)return [];
+  const rows=sh.getRange(2,1,last-1,VEICULOS_HEADERS_.length).getValues();
+  return rows.filter(function(r){return String(r[0]||"").trim()!=="";}).map(function(r){
+    return {
+      id:String(r[0]||""),
+      propriedade:String(r[1]||"PROPRIO"),
+      transportadorId:String(r[2]||""),
+      transportador:String(r[3]||""),
+      nomeExibicao:String(r[4]||""),
+      placa:String(r[5]||""),
+      uf:String(r[6]||"PR"),
+      marca:String(r[7]||""),
+      modelo:String(r[8]||""),
+      ano:String(r[9]||""),
+      cor:String(r[10]||""),
+      tipoVeiculo:String(r[11]||""),
+      pesoMaximoKg:numeroVeiculoSheet_(r[12]),
+      combustivelMotor:String(r[13]||"DIESEL"),
+      combustivelCalculo:String(r[14]||"DIESEL"),
+      consumoKmL:numeroVeiculoSheet_(r[15]),
+      precoCombustivelManual:numeroVeiculoSheet_(r[16]),
+      custoManutencaoKm:numeroVeiculoSheet_(r[17])||0,
+      ativo:r[18]!==false,
+      observacoes:String(r[19]||""),
+      atualizadoEm:r[20] instanceof Date?r[20].toISOString():String(r[20]||"")
+    };
+  });
+}
+
+function salvarVeiculo_(v){
+  if(!v||typeof v!=="object")return {ok:false,erro:"Dados do veículo não recebidos."};
+  const placa=String(v.placa||"").trim().toUpperCase().replace(/\s+/g,"");
+  if(!placa)return {ok:false,erro:"Informe a placa do veículo."};
+  if(!String(v.marca||"").trim()||!String(v.modelo||"").trim())return {ok:false,erro:"Informe marca e modelo."};
+  const propriedade=String(v.propriedade||"PROPRIO").toUpperCase();
+  if(["PROPRIO","TERCEIRIZADO"].indexOf(propriedade)<0)return {ok:false,erro:"Vínculo de frota inválido."};
+  const motor=String(v.combustivelMotor||"DIESEL").toUpperCase();
+  const calculo=String(v.combustivelCalculo||"DIESEL").toUpperCase();
+  if(["DIESEL","FLEX","GASOLINA"].indexOf(motor)<0)return {ok:false,erro:"Tipo de motor inválido."};
+  if(["DIESEL","GASOLINA","ETANOL"].indexOf(calculo)<0)return {ok:false,erro:"Combustível de cálculo inválido."};
+  if(motor==="DIESEL"&&calculo!=="DIESEL")return {ok:false,erro:"Veículo diesel precisa usar diesel no cálculo."};
+  if(motor==="GASOLINA"&&calculo!=="GASOLINA")return {ok:false,erro:"Veículo a gasolina precisa usar gasolina no cálculo."};
+
+  const lock=LockService.getScriptLock();
+  lock.waitLock(10000);
+  try{
+    const sh=getOrCreateVeiculosSheet_();
+    const last=sh.getLastRow();
+    const rows=last>=2?sh.getRange(2,1,last-1,VEICULOS_HEADERS_.length).getValues():[];
+    let index=-1;
+    const id=String(v.id||"").trim();
+    for(let i=0;i<rows.length;i++){
+      if(id&&String(rows[i][0])===id){index=i;continue;}
+      const placaAtual=String(rows[i][5]||"").trim().toUpperCase().replace(/\s+/g,"");
+      if(placaAtual===placa)return {ok:false,erro:"Já existe um veículo cadastrado com esta placa."};
+    }
+    const idFinal=id||( "VEICULO-"+Utilities.getUuid() );
+    const registro=[
+      idFinal,propriedade,String(v.transportadorId||"").trim(),String(v.transportador||"").trim(),
+      String(v.nomeExibicao||"").trim(),placa,String(v.uf||"PR").trim().toUpperCase(),
+      String(v.marca||"").trim(),String(v.modelo||"").trim(),String(v.ano||"").trim(),
+      String(v.cor||"").trim(),String(v.tipoVeiculo||"").trim(),
+      numeroVeiculoSheet_(v.pesoMaximoKg),motor,calculo,
+      numeroVeiculoSheet_(v.consumoKmL),numeroVeiculoSheet_(v.precoCombustivelManual),
+      numeroVeiculoSheet_(v.custoManutencaoKm),v.ativo!==false,String(v.observacoes||"").trim(),new Date()
+    ];
+    if(index>=0)sh.getRange(index+2,1,1,VEICULOS_HEADERS_.length).setValues([registro]);
+    else sh.appendRow(registro);
+    return {ok:true,id:idFinal};
+  }finally{
+    lock.releaseLock();
+  }
+}
+
+function alterarSituacaoVeiculo_(id,ativo){
+  const chave=String(id||"").trim();
+  if(!chave)return {ok:false,erro:"Identificador do veículo não informado."};
+  const sh=getOrCreateVeiculosSheet_();
+  const last=sh.getLastRow();
+  if(last<2)return {ok:false,erro:"Cadastro de veículos vazio."};
+  const ids=sh.getRange(2,1,last-1,1).getValues().flat();
+  const idx=ids.findIndex(function(x){return String(x)===chave;});
+  if(idx<0)return {ok:false,erro:"Veículo não encontrado."};
+  sh.getRange(idx+2,19).setValue(ativo===true);
+  sh.getRange(idx+2,21).setValue(new Date());
+  return {ok:true,id:chave,ativo:ativo===true};
+}
+
+/**
+ * Preços estaduais de gasolina e diesel da API Combustível.
+ * A resposta é armazenada por até duas horas no cache do Apps Script.
+ * Etanol não é fornecido por essa API e requer preço manual no cadastro.
+ */
+function obterPrecosCombustivel_(){
+  const cache=CacheService.getScriptCache();
+  const chave="COMBUSTIVEL_API_PRECOS_V1";
+  const guardado=cache.get(chave);
+  if(guardado){
+    try{return JSON.parse(guardado);}catch(e){}
+  }
+  try{
+    const resp=UrlFetchApp.fetch("https://combustivelapi.com.br/api/precos/",{
+      method:"get",muteHttpExceptions:true,followRedirects:true
+    });
+    if(resp.getResponseCode()!==200){
+      return {ok:false,erro:"API de combustível respondeu HTTP "+resp.getResponseCode()+"."};
+    }
+    const json=JSON.parse(resp.getContentText()||"{}");
+    if(json.error!==false||!json.precos){
+      return {ok:false,erro:"A API não retornou dados de preços válidos."};
+    }
+    const resultado={
+      ok:true,
+      dataColeta:String(json.data_coleta||""),
+      fonte:String(json.fonte||"https://combustivelapi.com.br/"),
+      moeda:String(json.moeda||"BRL"),
+      precos:json.precos
+    };
+    cache.put(chave,JSON.stringify(resultado),7200);
+    return resultado;
+  }catch(err){
+    return {ok:false,erro:"Não foi possível consultar a API de combustível: "+String(err)};
+  }
+}
+
 function doGet(e) {
   const p = (e && e.parameter) ? e.parameter : {};
 
@@ -1467,6 +1656,10 @@ function doGet(e) {
   switch (p.formato) {
     case "dados":
       return doGetDados_(e);
+    case "veiculos":
+      return jsonOutput_(listarVeiculos_());
+    case "precosCombustivel":
+      return jsonOutput_(obterPrecosCombustivel_());
     case "motoristas":
       return jsonOutput_(listarMotoristas());
     case "buscarCliente":
@@ -1536,6 +1729,10 @@ function doPost(e) {
         return jsonOutput_(removerEntrega(body.linha));
       case "sugerirRota":
         return jsonOutput_(sugerirRota(body.pontos));
+      case "salvarVeiculo":
+        return jsonOutput_(salvarVeiculo_(body.veiculo));
+      case "alterarSituacaoVeiculo":
+        return jsonOutput_(alterarSituacaoVeiculo_(body.id,body.ativo));
       case "marcarEntregaMotorista":
         return jsonOutput_(marcarEntregaMotorista(body.linha, body.status, body.motorista));
       case "marcarEmAndamento":
