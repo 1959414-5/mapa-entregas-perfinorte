@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa de Entregas — Vendedores · Perfinorte</title>
+<meta name="theme-color" content="#111925">
+<meta name="application-name" content="Perfinorte">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Perfinorte">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1408,5 +1418,6 @@ const INTERVALO_ATUALIZACAO_MS = 10000;
 setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
 setInterval(carregarLocalizacoesMotoristas, 15000);
 </script>
+<script src="./pwa-register.js" defer></script>
 </body>
 </html>
