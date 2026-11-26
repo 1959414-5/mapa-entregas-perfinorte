@@ -1466,27 +1466,52 @@ function geocodificarAoEditarEndereco_(e) {
  * transportadores terceirizados são identificados separadamente.
  * O primeiro acesso sem dados importa os veículos da planilha veiculos.xlsx.
  *******************************************************************************/
+
 const VEICULOS_SHEET_NAME_ = "CADASTRO_VEICULOS";
 const VEICULOS_HEADERS_ = [
   "ID","VINCULO_FROTA","COD_TRANSPORTADOR","TRANSPORTADOR","NOME_EXIBICAO",
-  "PLACA","UF","MARCA","MODELO","ANO","COR","TIPO_VEICULO","PESO_MAXIMO_KG",
-  "COMBUSTIVEL_MOTOR","COMBUSTIVEL_CALCULO","CONSUMO_KM_L",
-  "PRECO_COMBUSTIVEL_MANUAL","CUSTO_MANUTENCAO_KM","ATIVO","OBSERVACOES",
-  "ATUALIZADO_EM"
+  "PLACA","UF","NOME_UF","CEP","COD_MARCA","MARCA","COD_MODELO","MODELO",
+  "ANO","COD_COR","COR","COD_TIPO_VEICULO","TIPO_VEICULO","PESO_MAXIMO_KG",
+  "CERTIFICADO","CHASSI","VIA_TRANSPORTE","DESC_VIA_TRANSPORTE",
+  "CLASSIFICACAO","DESC_CLASSIFICACAO","DATA_COMPRA","DATA_VENDA",
+  "SITUACAO_DOCUMENTAL","COMBUSTIVEL_MOTOR","COMBUSTIVEL_CALCULO",
+  "CONSUMO_KM_L","PRECO_COMBUSTIVEL_MANUAL","CUSTO_MANUTENCAO_KM",
+  "ATIVO","OBSERVACOES","ATUALIZADO_EM"
 ];
 
 function obterVeiculosIniciais_(){
   const perfinorte = "PERFINORTE INDÚSTRIA E COMÉRCIO DE PERFILADOS LTDA.";
+  const data = "00/00/0000";
   return [
-    ["FROTA-001","TERCEIRIZADO","4","JOAO BATISTIOL","Ford F4000","ABT6773","PR","FORD","F4000","1984","MARROM","CAR/CAMINHAO/C. ABERTA",6000,"DIESEL","DIESEL","","","",true,"Transportador terceirizado conforme planilha veiculos.xlsx.",new Date()],
-    ["FROTA-002","TERCEIRIZADO","4","JOAO BATISTIOL","Mercedes-Benz L1113 · João Batistiol","ACG5235","PR","MERCEDES BENZ","L1113","1974","VERMELHA","CAR/CAMINHAO/C. ABERTA",0,"DIESEL","DIESEL","","","",true,"Transportador terceirizado conforme planilha veiculos.xlsx. Peso máximo não importado: o arquivo apresenta 999999999,99, valor inválido para capacidade.",new Date()],
-    ["FROTA-003","PROPRIO","13",perfinorte,"F1000","ACJ2991","PR","FORD","F1000S","1984","PRETA","CAR/CAMIONETE/C. ABERTA",800,"DIESEL","DIESEL","","","",true,"Importado da planilha veiculos.xlsx.",new Date()],
-    ["FROTA-004","PROPRIO","13",perfinorte,"Caminhão vermelho · Mercedes-Benz L1113","AIJ0E34","PR","MERCEDES BENZ","L1113","1979","VERMELHA","CAR/CAMINHAO/C. ABERTA",11000,"DIESEL","DIESEL","","","",true,"A planilha anexada identifica este caminhão como Mercedes-Benz L1113 vermelho. Confirmar divergência com a descrição informada de caminhão Volkswagen vermelho.",new Date()],
-    ["FROTA-005","PROPRIO","13",perfinorte,"Volkswagen 15.180","ASZ4656","PR","VOLKSWAGEN","15.180","2010","BRANCA","CAR/CAMINHAO/C. ABERTA",15000,"DIESEL","DIESEL","","","",true,"A planilha anexada informa Volkswagen 15.180 na cor branca. Confirmar se há outro caminhão Volkswagen vermelho.",new Date()],
-    ["FROTA-006","PROPRIO","13",perfinorte,"Strada Working","AVC0284","PR","FIAT","STRADA WORKING","2012","BRANCA","CAR/CAMIONETE/C. ABERTA",700,"FLEX","GASOLINA","","","",true,"Modelo adicional identificado na planilha veiculos.xlsx.",new Date()],
-    ["FROTA-007","PROPRIO","13",perfinorte,"Strada Freedom","RHO8D30","PR","FIAT","STRADA FREEDOM 13CS","2021/2022","BRANCA","CAR/CAMIONETE/C. ABERTA",720,"FLEX","GASOLINA","","","",true,"Modelo solicitado e identificado na planilha veiculos.xlsx. Referência inicial de custo em gasolina; alterável no cadastro.",new Date()],
-    ["FROTA-008","PROPRIO","13",perfinorte,"HR HDB","TBQ5F75","PR","HYUNDAI","HR HDB","2024/2025","BRANCA","CAR/CAMIONETE/C. ABERTA",1300,"DIESEL","DIESEL","","","",true,"Modelo solicitado e identificado na planilha veiculos.xlsx.",new Date()]
+    ["FROTA-001","TERCEIRIZADO","4","JOAO BATISTIOL","Ford F4000","ABT6773","PR","Paraná","0","3","FORD","4","F4000","1984","3","MARROM","1","CAR/CAMINHAO/C. ABERTA",6000,"014493247769","LA7GDP68956","TER","Terrestre","C","Cavalo",data,data,"A","DIESEL","DIESEL","","","",true,"Transportador terceirizado conforme planilha veiculos.xlsx.",new Date()],
+    ["FROTA-002","TERCEIRIZADO","4","JOAO BATISTIOL","Mercedes-Benz L1113 · João Batistiol","ACG5235","PR","Paraná","0","4","MERCEDES BENZ","5","L1113","1974","4","VERMELHA","1","CAR/CAMINHAO/C. ABERTA",0,"014225749360","34403212061643","TER","Terrestre","C","Cavalo",data,data,"A","DIESEL","DIESEL","","","",true,"Transportador terceirizado conforme planilha veiculos.xlsx. Peso máximo não importado: o arquivo apresenta 999999999,99, valor inválido para capacidade.",new Date()],
+    ["FROTA-003","PROPRIO","13",perfinorte,"F1000","ACJ2991","PR","Paraná","0","3","FORD","3","F1000S","1984","2","PRETA","2","CAR/CAMIONETE/C. ABERTA",800,"013821216157","LA7NDM67239","TER","Terrestre","C","Cavalo",data,data,"A","DIESEL","DIESEL","","","",true,"Importado da planilha veiculos.xlsx.",new Date()],
+    ["FROTA-004","PROPRIO","13",perfinorte,"Caminhão vermelho · Mercedes-Benz L1113","AIJ0E34","PR","Paraná","0","4","MERCEDES BENZ","5","L1113","1979","4","VERMELHA","1","CAR/CAMINHAO/C. ABERTA",11000,"014832784362","34403212442932","ROD","Rodoviário","C","Cavalo",data,data,"A","DIESEL","DIESEL","","","",true,"A planilha anexada identifica este caminhão como Mercedes-Benz L1113 vermelho. Confirmar divergência com a descrição informada de caminhão Volkswagen vermelho.",new Date()],
+    ["FROTA-005","PROPRIO","13",perfinorte,"Volkswagen 15.180","ASZ4656","PR","Paraná","87065005","1","VOLKSWAGEN","1","15.180","2010","1","BRANCA","1","CAR/CAMINHAO/C. ABERTA",15000,"012242091419","953468235AR053341","ROD","Rodoviário","C","Cavalo",data,data,"A","DIESEL","DIESEL","","","",true,"A planilha anexada informa Volkswagen 15.180 na cor branca. Confirmar se há outro caminhão Volkswagen vermelho.",new Date()],
+    ["FROTA-006","PROPRIO","13",perfinorte,"Strada Working","AVC0284","PR","Paraná","0","2","FIAT","2","STRADA WORKING","2012","1","BRANCA","2","CAR/CAMIONETE/C. ABERTA",700,"012242091419","9BD27805MC7506031","TER","Terrestre","C","Cavalo",data,data,"A","FLEX","GASOLINA","","","",true,"Modelo adicional identificado na planilha veiculos.xlsx.",new Date()],
+    ["FROTA-007","PROPRIO","13",perfinorte,"Strada Freedom","RHO8D30","PR","Paraná","0","2","FIAT","6","STRADA FREEDOM 13CS","2021/2022","1","BRANCA","2","CAR/CAMIONETE/C. ABERTA",720,"213289601803","9BD281A31NYW76036","ROD","Rodoviário","C","Cavalo",data,data,"A","FLEX","GASOLINA","","","",true,"Modelo solicitado e identificado na planilha veiculos.xlsx. Referência inicial de custo em gasolina; alterável no cadastro.",new Date()],
+    ["FROTA-008","PROPRIO","13",perfinorte,"HR HDB","TBQ5F75","PR","Paraná","0","5","HYUNDAI","7","HR HDB","2024/2025","1","BRANCA","2","CAR/CAMIONETE/C. ABERTA",1300,"254405089523","95PZBN7KPSB098176","ROD","Rodoviário","C","Cavalo",data,data,"A","DIESEL","DIESEL","","","",true,"Modelo solicitado e identificado na planilha veiculos.xlsx.",new Date()]
   ];
+}
+
+function migrarCadastroVeiculosAntigo_(sh){
+  const ultimaColuna=sh.getLastColumn();
+  if(ultimaColuna!==21||sh.getLastRow()<1)return false;
+  const cab=sh.getRange(1,1,1,21).getValues()[0];
+  if(String(cab[0]||"")!=="ID")return false;
+  const antigos=sh.getLastRow()>=2?sh.getRange(2,1,sh.getLastRow()-1,21).getValues():[];
+  const migrados=antigos.map(function(r){
+    return [
+      r[0],r[1],r[2],r[3],r[4],r[5],r[6],"","","",r[7],"",r[8],r[9],"",r[10],"",r[11],r[12],
+      "","","","","","","","A",r[13],r[14],r[15],r[16],r[17],r[18],r[19],r[20]
+    ];
+  });
+  sh.clearContents();
+  sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setValues([VEICULOS_HEADERS_]);
+  if(migrados.length)sh.getRange(2,1,migrados.length,VEICULOS_HEADERS_.length).setValues(migrados);
+  sh.setFrozenRows(1);
+  sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setBackground("#1b2b3d").setFontColor("#ffffff").setFontWeight("bold");
+  return true;
 }
 
 function getOrCreateVeiculosSheet_(){
@@ -1501,10 +1526,15 @@ function getOrCreateVeiculosSheet_(){
     sh.setColumnWidth(1,110);
     sh.setColumnWidth(4,260);
     sh.setColumnWidth(5,220);
-    sh.setColumnWidth(20,420);
-  }else if(sh.getLastRow()===0){
-    sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setValues([VEICULOS_HEADERS_]);
-    sh.setFrozenRows(1);
+    sh.setColumnWidth(20,180);
+    sh.setColumnWidth(21,220);
+    sh.setColumnWidth(35,420);
+  }else{
+    migrarCadastroVeiculosAntigo_(sh);
+    if(sh.getLastRow()===0){
+      sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setValues([VEICULOS_HEADERS_]);
+      sh.setFrozenRows(1);
+    }
   }
   if(sh.getLastRow()<2){
     const iniciais=obterVeiculosIniciais_();
@@ -1526,27 +1556,22 @@ function listarVeiculos_(){
   const rows=sh.getRange(2,1,last-1,VEICULOS_HEADERS_.length).getValues();
   return rows.filter(function(r){return String(r[0]||"").trim()!=="";}).map(function(r){
     return {
-      id:String(r[0]||""),
-      propriedade:String(r[1]||"PROPRIO"),
-      transportadorId:String(r[2]||""),
-      transportador:String(r[3]||""),
-      nomeExibicao:String(r[4]||""),
-      placa:String(r[5]||""),
-      uf:String(r[6]||"PR"),
-      marca:String(r[7]||""),
-      modelo:String(r[8]||""),
-      ano:String(r[9]||""),
-      cor:String(r[10]||""),
-      tipoVeiculo:String(r[11]||""),
-      pesoMaximoKg:numeroVeiculoSheet_(r[12]),
-      combustivelMotor:String(r[13]||"DIESEL"),
-      combustivelCalculo:String(r[14]||"DIESEL"),
-      consumoKmL:numeroVeiculoSheet_(r[15]),
-      precoCombustivelManual:numeroVeiculoSheet_(r[16]),
-      custoManutencaoKm:numeroVeiculoSheet_(r[17])||0,
-      ativo:r[18]!==false,
-      observacoes:String(r[19]||""),
-      atualizadoEm:r[20] instanceof Date?r[20].toISOString():String(r[20]||"")
+      id:String(r[0]||""),propriedade:String(r[1]||"PROPRIO"),
+      transportadorId:String(r[2]||""),transportador:String(r[3]||""),
+      nomeExibicao:String(r[4]||""),placa:String(r[5]||""),uf:String(r[6]||"PR"),
+      ufNome:String(r[7]||""),cep:String(r[8]||""),marcaId:String(r[9]||""),
+      marca:String(r[10]||""),modeloId:String(r[11]||""),modelo:String(r[12]||""),
+      ano:String(r[13]||""),corId:String(r[14]||""),cor:String(r[15]||""),
+      tipoVeiculoId:String(r[16]||""),tipoVeiculo:String(r[17]||""),
+      pesoMaximoKg:numeroVeiculoSheet_(r[18]),certificado:String(r[19]||""),
+      chassi:String(r[20]||""),viaTransporte:String(r[21]||""),
+      viaTransporteDesc:String(r[22]||""),classificacao:String(r[23]||""),
+      classificacaoDesc:String(r[24]||""),dataCompra:String(r[25]||""),
+      dataVenda:String(r[26]||""),situacaoDocumental:String(r[27]||""),
+      combustivelMotor:String(r[28]||"DIESEL"),combustivelCalculo:String(r[29]||"DIESEL"),
+      consumoKmL:numeroVeiculoSheet_(r[30]),precoCombustivelManual:numeroVeiculoSheet_(r[31]),
+      custoManutencaoKm:numeroVeiculoSheet_(r[32])||0,ativo:r[33]!==false,
+      observacoes:String(r[34]||""),atualizadoEm:r[35] instanceof Date?r[35].toISOString():String(r[35]||"")
     };
   });
 }
@@ -1564,49 +1589,47 @@ function salvarVeiculo_(v){
   if(["DIESEL","GASOLINA","ETANOL"].indexOf(calculo)<0)return {ok:false,erro:"Combustível de cálculo inválido."};
   if(motor==="DIESEL"&&calculo!=="DIESEL")return {ok:false,erro:"Veículo diesel precisa usar diesel no cálculo."};
   if(motor==="GASOLINA"&&calculo!=="GASOLINA")return {ok:false,erro:"Veículo a gasolina precisa usar gasolina no cálculo."};
-
   const lock=LockService.getScriptLock();
   lock.waitLock(10000);
   try{
-    const sh=getOrCreateVeiculosSheet_();
-    const last=sh.getLastRow();
+    const sh=getOrCreateVeiculosSheet_(),last=sh.getLastRow();
     const rows=last>=2?sh.getRange(2,1,last-1,VEICULOS_HEADERS_.length).getValues():[];
-    let index=-1;
-    const id=String(v.id||"").trim();
+    let index=-1;const id=String(v.id||"").trim();
     for(let i=0;i<rows.length;i++){
       if(id&&String(rows[i][0])===id){index=i;continue;}
-      const placaAtual=String(rows[i][5]||"").trim().toUpperCase().replace(/\s+/g,"");
-      if(placaAtual===placa)return {ok:false,erro:"Já existe um veículo cadastrado com esta placa."};
+      if(String(rows[i][5]||"").trim().toUpperCase().replace(/\s+/g,"")===placa)
+        return {ok:false,erro:"Já existe um veículo cadastrado com esta placa."};
     }
-    const idFinal=id||( "VEICULO-"+Utilities.getUuid() );
     const registro=[
-      idFinal,propriedade,String(v.transportadorId||"").trim(),String(v.transportador||"").trim(),
-      String(v.nomeExibicao||"").trim(),placa,String(v.uf||"PR").trim().toUpperCase(),
-      String(v.marca||"").trim(),String(v.modelo||"").trim(),String(v.ano||"").trim(),
-      String(v.cor||"").trim(),String(v.tipoVeiculo||"").trim(),
-      numeroVeiculoSheet_(v.pesoMaximoKg),motor,calculo,
-      numeroVeiculoSheet_(v.consumoKmL),numeroVeiculoSheet_(v.precoCombustivelManual),
+      id||( "VEICULO-"+Utilities.getUuid()),propriedade,String(v.transportadorId||"").trim(),
+      String(v.transportador||"").trim(),String(v.nomeExibicao||"").trim(),placa,
+      String(v.uf||"PR").trim().toUpperCase(),String(v.ufNome||"").trim(),String(v.cep||"").trim(),
+      String(v.marcaId||"").trim(),String(v.marca||"").trim(),String(v.modeloId||"").trim(),
+      String(v.modelo||"").trim(),String(v.ano||"").trim(),String(v.corId||"").trim(),
+      String(v.cor||"").trim(),String(v.tipoVeiculoId||"").trim(),String(v.tipoVeiculo||"").trim(),
+      numeroVeiculoSheet_(v.pesoMaximoKg),String(v.certificado||"").trim(),String(v.chassi||"").trim(),
+      String(v.viaTransporte||"").trim(),String(v.viaTransporteDesc||"").trim(),
+      String(v.classificacao||"").trim(),String(v.classificacaoDesc||"").trim(),
+      String(v.dataCompra||"").trim(),String(v.dataVenda||"").trim(),String(v.situacaoDocumental||"A").trim(),
+      motor,calculo,numeroVeiculoSheet_(v.consumoKmL),numeroVeiculoSheet_(v.precoCombustivelManual),
       numeroVeiculoSheet_(v.custoManutencaoKm),v.ativo!==false,String(v.observacoes||"").trim(),new Date()
     ];
     if(index>=0)sh.getRange(index+2,1,1,VEICULOS_HEADERS_.length).setValues([registro]);
     else sh.appendRow(registro);
-    return {ok:true,id:idFinal};
-  }finally{
-    lock.releaseLock();
-  }
+    return {ok:true,id:registro[0]};
+  }finally{lock.releaseLock();}
 }
 
 function alterarSituacaoVeiculo_(id,ativo){
   const chave=String(id||"").trim();
   if(!chave)return {ok:false,erro:"Identificador do veículo não informado."};
-  const sh=getOrCreateVeiculosSheet_();
-  const last=sh.getLastRow();
+  const sh=getOrCreateVeiculosSheet_(),last=sh.getLastRow();
   if(last<2)return {ok:false,erro:"Cadastro de veículos vazio."};
   const ids=sh.getRange(2,1,last-1,1).getValues().flat();
   const idx=ids.findIndex(function(x){return String(x)===chave;});
   if(idx<0)return {ok:false,erro:"Veículo não encontrado."};
-  sh.getRange(idx+2,19).setValue(ativo===true);
-  sh.getRange(idx+2,21).setValue(new Date());
+  sh.getRange(idx+2,34).setValue(ativo===true);
+  sh.getRange(idx+2,36).setValue(new Date());
   return {ok:true,id:chave,ativo:ativo===true};
 }
 
