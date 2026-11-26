@@ -1874,9 +1874,11 @@ function listarDadosViagens_(){
 function criarViagem_(dados){
   if(!dados||typeof dados!=="object")return {ok:false,erro:"Dados da viagem não recebidos."};
   const data=String(dados.data||"").trim();
+  const periodo=String(dados.periodo||"").trim().toUpperCase();
   const motorista=String(dados.motorista||"").trim();
   const ids=Array.isArray(dados.entregas)?dados.entregas:[];
   if(!data||!motorista)return {ok:false,erro:"Informe data e motorista."};
+  if(["MANHÃ","TARDE"].indexOf(periodo)<0)return {ok:false,erro:"Selecione manhã ou tarde para a viagem."};
   if(!ids.length)return {ok:false,erro:"Selecione ao menos uma entrega."};
 
   const estrutura=getOrCreateEstruturaViagens_();
@@ -1973,8 +1975,12 @@ function atualizarParadaViagem_(dados){
     const historicoIds=hist.getRange(2,AUDITORIA_ENTREGAS_CFG_.COL_ID,Math.max(1,hist.getLastRow()-1),1).getValues().flat();
     const histIdx=historicoIds.findIndex(x=>String(x)===idEntrega);
     if(histIdx<0)return {ok:false,erro:"Não localizei a entrega original na planilha. Ela pode ter sido removida."};
-    const resultado=concluirEntrega(histIdx+2,dados.motivoAtraso||"",dados.observacoes||"");
-    if(!resultado||!resultado.ok)return resultado||{ok:false,erro:"Não foi possível atualizar a entrega."};
+    const linhaHistorico=histIdx+2;
+    const statusOrigem=String(hist.getRange(linhaHistorico,MAPA_CFG.COL_STATUS).getValue()||"").trim().toUpperCase();
+    if(statusOrigem!=="ENTREGUE"){
+      const resultado=concluirEntrega(linhaHistorico,dados.motivoAtraso||"",dados.observacoes||"");
+      if(!resultado||!resultado.ok)return resultado||{ok:false,erro:"Não foi possível atualizar a entrega."};
+    }
     estrutura.entregas.getRange(row,17).setValue(new Date());
   }
   estrutura.entregas.getRange(row,13).setValue(status);
