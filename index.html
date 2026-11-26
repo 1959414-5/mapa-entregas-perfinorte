@@ -5733,7 +5733,7 @@ function renderizarModalAcaoViagem_(){
         extras+
         '<label class="trips-field span-2">Observações<textarea id="acaoObsParada" rows="3" placeholder="Detalhes adicionais (opcional)">'+escaparViagem_(a.observacoes||'')+'</textarea></label>'+
       '</div>'+
-      (entregue&&a.motivoObrigatorio&&document.getElementById('acaoMotivoAtraso')?'<p class="trips-action-hint">A regra de justificativa de atraso está ativa. Selecione o motivo para concluir.</p>':'');
+      (entregue&&a.motivoObrigatorio?'<p class="trips-action-hint">A regra de justificativa de atraso está ativa. Selecione o motivo para concluir.</p>':'');
   }else if(a.tipo==='fechamento'){
     title.textContent='Fechar viagem';
     subtitle.textContent='Informe as leituras e despesas finais para apurar o custo e realizar o rateio.';
