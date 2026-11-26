@@ -530,6 +530,116 @@
     display:none; height:100vh; overflow:auto; padding:20px;
     background:#ffffff; color:#1f2430;
   }
+
+  /* ---------- DASHBOARD GERENCIAL ---------- */
+  #app.dashboard-ativa{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+  #app.dashboard-ativa #sidebar,#app.dashboard-ativa #sidebarDireito{display:none!important;}
+  #app.dashboard-ativa #sidebarToggle,#app.dashboard-ativa #sidebarDireitoToggle{display:none!important;}
+  #app.dashboard-ativa .map-toolbar,#app.dashboard-ativa #config-banner,#app.dashboard-ativa #map,
+  #app.dashboard-ativa #mapLegend,#app.dashboard-ativa .map-actions,#app.dashboard-ativa #tableView{display:none!important;}
+  #dashboardView{display:none;flex:1;min-height:0;overflow:auto;padding:26px 28px 40px;background:#f4f6f9;color:#172033;}
+  #app.dashboard-ativa #dashboardView{display:block;}
+  .dashboard-shell{width:100%;max-width:1600px;margin:0 auto;}
+  .dashboard-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px;}
+  .dashboard-eyebrow{font:700 10px var(--font-mono);letter-spacing:.15em;color:#788397;}
+  .dashboard-header h1{margin:5px 0 4px;font-size:27px;letter-spacing:-.04em;color:#172033;}
+  .dashboard-header p{margin:0;color:#697487;font-size:13px;}
+  .dashboard-header-actions{display:flex;align-items:center;gap:12px;}
+  #dashboardGeradoEm{font:10px var(--font-mono);color:#788397;}
+  .dashboard-export{border:0;border-radius:8px;padding:10px 15px;background:#18283a;color:#fff;font-size:12px;font-weight:700;cursor:pointer;}
+  .dashboard-export:hover{background:#263d56;}
+  .dashboard-filters{display:flex;align-items:end;gap:10px;flex-wrap:wrap;padding:14px 16px;margin-bottom:18px;background:#fff;border:1px solid #e1e6ed;border-radius:12px;}
+  .dashboard-filters label{display:flex;flex-direction:column;gap:5px;min-width:120px;font-size:10px;font-weight:700;color:#748094;}
+  .dashboard-filters input,.dashboard-filters select{height:36px;min-width:120px;padding:0 9px;border:1px solid #d8dee7;border-radius:7px;background:#fff;color:#243044;font:11px var(--font-ui);}
+  .dashboard-filters label:nth-child(3),.dashboard-filters label:nth-child(4){min-width:155px;}
+  .dashboard-clear{height:36px;padding:0 12px;border:1px solid #d8dee7;border-radius:7px;background:#fff;color:#596578;font-size:11px;cursor:pointer;}
+  .dashboard-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px;}
+  .dashboard-kpi{padding:16px 17px;background:#fff;border:1px solid #e2e7ee;border-radius:12px;min-width:0;}
+  .dashboard-kpi .k-label{font-size:10px;color:#788397;font-weight:700;}
+  .dashboard-kpi .k-value{margin-top:8px;font-size:27px;font-weight:800;line-height:1;color:#19283a;letter-spacing:-.04em;}
+  .dashboard-kpi .k-note{margin-top:7px;font-size:10px;color:#929cad;}
+  .dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px;}
+  .dashboard-card{min-width:0;padding:17px 18px;background:#fff;border:1px solid #e2e7ee;border-radius:12px;box-shadow:0 2px 8px rgba(20,34,52,.025);}
+  .dashboard-span-2{grid-column:span 2;}
+  .dashboard-card-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px;}
+  .dashboard-card-heading h2{margin:0;font-size:13px;color:#1c2b3f;letter-spacing:-.01em;}
+  .dashboard-card-heading>span{font:9px var(--font-mono);color:#919bad;text-align:right;}
+  .dashboard-chart{min-height:155px;display:flex;flex-direction:column;justify-content:center;gap:11px;}
+  .dash-empty{padding:25px 10px;text-align:center;color:#9aa3b2;font-size:11px;}
+  .dash-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:9px;color:#788397;}
+  .dash-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;}
+  .dash-stack-row{display:grid;grid-template-columns:minmax(100px,160px) minmax(120px,1fr) 35px;gap:10px;align-items:center;font-size:10px;}
+  .dash-row-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#596578;}
+  .dash-stacked{height:13px;display:flex;overflow:hidden;border-radius:4px;background:#eef1f5;}
+  .dash-stacked span{height:100%;display:block;}
+  .dash-row-total{text-align:right;font:10px var(--font-mono);color:#596578;}
+  .dash-bar-row{display:grid;grid-template-columns:minmax(120px,180px) minmax(60px,1fr) 38px;gap:9px;align-items:center;font-size:10px;}
+  .dash-bar-track{height:10px;border-radius:6px;background:#eef1f5;overflow:hidden;}
+  .dash-bar-fill{height:100%;border-radius:6px;background:#647f9d;}
+  .dash-bar-value{text-align:right;font:10px var(--font-mono);color:#536176;}
+  .dash-weekly{display:flex;align-items:end;gap:10px;height:150px;padding:8px 4px 0;border-bottom:1px solid #e8edf2;}
+  .dash-week{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px;}
+  .dash-week-bar{width:min(34px,75%);min-height:2px;border-radius:5px 5px 0 0;background:#6686a8;}
+  .dash-week strong{font:10px var(--font-mono);color:#536176;}
+  .dash-week small{font-size:8px;color:#8b95a5;white-space:nowrap;}
+  .dashboard-ranking-card{margin-bottom:12px;}
+  .dashboard-table-wrap{width:100%;overflow:auto;}
+  .dashboard-table{width:100%;border-collapse:collapse;min-width:700px;font-size:11px;}
+  .dashboard-table th{text-align:left;padding:10px 9px;background:#f5f7fa;color:#7b8798;font-size:9px;text-transform:uppercase;letter-spacing:.06em;}
+  .dashboard-table td{padding:11px 9px;border-bottom:1px solid #edf0f4;color:#344256;}
+  .dashboard-table tr:last-child td{border-bottom:0;}
+  .dashboard-table td:not(:first-child){font-family:var(--font-mono);font-size:10px;}
+  .dash-pct{font-weight:800;color:#397e61!important;}
+  .dashboard-footnote{padding:8px 2px;color:#8a94a4;font-size:9px;line-height:1.5;}
+  .td-reprogramacoes{text-align:center;font:10px var(--font-mono);color:#52627a;}
+  .td-reprogramacoes .reprog-count{display:inline-flex;min-width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#eef2f7;color:#475a72;font-weight:700;}
+  .td-reprogramacoes .reprog-count.tem-reprog{background:#fff0df;color:#a65b18;}
+  .modal-justificativa{width:560px;max-width:94vw;}
+  .modal-justificativa .modal-kicker{margin-bottom:5px;color:#8f9daf;font:700 9px var(--font-mono);letter-spacing:.12em;}
+  .modal-justificativa .modal-body{gap:9px;}
+  .modal-justificativa .modal-body label{font-size:11px;font-weight:700;color:#d5dde7;}
+  .modal-justificativa .modal-body label span{font-weight:400;color:#97a3b3;}
+  .modal-justificativa .modal-body select{height:auto;min-height:39px;}
+  .atraso-intro{margin:0 0 2px;color:#c5ceda;font-size:12px;line-height:1.55;}
+  .atraso-detalhe{padding:10px 12px;border:1px solid #354253;border-radius:6px;background:#202a36;color:#dce4ed;font-size:11px;line-height:1.6;}
+  .atraso-exemplo{min-height:32px;padding:8px 10px;border-radius:5px;background:#202a36;color:#aab8c8;font-size:10px;line-height:1.45;}
+  .atraso-erro{color:#ffb7a8;font-size:11px;}
+  @media(max-width:1180px){
+    .dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .dashboard-filters label,.dashboard-filters label:nth-child(3),.dashboard-filters label:nth-child(4){min-width:135px;flex:1;}
+  }
+  @media(max-width:760px){
+    #dashboardView{padding:17px 12px 30px;}
+    .dashboard-header{flex-direction:column;}
+    .dashboard-header h1{font-size:23px;}
+    .dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .dashboard-grid{grid-template-columns:1fr;}
+    .dashboard-span-2{grid-column:auto;}
+    .dashboard-header-actions{width:100%;justify-content:space-between;}
+    .dash-stack-row{grid-template-columns:100px minmax(80px,1fr) 28px;}
+  }
+  @media print{
+    @page{size:landscape;margin:12mm;}
+    body.imprimir-dashboard{background:#fff!important;color:#172033!important;}
+    body.imprimir-dashboard #app{display:block!important;height:auto!important;min-height:0!important;}
+    body.imprimir-dashboard #appRail,body.imprimir-dashboard #sidebar,body.imprimir-dashboard #sidebarDireito,
+    body.imprimir-dashboard #sidebarToggle,body.imprimir-dashboard #sidebarDireitoToggle,
+    body.imprimir-dashboard .map-toolbar,body.imprimir-dashboard #config-banner,
+    body.imprimir-dashboard #map,body.imprimir-dashboard #mapLegend,body.imprimir-dashboard .map-actions,
+    body.imprimir-dashboard #tableView{display:none!important;}
+    body.imprimir-dashboard #mainContent{display:block!important;height:auto!important;overflow:visible!important;background:#fff!important;}
+    body.imprimir-dashboard #dashboardView{display:block!important;height:auto!important;overflow:visible!important;padding:0!important;background:#fff!important;}
+    body.imprimir-dashboard .dashboard-shell{max-width:none!important;}
+    body.imprimir-dashboard .dashboard-card,body.imprimir-dashboard .dashboard-kpi{break-inside:avoid;box-shadow:none!important;}
+    body.imprimir-dashboard .dashboard-grid{gap:8px;}
+    body.imprimir-dashboard .dashboard-card{padding:11px;}
+    body.imprimir-dashboard .dashboard-kpi{padding:10px;}
+    body.imprimir-dashboard .dashboard-kpi .k-value{font-size:20px;}
+    body.imprimir-dashboard .dashboard-header h1{font-size:22px;}
+    body.imprimir-dashboard .dashboard-filters{padding:8px;margin-bottom:10px;}
+    body.imprimir-dashboard .dashboard-export,body.imprimir-dashboard .dashboard-clear{display:none!important;}
+  }
+
   .tabela-toolbar{
     display:flex; justify-content:space-between; align-items:center;
     flex-wrap:wrap; gap:10px;
@@ -2164,6 +2274,9 @@ button,input,select,textarea{font-family:var(--font-ui);}
     <button id="railTableView" class="rail-link" type="button" onclick="mostrarView('tabela')" title="Tabela de entregas" aria-label="Tabela de entregas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M4 9h16M4 14.5h16M9.5 9v11.5M15 9v11.5"/></svg>
     </button>
+    <button id="railDashboardView" class="rail-link" type="button" onclick="mostrarView('dashboard')" title="Dashboard gerencial" aria-label="Dashboard gerencial">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h17"/><rect x="7" y="11" width="3" height="5" rx=".5"/><rect x="13" y="7" width="3" height="9" rx=".5"/><rect x="19" y="3" width="3" height="13" rx=".5"/></svg>
+    </button>
     <span class="rail-spacer"></span>
     <button id="btnSair" class="rail-link rail-logout" type="button" onclick="encerrarSessao_()" title="Sair da sessão" aria-label="Sair da sessão">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M15 8l4 4-4 4M19 12H9"/></svg>
@@ -2295,6 +2408,51 @@ button,input,select,textarea{font-family:var(--font-ui);}
       </button>
     </div>
     <div id="tableView"><div id="tabelaContainer"></div></div>
+    <section id="dashboardView" aria-label="Dashboard gerencial">
+      <div class="dashboard-shell">
+        <header class="dashboard-header">
+          <div>
+            <div class="dashboard-eyebrow">PERFINORTE · EXPEDIÇÃO</div>
+            <h1>Dashboard gerencial</h1>
+            <p>Desempenho das entregas, pontualidade e reprogramações.</p>
+          </div>
+          <div class="dashboard-header-actions">
+            <span id="dashboardGeradoEm"></span>
+            <button type="button" class="dashboard-export" onclick="exportarDashboardPDF_()">Exportar PDF</button>
+          </div>
+        </header>
+        <section class="dashboard-filters" aria-label="Filtros do dashboard">
+          <label>Previsão original de<input id="dashDataDe" type="date" onchange="atualizarDashboard_()"></label>
+          <label>Até<input id="dashDataAte" type="date" onchange="atualizarDashboard_()"></label>
+          <label>Vendedor<select id="dashVendedor" onchange="atualizarDashboard_()"><option value="">Todos</option></select></label>
+          <label>Motorista<select id="dashMotorista" onchange="atualizarDashboard_()"><option value="">Todos</option></select></label>
+          <label>Status<select id="dashStatus" onchange="atualizarDashboard_()">
+            <option value="">Todos</option><option value="ENTREGUE">Entregue</option><option value="EM ANDAMENTO">Em andamento</option><option value="EM FILA">Em fila</option><option value="VAZIO">Sem status</option>
+          </select></label>
+          <label>Período<select id="dashPeriodo" onchange="atualizarDashboard_()">
+            <option value="">Todos</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option>
+          </select></label>
+          <button type="button" class="dashboard-clear" onclick="limparFiltrosDashboard_()">Limpar</button>
+        </section>
+        <section id="dashKpis" class="dashboard-kpis" aria-label="Indicadores principais"></section>
+        <section class="dashboard-grid">
+          <article class="dashboard-card dashboard-span-2"><div class="dashboard-card-heading"><h2>Entregas por vendedor e status</h2><span>Volume</span></div><div id="dashPorVendedor" class="dashboard-chart"></div></article>
+          <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Evolução semanal</h2><span>Conclusões</span></div><div id="dashEvolucao" class="dashboard-chart"></div></article>
+          <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Pontualidade por vendedor</h2><span>Prazo original</span></div><div id="dashPontualidade" class="dashboard-chart"></div></article>
+          <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Aging das pendências</h2><span>Dias após a previsão original</span></div><div id="dashAging" class="dashboard-chart"></div></article>
+          <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Motivos dos atrasos</h2><span>Conclusões atrasadas</span></div><div id="dashMotivos" class="dashboard-chart"></div></article>
+          <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Reprogramações por entrega</h2><span>Mais reprogramadas</span></div><div id="dashReprogramacoes" class="dashboard-chart"></div></article>
+        </section>
+        <article class="dashboard-card dashboard-ranking-card">
+          <div class="dashboard-card-heading"><h2>Ranking de vendedores</h2><span>Volume, prazo e tempo de ciclo</span></div>
+          <div class="dashboard-table-wrap"><table class="dashboard-table">
+            <thead><tr><th>Vendedor</th><th>Entregas</th><th>Entregues</th><th>Pendentes</th><th>Tempo médio de ciclo</th><th>Pontualidade</th></tr></thead>
+            <tbody id="dashRanking"><tr><td colspan="6">Carregando indicadores...</td></tr></tbody>
+          </table></div>
+        </article>
+        <footer id="dashboardRodape" class="dashboard-footnote"></footer>
+      </div>
+    </section>
   </main>
 
   <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
@@ -2671,6 +2829,42 @@ button,input,select,textarea{font-family:var(--font-ui);}
   </div>
 </div>
 
+<div id="modalJustificativaAtraso" class="modal-overlay">
+  <div class="modal modal-justificativa" role="dialog" aria-modal="true" aria-labelledby="tituloJustificativaAtraso">
+    <div class="modal-header">
+      <div><div class="modal-kicker">PERFINORTE · EXPEDIÇÃO</div><h2 id="tituloJustificativaAtraso">Entrega concluída fora do prazo</h2></div>
+      <button class="modal-close" type="button" onclick="fecharModalJustificativaAtraso_()" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="atraso-intro">Esta entrega foi concluída após a data prevista original. Para manter nossos indicadores atualizados, informe o motivo do atraso.</p>
+      <div id="detalheEntregaAtrasada" class="atraso-detalhe"></div>
+      <label for="motivoAtrasoSelect">Motivo do atraso</label>
+      <select id="motivoAtrasoSelect" onchange="atualizarExemploMotivoAtraso_()">
+        <option value="">Selecione um motivo</option>
+        <option value="Atraso na produção">Atraso na produção | Pedido não ficou pronto dentro do prazo.</option>
+        <option value="Falta de matéria-prima ou estoque">Falta de matéria-prima ou estoque | Material indisponível para produção.</option>
+        <option value="Atraso de fornecedor">Atraso de fornecedor | Material recebido fora do prazo.</option>
+        <option value="Reprogramação da produção">Reprogramação da produção | Alteração de prioridades ou capacidade produtiva.</option>
+        <option value="Problema de transporte/logística">Problema de transporte/logística | Indisponibilidade de veículo, rota ou atraso no carregamento.</option>
+        <option value="Indisponibilidade do cliente">Indisponibilidade do cliente | Cliente não estava disponível para receber.</option>
+        <option value="Alteração solicitada pelo cliente">Alteração solicitada pelo cliente | Cliente solicitou mudança na data de entrega.</option>
+        <option value="Informações pendentes do pedido">Informações pendentes do pedido | Especificações, dados ou documentação incompletos.</option>
+        <option value="Problema operacional">Problema operacional | Erro, retrabalho ou falha no processo.</option>
+        <option value="Condições externas">Condições externas | Clima, interdição ou imprevistos externos.</option>
+        <option value="Erro no planejamento do prazo">Erro no planejamento do prazo | Prazo estimado inadequadamente.</option>
+        <option value="Outros">Outros | Situação não contemplada nas opções anteriores.</option>
+      </select>
+      <div id="exemploMotivoAtraso" class="atraso-exemplo">Selecione uma opção para ver a orientação.</div>
+      <label for="observacaoAtrasoInput">Observação adicional <span>(obrigatória para “Outros”)</span></label>
+      <textarea id="observacaoAtrasoInput" rows="3" placeholder="Descreva o que aconteceu..." style="width:100%;resize:vertical;background:var(--panel-2);border:1px solid var(--line);color:var(--paper);padding:10px;border-radius:5px;font:inherit;"></textarea>
+      <div id="erroJustificativaAtraso" class="atraso-erro" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" type="button" onclick="fecharModalJustificativaAtraso_()">Cancelar</button>
+      <button class="btn-primary" id="btnSalvarJustificativaAtraso" type="button" onclick="salvarConclusaoAtrasada_()">Confirmar conclusão</button>
+    </div>
+  </div>
+</div>
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -3213,7 +3407,9 @@ function aplicarFiltros(ajustarZoom){
 
   salvarPreferencias();
   atualizarBadgeFiltros_();
-  if (modoAtual === 'tabela') renderTabela(ajustarZoom === false); else render(ajustarZoom);
+  if (modoAtual === 'tabela') renderTabela(ajustarZoom === false);
+  else if (modoAtual === 'dashboard') atualizarDashboard_();
+  else render(ajustarZoom);
 }
 
 function populaMotoristas(){
@@ -3470,19 +3666,23 @@ function mostrarView(modo){
   modoAtual = modo;
   document.getElementById('railMapView').classList.toggle('active', modo === 'mapa');
   document.getElementById('railTableView').classList.toggle('active', modo === 'tabela');
+  document.getElementById('railDashboardView').classList.toggle('active', modo === 'dashboard');
   document.getElementById('map').style.display = (modo === 'mapa') ? 'block' : 'none';
   document.getElementById('tableView').style.display = (modo === 'tabela') ? 'block' : 'none';
+  document.getElementById('dashboardView').style.display = (modo === 'dashboard') ? 'block' : 'none';
 
-  // O painel de entregas é exclusivo do mapa.
   const app = document.getElementById('app');
   app.classList.toggle('tabela-ativa', modo === 'tabela');
-  document.getElementById('sidebarDireitoToggle').style.display = (modo === 'tabela') ? 'none' : 'flex';
+  app.classList.toggle('dashboard-ativa', modo === 'dashboard');
+  document.getElementById('sidebarDireitoToggle').style.display = (modo === 'mapa') ? 'flex' : 'none';
 
   if (modo === 'mapa'){
     setTimeout(function(){ map.invalidateSize(); }, 50);
     render();
-  } else {
+  } else if (modo === 'tabela'){
     renderTabela();
+  } else {
+    atualizarDashboard_();
   }
 }
 
@@ -3905,12 +4105,13 @@ function renderTabela(ehAtualizacaoAutomatica){
     '</th>' +
     '<th' + estiloLarguraCol_('ok', 46) + '>OK</th>' +
     '<th' + estiloLarguraCol_('obs', 170) + '>Observações' + handleResize_('obs') + '</th>' +
+    '<th' + estiloLarguraCol_('reprogramacoes', 82) + '>Reprog.' + handleResize_('reprogramacoes') + '</th>' +
     '<th' + estiloLarguraCol_('entrada', 112) + '>Data de entrada' + handleResize_('entrada') + '</th>' +
     '<th style="width:36px;"></th>' +
     '</tr></thead><tbody>';
 
   if (!lista.length){
-    const totalColunas = rotaSugerida ? 14 : 13;
+    const totalColunas = rotaSugerida ? 15 : 14;
     html += '<tr class="tabela-sem-resultados"><td colspan="' + totalColunas + '" style="padding:36px 16px;text-align:center;color:#6b7280;">Nenhuma entrega encontrada para esses filtros.</td></tr>';
   }
 
@@ -3936,6 +4137,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><select class="td-input td-status-select"' + corCelulaStatus_(d) + ' data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
+      '<td class="td-reprogramacoes" title="' + Number(d.qtdReprogramacoes || 0) + ' reprogramação(ões)"><span class="reprog-count' + (Number(d.qtdReprogramacoes || 0) > 0 ? ' tem-reprog' : '') + '">' + Number(d.qtdReprogramacoes || 0) + '</span></td>' +
       '<td class="td-data-entrada">' + formatarDataEntradaTabela_(d.dataEntrada || d.entrada) + '</td>' +
       '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" aria-label="Remover entrega" onclick="removerLinha_(this)">' +
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>' +
@@ -3971,6 +4173,8 @@ async function onEditarCelula_(e){
   const linha = tr.getAttribute('data-linha');
   const campo = el.getAttribute('data-campo');
   const valor = (el.type === 'checkbox') ? el.checked : el.value;
+  const itemAntes = todasEntregas.find(d => String(d.linha) === String(linha));
+  const statusAnterior = itemAntes ? (itemAntes.status || '') : '';
 
   if (!API_URL){
     mostrarToast('Configure a API_URL no início do arquivo.', true);
@@ -3996,6 +4200,12 @@ async function onEditarCelula_(e){
       return;
     }
 
+    if (campo === 'status' && String(valor).toUpperCase() === 'ENTREGUE' && res.requerJustificativa){
+      el.value = statusAnterior;
+      abrirModalJustificativaAtraso_(itemAntes, statusAnterior, res.previsaoOriginal);
+      return;
+    }
+
     // ============================================================
     // ATUALIZA EM MEMÓRIA
     // ============================================================
@@ -4006,6 +4216,12 @@ async function onEditarCelula_(e){
 
     if (item){
       item[campo] = valor;
+      if (campo === 'data' && res.qtdReprogramacoes !== undefined){
+        item.qtdReprogramacoes = Number(res.qtdReprogramacoes || 0);
+      }
+      if (campo === 'status' && String(valor).toUpperCase() === 'ENTREGUE'){
+        item.dataHoraConclusao = res.dataHoraConclusao || new Date().toISOString();
+      }
     }
 
     const item2 = entregasAtuais.find(
@@ -4014,6 +4230,17 @@ async function onEditarCelula_(e){
 
     if (item2){
       item2[campo] = valor;
+      if (campo === 'data' && res.qtdReprogramacoes !== undefined){
+        item2.qtdReprogramacoes = Number(res.qtdReprogramacoes || 0);
+      }
+      if (campo === 'status' && String(valor).toUpperCase() === 'ENTREGUE'){
+        item2.dataHoraConclusao = res.dataHoraConclusao || new Date().toISOString();
+      }
+    }
+
+    if (campo === 'status' || campo === 'data'){
+      atualizarDashboard_();
+      if (modoAtual === 'tabela') renderTabela();
     }
 
     // Blinda essa edição por 15s contra atualização automática
@@ -5445,6 +5672,233 @@ async function salvarNova(){
     mostrarToast('Erro: ' + err, true);
   }
 }
+
+
+/* ===== DASHBOARD GERENCIAL ===== */
+let dashboardFiltrosInicializados_ = false;
+let entregaAguardandoConclusao_ = null;
+
+function valorSelectDashboard_(id){ return document.getElementById(id)?.value || ''; }
+
+function popularSelectDashboard_(id, valores, primeiroLabel){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const atual=el.value;
+  const opcoes=[...new Set(valores.map(v=>String(v||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  el.innerHTML='<option value="">'+primeiroLabel+'</option>'+opcoes.map(v=>'<option value="'+escapeAttr_(v)+'">'+escapeAttr_(v)+'</option>').join('');
+  el.value=opcoes.includes(atual)?atual:'';
+}
+function prepararFiltrosDashboard_(){
+  popularSelectDashboard_('dashVendedor',todasEntregas.map(d=>d.representante),'Todos');
+  popularSelectDashboard_('dashMotorista',todasEntregas.map(d=>d.motorista),'Todos');
+  dashboardFiltrosInicializados_=true;
+}
+function limparFiltrosDashboard_(){
+  ['dashDataDe','dashDataAte','dashVendedor','dashMotorista','dashStatus','dashPeriodo'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  atualizarDashboard_();
+}
+function dataReferenciaDashboard_(d){return d.previsaoOriginal||d.data||'';}
+function dataConclusaoDashboard_(d){const v=String(d.dataHoraConclusao||'').trim();return /^\d{4}-\d{2}-\d{2}/.test(v)?v.slice(0,10):'';}
+function dataLocalIso_(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+function diferencaDiasIso_(de,ate){if(!de||!ate)return 0;return Math.max(0,Math.floor((new Date(ate+'T12:00:00')-new Date(de+'T12:00:00'))/86400000));}
+function formatarDuracaoHoras_(h){if(!Number.isFinite(h))return '—';if(h<24)return h.toFixed(1).replace('.',',')+' h';return Math.floor(h/24)+' d '+(h%24).toFixed(0)+' h';}
+function renderDashSemDados_(id,msg){const e=document.getElementById(id);if(e)e.innerHTML='<div class="dash-empty">'+msg+'</div>';}
+function renderDashBarras_(id,linhas){
+  const el=document.getElementById(id);if(!el)return;
+  if(!linhas.length){renderDashSemDados_(id,'Sem dados para os filtros selecionados.');return;}
+  const max=Math.max(1,...linhas.map(x=>x.valor));
+  el.innerHTML=linhas.map(x=>'<div class="dash-bar-row"><span class="dash-row-label" title="'+escapeAttr_(x.label)+'">'+escapeAttr_(x.label)+'</span><div class="dash-bar-track"><div class="dash-bar-fill" style="width:'+Math.max(x.valor?2:0,x.valor/max*100)+'%;background:'+(x.cor||'#647f9d')+'"></div></div><span class="dash-bar-value">'+x.valor+(x.sufixo||'')+'</span></div>').join('');
+}
+function atualizarDashboard_(){
+  const gerado=document.getElementById('dashboardGeradoEm');
+  if(gerado)gerado.textContent='Gerado em '+new Date().toLocaleString('pt-BR');
+  if(!dashboardFiltrosInicializados_)prepararFiltrosDashboard_();
+  const de=valorSelectDashboard_('dashDataDe'),ate=valorSelectDashboard_('dashDataAte');
+  const vendedor=valorSelectDashboard_('dashVendedor'),motorista=valorSelectDashboard_('dashMotorista');
+  const status=valorSelectDashboard_('dashStatus'),periodo=valorSelectDashboard_('dashPeriodo');
+  const hoje=dataLocalIso_();
+  const lista=todasEntregas.filter(d=>{
+    const ref=dataReferenciaDashboard_(d);
+    if(de&&ref&&ref<de)return false;
+    if(ate&&ref&&ref>ate)return false;
+    if(vendedor&&String(d.representante||'')!==vendedor)return false;
+    if(motorista&&String(d.motorista||'')!==motorista)return false;
+    const stat=String(d.status||'').trim().toUpperCase()||'VAZIO';
+    if(status&&stat!==status)return false;
+    if(periodo&&String(d.periodo||'')!==periodo)return false;
+    return true;
+  });
+  const entregues=lista.filter(d=>String(d.status||'').trim().toUpperCase()==='ENTREGUE');
+  const andamento=lista.filter(d=>String(d.status||'').trim().toUpperCase()==='EM ANDAMENTO');
+  const fila=lista.filter(d=>String(d.status||'').trim().toUpperCase()==='EM FILA');
+  const pendentes=lista.filter(d=>!['ENTREGUE','CANCELAR'].includes(String(d.status||'').trim().toUpperCase()));
+  const atrasadas=pendentes.filter(d=>d.previsaoOriginal&&d.previsaoOriginal<hoje);
+  const reprogramadas=lista.filter(d=>Number(d.qtdReprogramacoes||0)>0);
+  const totalReprogramacoes=lista.reduce((a,d)=>a+Number(d.qtdReprogramacoes||0),0);
+  const taxa=lista.length?Math.round(entregues.length/lista.length*100):0;
+  const kpis=[
+    ['Entregas no período',lista.length,'Previsão original como referência'],
+    ['Entregues',entregues.length,'Status concluído'],
+    ['Taxa de conclusão',taxa+'%','Entregues sobre o total'],
+    ['Em andamento',andamento.length,'Status atual'],
+    ['Em fila',fila.length,'Aguardando execução'],
+    ['Atrasadas',atrasadas.length,'Pendentes após a previsão original']
+  ];
+  const kpi=document.getElementById('dashKpis');
+  if(kpi)kpi.innerHTML=kpis.map(x=>'<article class="dashboard-kpi"><div class="k-label">'+x[0]+'</div><div class="k-value">'+x[1]+'</div><div class="k-note">'+x[2]+'</div></article>').join('');
+
+  // Barras empilhadas por vendedor e status.
+  const mapaVendedor={};
+  lista.forEach(d=>{
+    const nome=String(d.representante||'').trim()||'Não informado';
+    if(!mapaVendedor[nome])mapaVendedor[nome]={entregue:0,andamento:0,fila:0,total:0};
+    const v=mapaVendedor[nome];v.total++;
+    const st=String(d.status||'').trim().toUpperCase();
+    if(st==='ENTREGUE')v.entregue++;else if(st==='EM ANDAMENTO')v.andamento++;else v.fila++;
+  });
+  const vendedores=Object.entries(mapaVendedor).sort((a,b)=>b[1].total-a[1].total);
+  const porVendedor=document.getElementById('dashPorVendedor');
+  if(porVendedor){
+    if(!vendedores.length)renderDashSemDados_('dashPorVendedor','Sem dados para os filtros selecionados.');
+    else porVendedor.innerHTML=
+      '<div class="dash-legend"><span><i style="background:#579b78"></i>Entregue</span><span><i style="background:#d3a94a"></i>Em andamento</span><span><i style="background:#a5afbd"></i>Em fila / outros</span></div>'+
+      vendedores.map(([nome,v])=>'<div class="dash-stack-row"><span class="dash-row-label" title="'+escapeAttr_(nome)+'">'+escapeAttr_(nome)+'</span><div class="dash-stacked"><span style="width:'+(v.entregue/v.total*100)+'%;background:#579b78"></span><span style="width:'+(v.andamento/v.total*100)+'%;background:#d3a94a"></span><span style="width:'+(v.fila/v.total*100)+'%;background:#a5afbd"></span></div><span class="dash-row-total">'+v.total+'</span></div>').join('');
+  }
+
+  // Evolução semanal de conclusões reais.
+  const semanas={};
+  entregues.forEach(d=>{
+    const iso=dataConclusaoDashboard_(d);if(!iso)return;
+    const dt=new Date(iso+'T12:00:00');const dia=dt.getDay()||7;dt.setDate(dt.getDate()-dia+1);
+    const chave=[dt.getFullYear(),String(dt.getMonth()+1).padStart(2,'0'),String(dt.getDate()).padStart(2,'0')].join('-');
+    semanas[chave]=(semanas[chave]||0)+1;
+  });
+  const semanasOrdenadas=Object.entries(semanas).sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
+  const evolucao=document.getElementById('dashEvolucao');
+  if(evolucao){
+    if(!semanasOrdenadas.length)renderDashSemDados_('dashEvolucao','Ainda não há datas reais de conclusão registradas.');
+    else{
+      const max=Math.max(1,...semanasOrdenadas.map(x=>x[1]));
+      evolucao.innerHTML='<div class="dash-weekly">'+semanasOrdenadas.map(([sem,n])=>{
+        const d=new Date(sem+'T12:00:00');const rot=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
+        return '<div class="dash-week"><strong>'+n+'</strong><div class="dash-week-bar" style="height:'+Math.max(3,n/max*105)+'px"></div><small>'+rot+'</small></div>';
+      }).join('')+'</div>';
+    }
+  }
+
+  // Pontualidade somente para entregas com data real de conclusão.
+  const pontualidade=vendedores.map(([nome])=>{
+    const itens=entregues.filter(d=>(String(d.representante||'').trim()||'Não informado')===nome&&dataConclusaoDashboard_(d)&&d.previsaoOriginal);
+    const noPrazo=itens.filter(d=>dataConclusaoDashboard_(d)<=d.previsaoOriginal).length;
+    return {label:nome,valor:itens.length?Math.round(noPrazo/itens.length*100):0,total:itens.length};
+  }).filter(x=>x.total>0).sort((a,b)=>b.valor-a.valor);
+  renderDashBarras_('dashPontualidade',pontualidade.map(x=>({label:x.label,valor:x.valor,cor:x.valor>=90?'#579b78':x.valor>=70?'#c59a43':'#bc7067',sufixo:'%'})));
+
+  // Aging de pendências em relação à previsão original.
+  const aging=[{label:'1 dia',valor:0},{label:'2 a 3 dias',valor:0},{label:'4 a 7 dias',valor:0},{label:'Mais de 7 dias',valor:0}];
+  atrasadas.forEach(d=>{const dias=diferencaDiasIso_(d.previsaoOriginal,hoje);if(dias===1)aging[0].valor++;else if(dias<=3)aging[1].valor++;else if(dias<=7)aging[2].valor++;else aging[3].valor++;});
+  renderDashBarras_('dashAging',aging);
+
+  // Motivos registrados nas conclusões atrasadas.
+  const motivos={};entregues.forEach(d=>{const m=String(d.motivoAtraso||'').trim();if(m)motivos[m]=(motivos[m]||0)+1;});
+  renderDashBarras_('dashMotivos',Object.entries(motivos).sort((a,b)=>b[1]-a[1]).map(([label,valor])=>({label,valor})));
+
+  // Entregas com mais alterações de previsão.
+  const maiores=lista.filter(d=>Number(d.qtdReprogramacoes||0)>0).sort((a,b)=>Number(b.qtdReprogramacoes||0)-Number(a.qtdReprogramacoes||0)).slice(0,8)
+    .map(d=>({label:(d.cliente||'Entrega')+' · '+(d.codigo||'sem código'),valor:Number(d.qtdReprogramacoes||0),cor:'#c58b4f'}));
+  renderDashBarras_('dashReprogramacoes',maiores);
+
+  // Ranking e tempo de ciclo: entrada até conclusão real.
+  const ranking=vendedores.map(([nome,v])=>{
+    const itens=entregues.filter(d=>(String(d.representante||'').trim()||'Não informado')===nome);
+    const ciclos=itens.map(d=>{
+      if(!d.dataEntradaHora||!d.dataHoraConclusao)return null;
+      const a=new Date(d.dataEntradaHora).getTime(),b=new Date(d.dataHoraConclusao).getTime();
+      return Number.isFinite(a)&&Number.isFinite(b)&&b>=a?(b-a)/3600000:null;
+    }).filter(x=>x!==null);
+    const avaliadas=itens.filter(d=>d.dataHoraConclusao&&d.previsaoOriginal);
+    const noPrazo=avaliadas.filter(d=>dataConclusaoDashboard_(d)<=d.previsaoOriginal).length;
+    return {nome,total:v.total,entregues:v.entregue,pendentes:v.total-v.entregue,ciclo:ciclos.length?ciclos.reduce((a,b)=>a+b,0)/ciclos.length:null,pontualidade:avaliadas.length?Math.round(noPrazo/avaliadas.length*100):null};
+  }).sort((a,b)=>b.total-a.total);
+  const tbody=document.getElementById('dashRanking');
+  if(tbody)tbody.innerHTML=ranking.length?ranking.map(x=>'<tr><td><b>'+escapeAttr_(x.nome)+'</b></td><td>'+x.total+'</td><td>'+x.entregues+'</td><td>'+x.pendentes+'</td><td>'+formatarDuracaoHoras_(x.ciclo)+'</td><td class="dash-pct">'+(x.pontualidade===null?'—':x.pontualidade+'%')+'</td></tr>').join(''):'<tr><td colspan="6" class="dash-empty">Sem dados para os filtros selecionados.</td></tr>';
+
+  const rodape=document.getElementById('dashboardRodape');
+  if(rodape)rodape.textContent='Base: '+lista.length+' entrega(s) filtrada(s). '+reprogramadas.length+' entrega(s) reprogramada(s), com '+totalReprogramacoes+' alteração(ões) de previsão registradas. A pontualidade usa a previsão original. Entregas antigas sem timestamp de conclusão não entram no cálculo de ciclo ou pontualidade.';
+}
+
+function exportarDashboardPDF_(){
+  if(modoAtual!=='dashboard')mostrarView('dashboard');
+  atualizarDashboard_();
+  document.body.classList.add('imprimir-dashboard');
+  window.onafterprint=function(){document.body.classList.remove('imprimir-dashboard');window.onafterprint=null;};
+  window.print();
+}
+
+/* ===== CONCLUSÃO FORA DO PRAZO ===== */
+const MOTIVOS_ATRASO_UI_=[
+  ['Atraso na produção','Pedido não ficou pronto dentro do prazo.'],
+  ['Falta de matéria-prima ou estoque','Material indisponível para produção.'],
+  ['Atraso de fornecedor','Material recebido fora do prazo.'],
+  ['Reprogramação da produção','Alteração de prioridades ou capacidade produtiva.'],
+  ['Problema de transporte/logística','Indisponibilidade de veículo, rota ou atraso no carregamento.'],
+  ['Indisponibilidade do cliente','Cliente não estava disponível para receber.'],
+  ['Alteração solicitada pelo cliente','Cliente solicitou mudança na data de entrega.'],
+  ['Informações pendentes do pedido','Especificações, dados ou documentação incompletos.'],
+  ['Problema operacional','Erro, retrabalho ou falha no processo.'],
+  ['Condições externas','Clima, interdição ou imprevistos externos.'],
+  ['Erro no planejamento do prazo','Prazo estimado inadequadamente.'],
+  ['Outros','Situação não contemplada nas opções anteriores.']
+];
+
+function abrirModalJustificativaAtraso_(entrega,statusAnterior,previsaoOriginal){
+  if(!entrega)return;
+  entregaAguardandoConclusao_={linha:entrega.linha,cliente:entrega.cliente,codigo:entrega.codigo,statusAnterior:statusAnterior||'',previsaoOriginal:previsaoOriginal||entrega.previsaoOriginal||''};
+  const detalhe=document.getElementById('detalheEntregaAtrasada');
+  detalhe.innerHTML='<b>'+escapeAttr_(entrega.cliente||'Cliente')+'</b>'+(entrega.codigo?' · Código '+escapeAttr_(entrega.codigo):'')+
+    '<br>Previsão original: <b>'+formatarDataBR_(entregaAguardandoConclusao_.previsaoOriginal)+'</b>'+
+    '<br>Data/hora da conclusão: <b>'+new Date().toLocaleString('pt-BR')+'</b>';
+  document.getElementById('motivoAtrasoSelect').value='';
+  document.getElementById('observacaoAtrasoInput').value='';
+  document.getElementById('erroJustificativaAtraso').style.display='none';
+  atualizarExemploMotivoAtraso_();
+  document.getElementById('modalJustificativaAtraso').classList.add('show');
+}
+function atualizarExemploMotivoAtraso_(){
+  const motivo=document.getElementById('motivoAtrasoSelect').value;
+  const item=MOTIVOS_ATRASO_UI_.find(x=>x[0]===motivo);
+  document.getElementById('exemploMotivoAtraso').textContent=item?item[1]:'Selecione uma opção para ver a orientação.';
+}
+function fecharModalJustificativaAtraso_(){
+  const pendente=entregaAguardandoConclusao_;
+  if(pendente){
+    const linha=document.querySelector('tr[data-linha="'+pendente.linha+'"]');
+    const select=linha&&linha.querySelector('[data-campo="status"]');
+    if(select)select.value=pendente.statusAnterior;
+  }
+  entregaAguardandoConclusao_=null;
+  document.getElementById('modalJustificativaAtraso').classList.remove('show');
+}
+async function salvarConclusaoAtrasada_(){
+  const pendente=entregaAguardandoConclusao_;if(!pendente)return;
+  const motivo=document.getElementById('motivoAtrasoSelect').value;
+  const observacao=document.getElementById('observacaoAtrasoInput').value.trim();
+  const erro=document.getElementById('erroJustificativaAtraso');erro.style.display='none';
+  if(!motivo){erro.textContent='Selecione o motivo do atraso.';erro.style.display='block';return;}
+  if(motivo==='Outros'&&!observacao){erro.textContent='Descreva o motivo quando selecionar Outros.';erro.style.display='block';return;}
+  const botao=document.getElementById('btnSalvarJustificativaAtraso');
+  botao.disabled=true;botao.textContent='Salvando...';
+  try{
+    const res=await chamarAPI_POST_({acao:'concluirEntrega',linha:pendente.linha,motivo:motivo,observacao:observacao});
+    if(!res.ok){erro.textContent=res.erro||'Não foi possível concluir a entrega.';erro.style.display='block';return;}
+    entregaAguardandoConclusao_=null;
+    document.getElementById('modalJustificativaAtraso').classList.remove('show');
+    mostrarToast('Entrega concluída. Justificativa registrada.');
+    await carregarEntregas();
+  }catch(err){erro.textContent='Erro ao salvar: '+err;erro.style.display='block';}
+  finally{botao.disabled=false;botao.textContent='Confirmar conclusão';}
+}
+
 
 function mostrarToast(msg, erro){
   const t = document.getElementById('toast');
