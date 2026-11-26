@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'perfinorte-entregas-';
-const CACHE_NAME = CACHE_PREFIX + 'v5';
+const CACHE_NAME = CACHE_PREFIX + 'v6';
 const APP_BASE = new URL('./', self.registration.scope);
 
 const APP_FILES = [
@@ -10,8 +10,8 @@ const APP_FILES = [
   'favicon.svg',
   'pwa-register.js',
   'icons/icon-192.png',
-  'icons/icon-512.png',
-  'icons/icon-maskable-512.png',
+  'icons/icon.svg',
+  'icons/icon-maskable.svg',
   'icons/apple-touch-icon.png'
 ];
 
