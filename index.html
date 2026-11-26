@@ -1971,6 +1971,10 @@ button,input,select,textarea{font-family:var(--font-ui);}
 #modalOverlay .saved-addresses .memoria-endereco:hover{
   border-color:#4c8192;background:#233647;
 }
+#modalOverlay .saved-addresses .memoria-endereco:disabled{cursor:wait;opacity:.72;}
+#modalOverlay .saved-addresses .memoria-endereco.loading{border-color:#2cabbc;background:#223847;}
+#modalOverlay .saved-addresses .memoria-endereco.loading .address-option-arrow{color:#5bd1dc;}
+
 #modalOverlay .saved-addresses .memoria-endereco.selected{
   border-color:#39bd89;background:rgba(54,179,126,.12);
   box-shadow:inset 0 0 0 1px rgba(54,179,126,.12);
@@ -4288,7 +4292,6 @@ function abrirModal(){
   enderecoEscolhidoNovaEntrega = '';
   enderecoOrigemEscolhidoNovaEntrega = '';
   enderecoSugeridoCadastroAtual = '';
-  novoEnderecoIniciado = false;
   enderecosMemoriaAtuais = [];
   enderecosMemoriaOrigens = [];
   document.getElementById('novoCodigo').value = '';
@@ -4957,7 +4960,6 @@ let etapaNovaEntregaAtual = 1;
 let enderecoEscolhidoNovaEntrega = '';
 let enderecoOrigemEscolhidoNovaEntrega = '';
 let enderecoSugeridoCadastroAtual = '';
-let novoEnderecoIniciado = false;
 
 function atualizarNavegacaoNovaEntrega_(){
   const btnVoltar = document.getElementById('btnVoltarEtapa');
@@ -5043,7 +5045,6 @@ function limparSelecaoEnderecoNovaEntrega_(){
 
 function abrirNovoEndereco_(){
   limparSelecaoEnderecoNovaEntrega_();
-  novoEnderecoIniciado = true;
 
   const form = document.getElementById('camposManuais');
   const lista = document.getElementById('enderecosMemoria');
@@ -5052,13 +5053,12 @@ function abrirNovoEndereco_(){
   const resultado = document.getElementById('enderecoResultado');
   const miniMap = document.getElementById('miniMap');
 
-  novoEnderecoIniciado = true;
   if (resultado){resultado.className='busca-resultado address-result';resultado.textContent='';}
   if (miniMap) miniMap.style.display='none';
   if (form) form.style.display='grid';
   if (btnNovo) btnNovo.style.display='none';
   if (btnVoltar) btnVoltar.style.display = enderecosMemoriaAtuais.length ? 'inline-flex' : 'none';
-  if (lista) lista.style.display = enderecosMemoriaAtuais.length ? 'block' : 'none';
+  if (lista) lista.style.display = 'none';
   atualizarNavegacaoNovaEntrega_();
 
   const cep = document.getElementById('novoCep');
@@ -5079,7 +5079,6 @@ function voltarParaEnderecosSalvos_(){
 
 function trocarEnderecoNovaEntrega_(){
   limparSelecaoEnderecoNovaEntrega_();
-  novoEnderecoIniciado = false;
   ['novoCep','novaRua','novoNumero','novoBairro','novaCidade','novoUf'].forEach(function(id){
     const campo = document.getElementById(id);
     if (campo) campo.value = '';
@@ -5186,9 +5185,33 @@ async function mostrarEnderecosMemoria_(codigo, enderecoSugerido){
 async function usarEnderecoMemoria_(indice){
   const endereco = enderecosMemoriaAtuais[indice];
   if (!endereco) return;
-  const confirmado = await confirmarEndereco_(endereco);
-  if (!confirmado) return;
-  selecionarEnderecoNovaEntrega_(endereco, enderecosMemoriaOrigens[indice] || 'salvo');
+
+  const botoes = Array.from(document.querySelectorAll('#enderecosMemoria .memoria-endereco'));
+  const botao = botoes.find(function(el){ return Number(el.dataset.enderecoIndex) === indice; });
+  botoes.forEach(function(el){ el.disabled = true; });
+  if (botao){
+    botao.classList.add('loading');
+    const titulo = botao.querySelector('.address-option-copy strong');
+    if (titulo) titulo.textContent = 'Localizando endereço…';
+  }
+
+  try{
+    const confirmado = await confirmarEndereco_(endereco);
+    if (!confirmado){
+      mostrarToast('Não foi possível localizar esse endereço. Escolha outro ou informe um novo.', true);
+      return;
+    }
+    selecionarEnderecoNovaEntrega_(endereco, enderecosMemoriaOrigens[indice] || 'salvo');
+  }finally{
+    botoes.forEach(function(el){ el.disabled = false;el.classList.remove('loading'); });
+    if (botao){
+      const titulo = botao.querySelector('.address-option-copy strong');
+      if (titulo){
+        const origem = enderecosMemoriaOrigens[indice] || 'historico';
+        titulo.textContent = origem === 'cadastro' ? 'Endereço do cadastro' : (origem === 'novo' ? 'Novo endereço' : 'Usado anteriormente');
+      }
+    }
+  }
 }
 
 async function buscarCliente(){
@@ -5204,7 +5227,7 @@ async function buscarCliente(){
   document.getElementById('miniMapPanel').style.display = 'none';
   enderecosMemoriaAtuais = [];
   enderecosMemoriaOrigens = [];
-  novoEnderecoIniciado = false;
+  enderecoSugeridoCadastroAtual = '';
   ['novoCep','novaRua','novoNumero','novoBairro','novaCidade','novoUf'].forEach(function(id){
     const campo = document.getElementById(id);
     if (campo) campo.value = '';
