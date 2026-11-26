@@ -5003,8 +5003,21 @@ function definirEtapaNovaEntrega_(etapa){
   const corpo = document.querySelector('#modalOverlay .modal-delivery-body');
   if (corpo) corpo.scrollTop = 0;
 
-  if (etapaNovaEntregaAtual === 2 && !enderecosMemoriaAtuais.length && !enderecoEscolhidoNovaEntrega){
-    abrirNovoEndereco_();
+  if (etapaNovaEntregaAtual === 2 && !enderecoEscolhidoNovaEntrega){
+    const lista = document.getElementById('enderecosMemoria');
+    const botaoNovo = document.getElementById('btnNovoEndereco');
+    const formulario = document.getElementById('camposManuais');
+
+    if (enderecosMemoriaAtuais.length){
+      // Na etapa Endereço, mostrar sempre as opções salvas e o atalho para incluir outro destino.
+      if (formulario) formulario.style.display = 'none';
+      if (lista) lista.style.display = 'block';
+      if (botaoNovo) botaoNovo.style.display = 'inline-flex';
+      const voltarEnderecos = document.getElementById('btnVoltarEnderecos');
+      if (voltarEnderecos) voltarEnderecos.style.display = 'none';
+    } else {
+      abrirNovoEndereco_();
+    }
   }
 }
 
