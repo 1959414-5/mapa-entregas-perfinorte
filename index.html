@@ -2480,6 +2480,8 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .vehicles-field input::placeholder{color:#74869a;}
 .vehicles-form-hint{grid-column:1/-1;padding:10px 11px;border:1px solid #3b4e61;border-radius:7px;background:#1d2c3a;color:#aebdcc;font-size:9px;line-height:1.5;}
 .vehicles-form-hint strong{color:#e9f0f6;}
+.vehicles-extra-details{border:1px solid #405266;border-radius:8px;background:#1d2c3a;padding:10px 12px;}
+.vehicles-extra-details summary{color:#d1dce7;font-size:10px;font-weight:750;cursor:pointer;}
 .vehicles-modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:14px 21px;border-top:1px solid #334354;}
 .vehicles-modal-actions button{padding:9px 14px;border-radius:7px;font-size:10px;font-weight:750;cursor:pointer;}
 .vehicles-cancel{border:1px solid #43566a;background:#223244;color:#c7d1dc;}
@@ -2977,6 +2979,29 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <div class="vehicles-field span-3">
             <label for="veiculoObservacoes">Observações</label>
             <textarea id="veiculoObservacoes" placeholder="Dados a confirmar, particularidades ou observações do cadastro..."></textarea>
+          </div>
+
+          <div class="vehicles-field span-3">
+            <details class="vehicles-extra-details">
+              <summary>Dados cadastrais complementares da planilha</summary>
+              <div class="vehicles-form-grid" style="margin-top:12px">
+                <div class="vehicles-field"><label for="veiculoUfNome">Nome da UF</label><input id="veiculoUfNome" placeholder="Paraná"></div>
+                <div class="vehicles-field"><label for="veiculoCep">CEP</label><input id="veiculoCep" placeholder="Opcional"></div>
+                <div class="vehicles-field"><label for="veiculoMarcaId">Código da marca</label><input id="veiculoMarcaId" placeholder="Opcional"></div>
+                <div class="vehicles-field"><label for="veiculoModeloId">Código do modelo</label><input id="veiculoModeloId" placeholder="Opcional"></div>
+                <div class="vehicles-field"><label for="veiculoCorId">Código da cor</label><input id="veiculoCorId" placeholder="Opcional"></div>
+                <div class="vehicles-field"><label for="veiculoTipoId">Código do tipo</label><input id="veiculoTipoId" placeholder="Opcional"></div>
+                <div class="vehicles-field"><label for="veiculoCertificado">Certificado</label><input id="veiculoCertificado" placeholder="Número do certificado"></div>
+                <div class="vehicles-field span-2"><label for="veiculoChassi">Chassi</label><input id="veiculoChassi" placeholder="Número do chassi"></div>
+                <div class="vehicles-field"><label for="veiculoViaTransp">Via de transporte</label><input id="veiculoViaTransp" placeholder="TER / ROD"></div>
+                <div class="vehicles-field"><label for="veiculoViaTranspDesc">Descrição da via</label><input id="veiculoViaTranspDesc" placeholder="Terrestre / Rodoviário"></div>
+                <div class="vehicles-field"><label for="veiculoClassificacao">Classificação</label><input id="veiculoClassificacao" placeholder="Código"></div>
+                <div class="vehicles-field"><label for="veiculoClassificacaoDesc">Descrição da classificação</label><input id="veiculoClassificacaoDesc" placeholder="Cavalo"></div>
+                <div class="vehicles-field"><label for="veiculoDataCompra">Data de compra</label><input id="veiculoDataCompra" placeholder="dd/mm/aaaa"></div>
+                <div class="vehicles-field"><label for="veiculoDataVenda">Data de venda</label><input id="veiculoDataVenda" placeholder="dd/mm/aaaa"></div>
+                <div class="vehicles-field"><label for="veiculoSituacaoDoc">Situação cadastral</label><input id="veiculoSituacaoDoc" placeholder="A"></div>
+              </div>
+            </details>
           </div>
           <div class="vehicles-form-hint">
             <strong>Importante:</strong> a média de consumo e o custo de manutenção não serão presumidos.
@@ -4328,6 +4353,21 @@ function abrirModalVeiculo_(id){
   definirCampoVeiculoUI_('veiculoManutencao',v&&v.custoManutencaoKm?v.custoManutencaoKm:'');
   definirCampoVeiculoUI_('veiculoAtivo',v&&v.ativo===false?'false':'true');
   definirCampoVeiculoUI_('veiculoObservacoes',v?v.observacoes:'');
+  definirCampoVeiculoUI_('veiculoUfNome',v?v.ufNome:'Paraná');
+  definirCampoVeiculoUI_('veiculoCep',v?v.cep:'');
+  definirCampoVeiculoUI_('veiculoMarcaId',v?v.marcaId:'');
+  definirCampoVeiculoUI_('veiculoModeloId',v?v.modeloId:'');
+  definirCampoVeiculoUI_('veiculoCorId',v?v.corId:'');
+  definirCampoVeiculoUI_('veiculoTipoId',v?v.tipoVeiculoId:'');
+  definirCampoVeiculoUI_('veiculoCertificado',v?v.certificado:'');
+  definirCampoVeiculoUI_('veiculoChassi',v?v.chassi:'');
+  definirCampoVeiculoUI_('veiculoViaTransp',v?v.viaTransporte:'');
+  definirCampoVeiculoUI_('veiculoViaTranspDesc',v?v.viaTransporteDesc:'');
+  definirCampoVeiculoUI_('veiculoClassificacao',v?v.classificacao:'');
+  definirCampoVeiculoUI_('veiculoClassificacaoDesc',v?v.classificacaoDesc:'');
+  definirCampoVeiculoUI_('veiculoDataCompra',v?v.dataCompra:'');
+  definirCampoVeiculoUI_('veiculoDataVenda',v?v.dataVenda:'');
+  definirCampoVeiculoUI_('veiculoSituacaoDoc',v?v.situacaoDocumental:'A');
   document.getElementById('tituloModalVeiculo').textContent=v?'Editar veículo':'Novo veículo';
   document.getElementById('btnSalvarVeiculo').textContent=v?'Salvar alterações':'Salvar veículo';
   document.getElementById('modalVeiculoOverlay').classList.add('show');
@@ -4368,7 +4408,22 @@ async function salvarVeiculoUI_(event){
     precoCombustivelManual:document.getElementById('veiculoPrecoManual').value,
     custoManutencaoKm:document.getElementById('veiculoManutencao').value,
     ativo:document.getElementById('veiculoAtivo').value==='true',
-    observacoes:document.getElementById('veiculoObservacoes').value.trim()
+    observacoes:document.getElementById('veiculoObservacoes').value.trim(),
+    ufNome:document.getElementById('veiculoUfNome').value.trim(),
+    cep:document.getElementById('veiculoCep').value.trim(),
+    marcaId:document.getElementById('veiculoMarcaId').value.trim(),
+    modeloId:document.getElementById('veiculoModeloId').value.trim(),
+    corId:document.getElementById('veiculoCorId').value.trim(),
+    tipoVeiculoId:document.getElementById('veiculoTipoId').value.trim(),
+    certificado:document.getElementById('veiculoCertificado').value.trim(),
+    chassi:document.getElementById('veiculoChassi').value.trim(),
+    viaTransporte:document.getElementById('veiculoViaTransp').value.trim(),
+    viaTransporteDesc:document.getElementById('veiculoViaTranspDesc').value.trim(),
+    classificacao:document.getElementById('veiculoClassificacao').value.trim(),
+    classificacaoDesc:document.getElementById('veiculoClassificacaoDesc').value.trim(),
+    dataCompra:document.getElementById('veiculoDataCompra').value.trim(),
+    dataVenda:document.getElementById('veiculoDataVenda').value.trim(),
+    situacaoDocumental:document.getElementById('veiculoSituacaoDoc').value.trim()
   };
   try{
     const res=await chamarAPI_POST_({acao:'salvarVeiculo',veiculo:dados});
