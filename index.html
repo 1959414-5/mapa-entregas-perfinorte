@@ -3815,11 +3815,6 @@ function renderTabela(ehAtualizacaoAutomatica){
     return true;
   });
 
-  if (!lista.length){
-    container.innerHTML = '<div class="empty"><div class="big">📭</div>Nenhuma entrega encontrada<br>pra esses filtros.</div>';
-    return;
-  }
-
   // ordem: rota sugerida (se tiver) sempre vence tudo. Sem rota: Status
   // é SEMPRE o critério principal (Entregue > Em andamento > Em fila >
   // vazio) — dentro de CADA grupo de status, ordena por data (a seta ▲▼
@@ -3913,6 +3908,11 @@ function renderTabela(ehAtualizacaoAutomatica){
     '<th' + estiloLarguraCol_('entrada', 112) + '>Data de entrada' + handleResize_('entrada') + '</th>' +
     '<th style="width:36px;"></th>' +
     '</tr></thead><tbody>';
+
+  if (!lista.length){
+    const totalColunas = rotaSugerida ? 14 : 13;
+    html += '<tr class="tabela-sem-resultados"><td colspan="' + totalColunas + '" style="padding:36px 16px;text-align:center;color:#6b7280;">Nenhuma entrega encontrada para esses filtros.</td></tr>';
+  }
 
   lista.forEach(d => {
     const corLinha = corLinhaEntrega_(d);
