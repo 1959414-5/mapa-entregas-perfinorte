@@ -3189,9 +3189,9 @@ function aplicarFiltros(ajustarZoom){
   const dataAte = document.getElementById('dataAteInput').value;
   const motorista = document.getElementById('motoristaSelect').value;
 
-  // filtros do sidebar (data/período/motorista/status) só valem pro MAPA —
-  // a tabela é 100% independente, com os filtros dela mesma (status e
-  // período próprios, na própria tabela).
+  // filtros do sidebar (data/período/motorista/status) só valem pro MAPA.
+  // A tabela mantém os filtros próprios de status e período, mas compartilha
+  // a busca rápida superior.
   entregasAtuais = todasEntregas.filter(d => {
     // sem data, não aparece no mapa — o mapa é sobre "onde ir e quando",
     // uma entrega sem data prevista não tem "quando" pra mostrar aqui
