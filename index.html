@@ -237,7 +237,7 @@
   /* Mapa sem grade/linhas de tiles: sobreposição mínima evita emendas de renderização */
   /* Elimina emendas brancas entre tiles sem alterar tamanho ou posicionamento do Leaflet */
   .leaflet-tile-container{transform:none!important;}
-  .leaflet-tile{border:0!important;outline:0!important;transform:scale(1.002);transform-origin:center center;backface-visibility:hidden;}
+  .leaflet-tile{border:0!important;outline:0!important;transform:none!important;backface-visibility:hidden;}
   .leaflet-container{background:#f2efe9!important;overflow:hidden;}
   .leaflet-popup-content-wrapper{
     background:var(--panel);color:var(--paper);border-radius:6px;
@@ -767,6 +767,25 @@ html,body{background:var(--ink);font-family:var(--font-ui);}
 .toast{border-radius:10px;}
 ::-webkit-scrollbar{width:7px;}
 ::-webkit-scrollbar-thumb{background:#354354;border-radius:8px;}
+
+/* DESIGN V2: acabamento visual sem alterar estrutura ou comportamento */
+.brand{position:relative;}
+.brand:after{content:"";display:block;width:42px;height:3px;background:var(--manha);border-radius:3px;margin-top:13px;}
+.controls .field input,.controls .field select,.controls .field textarea{transition:border-color .16s,box-shadow .16s,background .16s;}
+.controls .field input:hover,.controls .field select:hover,.controls .field textarea:hover{border-color:#52677f;background:#253241;}
+.date-atalhos button:hover,.period-toggle button:hover,.view-toggle button:hover,#rotaToolbar button:hover,.btn-confirmacoes:hover{filter:brightness(1.12);transform:translateY(-1px);}
+button,.btn{transition:background .16s,border-color .16s,color .16s,transform .16s,filter .16s;}
+#sidebarDireito .secao-titulo{font-weight:700;color:#e5edf5;}
+#list{scrollbar-gutter:stable;}
+.item .cliente{line-height:1.35;}
+.item .meta{line-height:1.5;}
+.leaflet-control-zoom a{transition:background .15s;}
+.leaflet-control-zoom a:hover{background:#263545!important;}
+.leaflet-control-attribution{background:rgba(255,255,255,.88)!important;color:#46515d!important;font-size:9px!important;}
+.leaflet-control-attribution a{color:#1b6b91!important;}
+.leaflet-popup-content{margin:12px 14px!important;}
+.rotulo-cliente{font-weight:700;letter-spacing:.01em;}
+@media(prefers-reduced-motion:reduce){button,.btn,.item,.controls .field input,.controls .field select,.controls .field textarea{transition:none!important;}}
 /* Preserve operation on smaller screens: collapse into practical widths, never hide controls. */
 @media(max-width:1180px){
   #app{grid-template-columns:320px minmax(0,1fr) 310px;}
