@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa de Entregas — Vendedores · Perfinorte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
@@ -230,19 +233,296 @@
 .loading-publico-erro{color:#e8a2a2;font-size:12px;line-height:1.5;margin-top:12px;word-break:break-word}
 .loading-publico-retry{margin-top:14px;border:1px solid #e07b39;background:#e07b39;color:#1a1305;font-weight:700;border-radius:5px;padding:8px 14px;cursor:pointer}
 </style>
+<style>
+
+/* ===== VENDEDORES · layout alinhado ao Mapa de Entregas ===== */
+:root{
+  --shell:#0f1722;
+  --shell-2:#151f2b;
+  --shell-3:#1d2937;
+  --shell-line:#2b3949;
+  --accent:#f28a31;
+  --success:#36d79a;
+  --warning:#f4bc40;
+  --danger:#ff6464;
+  --font-ui:"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:"IBM Plex Mono","SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+}
+html,body{
+  background:#0f1722;font-family:var(--font-ui);font-size:14px;
+  letter-spacing:-.012em;-webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{font-family:var(--font-ui);}
+#app{
+  display:grid;grid-template-columns:72px 328px minmax(0,1fr) 394px;
+  height:100vh;min-width:0;background:#0f1722;overflow:hidden;
+  transition:grid-template-columns .18s ease;
+}
+#app.sidebar-colapsado{grid-template-columns:72px 0 minmax(0,1fr) 394px;}
+#app.sidebar-direito-colapsado{grid-template-columns:72px 328px minmax(0,1fr) 0;}
+#app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+#app.tabela-ativa{grid-template-columns:72px 328px minmax(0,1fr) 0;}
+#app.tabela-ativa.sidebar-colapsado{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+
+.app-rail{
+  grid-column:1;grid-row:1;min-width:0;height:100vh;position:relative;z-index:1600;
+  display:flex;flex-direction:column;align-items:center;gap:9px;padding:18px 9px 14px;
+  background:linear-gradient(180deg,#101925 0%,#111b27 100%);border-right:1px solid #263444;
+}
+.rail-brand,.rail-link{
+  width:52px;height:52px;flex:0 0 52px;display:flex;align-items:center;justify-content:center;
+  border:1px solid transparent;border-radius:12px;background:transparent;color:#9bacc0;
+  text-decoration:none;cursor:pointer;position:relative;transition:background .16s,border-color .16s,color .16s;
+}
+.rail-brand{
+  background:linear-gradient(145deg,#ff9a3d,#ec6f16);color:#fff;border-radius:50%;
+  box-shadow:0 7px 18px rgba(235,111,22,.22);margin-bottom:3px;
+}
+.rail-brand svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.rail-link svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+.rail-link:hover{background:#202d3b;color:#f1f5f9;border-color:#344658;}
+.rail-link.active{background:#253343;color:#ff9b45;border-color:#35495d;}
+.rail-link.active:before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+
+#sidebar{
+  grid-column:2;grid-row:1;min-width:0;overflow-y:auto;overflow-x:hidden;
+  background:linear-gradient(180deg,#172330 0%,#121c27 100%);border-right:1px solid #2a3949;
+  scrollbar-width:thin;scrollbar-color:#334558 transparent;
+}
+#sidebar>*{min-width:0!important;width:100%;}
+#app.sidebar-colapsado #sidebar{overflow:hidden;visibility:hidden;border:0;}
+.brand{
+  padding:17px 18px 16px;background:linear-gradient(180deg,#182432 0%,#17222e 100%);
+  border-bottom:1px solid #2b3a4a;
+}
+.brand-heading{padding-bottom:2px;}
+.brand .eyebrow{font-family:var(--font-mono);font-size:9.5px;font-weight:500;letter-spacing:.16em;color:#a8b8ca;}
+.brand h1{font-family:var(--font-ui);font-size:23px;font-weight:800;line-height:1.18;letter-spacing:-.045em;margin:5px 0 10px;color:#f4f7fa;}
+.brand-status-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0;}
+.brand .tag-somente-ver{
+  display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;margin:0;padding:5px 9px;
+  border:1px solid rgba(242,138,49,.34);border-radius:20px;background:rgba(242,138,49,.1);
+  color:#ffbd82;font-family:var(--font-ui);font-size:10px;font-weight:650;letter-spacing:-.01em;text-transform:none;
+}
+.read-only-dot{width:7px;height:7px;border-radius:50%;background:#f2a44f;box-shadow:0 0 0 3px rgba(242,164,79,.12);}
+.brand .brand-updated{min-width:0;text-align:right;white-space:nowrap;color:#9eafc2;font-family:var(--font-mono);font-size:8.5px;font-weight:400;line-height:1.4;letter-spacing:0;}
+.brand .brand-updated span{font-variant-numeric:tabular-nums;}
+
+#sidebarToggle{
+  left:400px;width:17px;height:42px;border:1px solid #35475b;background:#182532;
+  color:#b4c1d0;border-radius:0 8px 8px 0;z-index:1700;font-size:12px;
+}
+#app.sidebar-colapsado #sidebarToggle{left:72px;}
+#sidebarToggle:hover{color:#fff;background:#263748;}
+
+#sidebar .controls{padding:15px 17px 22px;gap:10px;background:#121c27;border:0;}
+#sidebar .controls .secao-titulo{
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--font-ui);font-size:13px;letter-spacing:-.02em;text-transform:none;
+  font-weight:700;color:#e5edf5;border-bottom:1px solid #2b3949;padding:0 0 10px;margin:0 0 2px;
+}
+#sidebar .controls .field{display:flex;flex-direction:column;gap:6px;padding:0;}
+#sidebar .controls .field label{font-family:var(--font-ui);font-size:11.3px;font-weight:600;line-height:1.35;letter-spacing:-.015em;text-transform:none;color:#aebdcd;margin:0;}
+#sidebar .controls .date-range{gap:6px;}
+#sidebar .controls .date-range input,#sidebar .controls .field select{
+  min-width:0;min-height:36px;padding:8px 9px;background:#202d3b;border:1px solid #394b60;
+  color:#edf2f8;border-radius:8px;font-family:var(--font-ui);font-size:12px;font-weight:500;
+}
+#sidebar .controls .date-range-sep{color:#8495a9;}
+#sidebar .controls .date-atalhos{gap:6px;margin:0;}
+#sidebar .controls .date-atalhos button,#sidebar .controls .period-toggle button{
+  min-height:32px;padding:7px 6px;background:#202d3b;border:1px solid #394b60;
+  border-radius:8px;color:#c0ccda;font-family:var(--font-ui);font-size:11.2px;font-weight:550;letter-spacing:-.02em;
+}
+#sidebar .controls .period-toggle{gap:6px;}
+#sidebar .controls .period-toggle button.active{background:#eef3f7!important;color:#172330!important;border-color:#eef3f7!important;}
+#sidebar .controls .status-filtro-sidebar{padding:9px 10px;gap:7px;background:#1b2734;border:1px solid #34475a;border-radius:8px;}
+#sidebar .controls .status-filtro-sidebar label{font-family:var(--font-ui);font-size:11.5px;font-weight:500;color:#d5deea;letter-spacing:-.015em;text-transform:none;}
+#sidebar .controls .field select,#sidebar .controls .field input[type=date]{color-scheme:dark;}
+#sidebar .controls .field input:focus,#sidebar .controls .field select:focus{outline:2px solid rgba(242,138,49,.48);outline-offset:1px;}
+
+#sidebarDireito{
+  grid-column:4;grid-row:1;min-width:0;padding:0;overflow-y:auto;overflow-x:hidden;
+  display:flex;flex-direction:column;background:linear-gradient(180deg,#151f2b 0%,#111a25 100%);
+  border-left:1px solid #2a3949;
+}
+#sidebarDireito>*{min-width:0!important;width:auto;}
+#app.sidebar-direito-colapsado #sidebarDireito{overflow:hidden;border:0;}
+#sidebarDireitoToggle{
+  right:394px;width:17px;height:42px;border:1px solid #35475b;background:#182532;
+  color:#b4c1d0;border-radius:8px 0 0 8px;z-index:1700;font-size:12px;
+}
+#app.sidebar-direito-colapsado #sidebarDireitoToggle{right:0;}
+
+#mainContent{
+  grid-column:3;grid-row:1;display:flex;flex-direction:column;position:relative;
+  min-width:0;min-height:0;height:100vh;overflow:hidden;background:#f2efe9;
+}
+.map-toolbar{
+  height:66px;flex:0 0 66px;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:0 18px;background:#111a25;border-bottom:1px solid #2a3949;z-index:900;
+}
+.map-toolbar-heading{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.map-toolbar-heading strong{font-family:var(--font-ui);font-size:14px;font-weight:750;letter-spacing:-.03em;color:#f0f4f8;}
+.map-toolbar-heading span{font-family:var(--font-ui);font-size:10px;font-weight:500;letter-spacing:-.01em;color:#98aabe;}
+.map-toolbar-state{display:flex;align-items:center;gap:7px;color:#a8b8ca;font-family:var(--font-ui);font-size:10px;font-weight:500;white-space:nowrap;}
+.toolbar-live-dot{width:7px;height:7px;border-radius:50%;background:#3bd69a;box-shadow:0 0 0 3px rgba(59,214,154,.1);}
+#config-banner{top:76px;left:12px;right:12px;border-radius:9px;z-index:1200;background:#d8622f;color:#fff;font-family:var(--font-ui);}
+#map{flex:1 1 auto;width:100%;height:auto;min-height:0;background:#f2efe9;}
+#map .leaflet-container,.leaflet-container{background:#f2efe9!important;}
+#map .leaflet-tile{filter:none!important;}
+.leaflet-control-zoom a{background:#182532!important;color:#f2f6fa!important;border-color:#35475b!important;}
+.leaflet-bar{border:1px solid #35475b!important;border-radius:9px!important;overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.2)!important;}
+.leaflet-control-scale-line{border:2px solid #657181;border-top:0;background:rgba(255,255,255,.82);color:#253447;font-family:var(--font-ui);font-size:10px;}
+.leaflet-control-attribution{font-family:var(--font-ui);font-size:8px!important;}
+.leaflet-popup-content-wrapper{border-radius:10px!important;border-color:#d5dde5!important;background:#fff!important;color:#182330!important;box-shadow:0 8px 24px rgba(20,35,50,.2);}
+.leaflet-popup-tip{background:#fff!important;}
+.pop .row{color:#64748b!important;}
+.pop .row b{color:#253447!important;}
+.map-legend{
+  position:absolute;top:82px;right:15px;z-index:650;display:flex;flex-direction:column;gap:9px;
+  min-width:150px;padding:13px 14px;background:rgba(255,255,255,.94);color:#273548;
+  border:1px solid #d5dde5;border-radius:10px;box-shadow:0 5px 18px rgba(28,42,58,.15);font-family:var(--font-ui);font-size:10px;
+}
+.map-legend strong{font-size:11px;font-weight:700;margin-bottom:2px;}
+.map-legend span{display:flex;align-items:center;gap:8px;color:#526174;font-size:10px;line-height:1.35;}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 9px;}
+.legend-dot.period-morning{background:#f28a31;}
+.legend-dot.period-afternoon{background:#36b6c9;}
+.legend-dot.period-undefined{background:#9aa5b4;}
+
+#tableView{display:none;flex:1 1 auto;min-height:0;height:auto;overflow:auto;padding:20px;background:#fff;color:#1f2430;}
+
+#sidebarDireito .summary{
+  flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+  padding:17px 13px 15px;background:transparent;border-bottom:1px solid #263646;
+}
+#sidebarDireito .summary .stat{
+  min-width:0;min-height:104px;padding:11px 10px 9px;background:linear-gradient(145deg,#202c3a,#1a2531);
+  border:1px solid #394a5e;border-radius:11px;box-shadow:0 3px 10px rgba(0,0,0,.13);
+}
+#sidebarDireito .stat-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+#sidebarDireito .stat-icon{font-size:18px;font-weight:800;line-height:1;}
+#sidebarDireito .icon-green{color:#39d99a;}
+#sidebarDireito .icon-orange{color:#ff9b35;}
+#sidebarDireito .icon-red{color:#ff6868;}
+#sidebarDireito .summary .stat .n{font-family:var(--font-ui);font-size:25px;font-weight:750;letter-spacing:-.05em;line-height:1;color:#f1f5f9;}
+#sidebarDireito .summary .stat .l{margin-top:4px;font-family:var(--font-ui);font-size:10.5px;font-weight:600;letter-spacing:-.02em;text-transform:none;line-height:1.3;color:#d8e1eb;}
+#sidebarDireito .stat-hint{margin-top:7px;color:#45d59a;font-family:var(--font-ui);font-size:9px;font-weight:500;line-height:1.3;}
+#sidebarDireito .geo-warn .stat-hint{color:#9cacbd;}
+#sidebarDireito .deliveries-heading{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 14px 9px;
+}
+.deliveries-heading h2{margin:0;color:#f0f4f8;font-family:var(--font-ui);font-size:14px;font-weight:750;letter-spacing:-.03em;}
+.deliveries-live{display:inline-flex;align-items:center;gap:6px;color:#91a2b6;font-family:var(--font-ui);font-size:9px;white-space:nowrap;}
+.deliveries-live i{width:6px;height:6px;border-radius:50%;background:#3bd69a;box-shadow:0 0 0 3px rgba(59,214,154,.1);}
+#sidebarDireito #list{
+  flex:1 1 auto;min-height:80px;overflow-y:auto;padding:1px 12px 12px;
+  scrollbar-width:thin;scrollbar-color:#34475b transparent;
+}
+#sidebarDireito .item{
+  display:block;margin:7px 0;padding:12px 11px 10px;border:1px solid #3a4b5f;
+  border-radius:10px;background:linear-gradient(145deg,#202d3b,#1a2531);box-shadow:0 3px 10px rgba(0,0,0,.12);
+}
+#sidebarDireito .item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#64748b;}
+#sidebarDireito .item:has(.status.EMANDAMENTO):before{background:#f4bc40;}
+#sidebarDireito .item:has(.status.ENTREGUE):before{background:#36d79a;}
+#sidebarDireito .item:has(.status.EMFILA):before{background:#df86b4;}
+#sidebarDireito .item .cliente{font-family:var(--font-ui);font-size:13px;font-weight:700;line-height:1.35;letter-spacing:-.025em;color:#f0f4f8;}
+#sidebarDireito .item .badge{font-family:var(--font-ui);font-size:9px;font-weight:700;padding:4px 7px;border-radius:6px;}
+#sidebarDireito .item .meta{margin-top:7px;padding-top:7px;border-top:1px solid rgba(157,177,198,.14);font-family:var(--font-ui);font-size:10px;line-height:1.45;color:#adbdce;}
+#sidebarDireito .item .status{display:inline-block;margin-top:7px;padding:4px 8px;border-radius:20px;background:rgba(244,188,64,.16);font-family:var(--font-ui);font-size:10px;font-weight:650;letter-spacing:0;text-transform:none;color:#f4c74f;}
+#sidebarDireito .item .status.ENTREGUE{background:rgba(54,215,154,.13);color:#53dda7;}
+#sidebarDireito .item .status.EMFILA{background:rgba(223,134,180,.14);color:#e9a4c6;}
+#sidebarDireito .empty,#sidebarDireito .loading{font-family:var(--font-ui);font-size:12px;line-height:1.5;}
+
+#app.tabela-ativa #mapLegend{display:none;}
+#app.tabela-ativa #sidebarDireito{display:none;}
+#app.tabela-ativa #sidebarDireitoToggle{display:none;}
+#app[hidden]{display:none!important;}
+
+@media(max-width:1320px){
+  #app{grid-template-columns:60px 292px minmax(0,1fr) 318px;}
+  #app.sidebar-colapsado{grid-template-columns:60px 0 minmax(0,1fr) 318px;}
+  #app.sidebar-direito-colapsado{grid-template-columns:60px 292px minmax(0,1fr) 0;}
+  #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:60px 0 minmax(0,1fr) 0;}
+  #app.tabela-ativa{grid-template-columns:60px 292px minmax(0,1fr) 0;}
+  #app.tabela-ativa.sidebar-colapsado{grid-template-columns:60px 0 minmax(0,1fr) 0;}
+  #sidebarToggle{left:352px;}
+  #app.sidebar-colapsado #sidebarToggle{left:60px;}
+  #sidebarDireitoToggle{right:318px;}
+  #app.sidebar-direito-colapsado #sidebarDireitoToggle{right:0;}
+  .app-rail{padding-left:4px;padding-right:4px;}
+  .rail-brand,.rail-link{width:48px;height:48px;flex-basis:48px;}
+}
+@media(max-width:1050px){
+  #app{grid-template-columns:58px 280px minmax(0,1fr) 0;}
+  #sidebarDireito{display:none;}
+  #sidebarDireitoToggle{display:none;}
+  #app.sidebar-colapsado{grid-template-columns:58px 0 minmax(0,1fr) 0;}
+  #app.sidebar-direito-colapsado{grid-template-columns:58px 280px minmax(0,1fr) 0;}
+  #app.sidebar-colapsado.sidebar-direito-colapsado{grid-template-columns:58px 0 minmax(0,1fr) 0;}
+  #app.tabela-ativa{grid-template-columns:58px 280px minmax(0,1fr) 0;}
+  #app.tabela-ativa.sidebar-colapsado{grid-template-columns:58px 0 minmax(0,1fr) 0;}
+  #sidebarToggle{left:338px;}
+  #app.sidebar-colapsado #sidebarToggle{left:58px;}
+  .map-toolbar{padding:0 12px;gap:10px;}
+  .map-toolbar-state{font-size:9px;}
+  .map-legend{top:78px;right:10px;}
+}
+@media(max-width:700px){
+  #app{grid-template-columns:54px minmax(0,1fr);}
+  #sidebar{
+    position:absolute;left:54px;top:0;bottom:0;width:min(310px,calc(100vw - 54px));
+    z-index:1500;box-shadow:12px 0 28px rgba(0,0,0,.28);
+  }
+  #sidebar>*{width:100%;min-width:0!important;}
+  #app.sidebar-colapsado #sidebar{display:none;}
+  #app #mainContent{grid-column:2;grid-row:1;}
+  #app #sidebarDireito{display:none;}
+  #sidebarToggle{left:min(calc(54px + min(310px, 100vw - 54px)),364px);z-index:1700;}
+  #app.sidebar-colapsado #sidebarToggle{left:54px;}
+  .app-rail{grid-column:1;padding:12px 3px;}
+  .rail-brand,.rail-link{width:46px;height:46px;flex-basis:46px;}
+  .map-toolbar{height:auto;min-height:62px;padding:10px 12px;}
+  .map-toolbar-state{font-size:8.5px;}
+  #map{min-height:240px;}
+  .map-legend{top:78px;right:8px;min-width:128px;padding:10px;font-size:9px;}
+  .brand{padding:14px;}
+  #sidebar .controls{padding:13px 14px 18px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .rail-link{transition:none!important;}
+}
+
+</style>
 </head>
 <body>
 <div id="loadingDadosPublico" aria-live="polite" aria-busy="true"><div class="loading-publico-card"><div class="loading-publico-brand">PERFINORTE · EXPEDIÇÃO</div><div class="loading-publico-spinner" aria-hidden="true"></div><div class="loading-publico-titulo">Preparando o mapa</div><p class="loading-publico-desc">Carregando entregas e organizando as informações…</p><div class="loading-publico-barra" aria-hidden="true"></div><div class="loading-publico-status">AGUARDE · SINCRONIZANDO DADOS</div></div></div>
 <div id="app">
+  <nav id="appRail" class="app-rail" aria-label="Navegação principal">
+    <a class="rail-brand" href="index.html" title="Perfinorte · Mapa de Entregas" aria-label="Voltar ao Mapa de Entregas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
+    </a>
+    <span class="rail-divider"></span>
+    <button id="btnVerMapa" class="rail-link active" type="button" onclick="mostrarView('mapa')" title="Mapa de entregas" aria-label="Mapa de entregas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8.5 4l7 2.5L21 4v13.5L15.5 20l-7-2.5L3 20zM8.5 4v13.5M15.5 6.5V20"/></svg>
+    </button>
+    <button id="btnVerTabela" class="rail-link" type="button" onclick="mostrarView('tabela')" title="Tabela de entregas" aria-label="Tabela de entregas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M4 9h16M4 14.5h16M9.5 9v11.5M15 9v11.5"/></svg>
+    </button>
+  </nav>
   <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
   <aside id="sidebar">
     <div class="brand">
-      <div class="eyebrow">Perfinorte · Expedição · <span id="ultimaAtualizacao"></span></div>
-      <h1>Mapa de Entregas</h1>
-      <span class="tag-somente-ver">👁 Somente visualização</span>
-      <div class="view-toggle">
-        <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">🗺 Mapa</button>
-        <button id="btnVerTabela" onclick="mostrarView('tabela')">📋 Tabela</button>
+      <div class="brand-heading">
+        <div class="eyebrow">PERFINORTE · EXPEDIÇÃO</div>
+        <h1>Mapa de Entregas</h1>
+        <div class="brand-status-row">
+          <span class="tag-somente-ver"><span class="read-only-dot"></span>Somente visualização</span>
+          <span class="brand-updated">Atualizado <span id="ultimaAtualizacao"></span></span>
+        </div>
       </div>
     </div>
 
@@ -291,18 +571,47 @@
     </div>
   </aside>
 
-  <main style="position:relative;">
+  <main id="mainContent">
+    <div class="map-toolbar">
+      <div class="map-toolbar-heading">
+        <strong>Mapa de entregas</strong>
+        <span>Acompanhamento comercial · Somente leitura</span>
+      </div>
+      <div class="map-toolbar-state"><span class="toolbar-live-dot"></span>Dados atualizados automaticamente</div>
+    </div>
     <div id="config-banner">Configure a URL da API no início do arquivo (constante <code>API_URL</code>).</div>
     <div id="map"></div>
+    <div id="mapLegend" class="map-legend">
+      <strong>Período das entregas</strong>
+      <span><i class="legend-dot period-morning"></i>Manhã</span>
+      <span><i class="legend-dot period-afternoon"></i>Tarde</span>
+      <span><i class="legend-dot period-undefined"></i>Sem período definido</span>
+    </div>
     <div id="tableView"><div id="tabelaContainer"></div></div>
   </main>
 
   <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
   <aside id="sidebarDireito">
     <div class="summary">
-      <div class="stat"><div class="n" id="statTotal">–</div><div class="l">Entregas</div></div>
-      <div class="stat"><div class="n" id="statCidades">–</div><div class="l">Cidades</div></div>
-      <div class="stat geo-warn"><div class="n" id="statSemGeo">–</div><div class="l">Sem endereço</div></div>
+      <div class="stat">
+        <div class="stat-top"><span class="stat-icon icon-green">↗</span><div class="n" id="statTotal">–</div></div>
+        <div class="l">Entregas</div>
+        <div class="stat-hint">No período selecionado</div>
+      </div>
+      <div class="stat">
+        <div class="stat-top"><span class="stat-icon icon-orange">⌖</span><div class="n" id="statCidades">–</div></div>
+        <div class="l">Cidades</div>
+        <div class="stat-hint">Destinos mapeados</div>
+      </div>
+      <div class="stat geo-warn">
+        <div class="stat-top"><span class="stat-icon icon-red">△</span><div class="n" id="statSemGeo">–</div></div>
+        <div class="l">Sem endereço</div>
+        <div class="stat-hint">Verificação geográfica</div>
+      </div>
+    </div>
+    <div class="deliveries-heading">
+      <h2>Entregas do período</h2>
+      <span class="deliveries-live"><i></i>Lista sincronizada</span>
     </div>
     <div id="list"><div class="loading"><div class="big">⏳</div>Carregando entregas…</div></div>
   </aside>
