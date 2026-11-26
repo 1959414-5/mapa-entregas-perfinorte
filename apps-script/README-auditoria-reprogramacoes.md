@@ -11,6 +11,10 @@ Este diretório contém o patch complementar do Apps Script para a funcionalidad
 ```js
 case "concluirEntrega":
   return jsonOutput_(concluirEntrega(body.linha, body.motivo, body.observacao));
+case "obterConfigMotivoAtraso":
+  return jsonOutput_(obterConfigMotivoAtraso_());
+case "salvarConfigMotivoAtraso":
+  return jsonOutput_(salvarConfigMotivoAtraso_(body.ativo));
 ```
 
 4. Na função `onEdit(e)`, depois da validação da aba e da linha, adicione o trecho abaixo. Mantenha os tratamentos existentes de ID/endereço:
@@ -54,3 +58,17 @@ O log completo fica na aba `Historico_Reprogramacoes`, com previsão anterior, n
 **Critério inicial de atraso:** compara a data real da conclusão com a data original. Como ainda não foram definidos horários-limite para manhã e tarde, o atraso começa no dia seguinte à previsão original.
 
 **Registros que não são entregas:** linhas com `FA = AVISO` e `I` (código/ID da entrega) vazio são ignoradas na migração da auditoria e na lista retornada ao site. Elas não entram nos totais, atrasos, rankings ou gráficos e não geram reprogramações/conclusões na auditoria.
+
+
+## Controle liga/desliga da justificativa de atraso
+
+O Dashboard inclui um toggle **Motivos de atraso**. Ligado, exige a seleção de um dos 12 motivos ao concluir uma entrega fora da previsão original. Desligado, permite concluir sem abrir o modal e sem gravar motivo. A configuração fica em `ScriptProperties` e vale para o sistema inteiro; não depende do navegador. O padrão inicial é ligado.
+
+Para ativar a integração do toggle:
+
+1. No `doPost(e)`, inclua os dois cases `obterConfigMotivoAtraso` e `salvarConfigMotivoAtraso` mostrados acima.
+2. No bloco de auditoria que já foi adicionado ao Apps Script, inclua a constante `CONFIG_EXIGIR_MOTIVO_ATRASO_` e as funções `obterConfigMotivoAtraso_()` e `salvarConfigMotivoAtraso_()` da versão atual de `patch-auditoria-reprogramacoes.gs`.
+3. Substitua as funções `concluirEntrega()` e `atualizarCampoEntrega()` existentes pelas versões atuais do mesmo arquivo. Não cole o patch completo por cima sem remover a versão anterior: isso duplicaria declarações `const`.
+4. Salve e publique uma nova versão do Web App.
+
+O site lê a configuração ao autenticar e salva cada alteração diretamente no Apps Script. A preferência permanece após fechar o navegador ou entrar em outro computador.
