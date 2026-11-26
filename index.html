@@ -234,8 +234,10 @@
 
   /* ---------- MAP ---------- */
   #map{height:100vh;background:#f2efe9;}
-  /* corrige as linhas/emendas finas entre os tiles do mapa (bug conhecido do Leaflet) */
+  /* Mapa sem grade/linhas de tiles: sobreposição mínima evita emendas de renderização */
   .leaflet-tile-container{transform:scale(1.0005);}
+  .leaflet-tile{border:0!important;outline:0!important;}
+  .leaflet-container{background:#f2efe9!important;overflow:hidden;}
   .leaflet-popup-content-wrapper{
     background:var(--panel);color:var(--paper);border-radius:6px;
     border:1px solid var(--line);
