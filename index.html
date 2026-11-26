@@ -5101,6 +5101,13 @@ function selecionarEnderecoNovaEntrega_(endereco, origem){
   enderecoOrigemEscolhidoNovaEntrega = origem || 'salvo';
   enderecoAplicado = endereco;
 
+  // Guarda o novo endereço temporariamente nesta sessão para permitir voltar e selecioná-lo novamente.
+  if (origem === 'novo' && !enderecosMemoriaAtuais.includes(endereco)){
+    enderecosMemoriaAtuais.unshift(endereco);
+    enderecosMemoriaOrigens.unshift('novo');
+    renderEnderecosMemoria_();
+  }
+
   const texto = document.getElementById('enderecoSelecionadoTexto');
   const tipo = document.getElementById('enderecoSelecionadoTipo');
   const card = document.getElementById('enderecoSelecionadoCard');
