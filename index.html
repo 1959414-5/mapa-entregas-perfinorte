@@ -637,10 +637,35 @@
   }
   .btn-remover:hover{color:var(--fila); background:#fdecea;}
   #tableView .empty{color:#8b93a1;}
+#app[hidden]{display:none!important;}
+#loginScreen[hidden]{display:none!important;}
+#loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#12161b;z-index:5000;padding:20px;}
+.login-card{width:min(390px,100%);padding:28px;background:#181d24;border:1px solid #2a313c;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:10px;color:#eef1f4;}
+.login-brand{font-family:Consolas,monospace;font-size:10px;letter-spacing:.15em;color:#aab3bf;}
+.login-card h1{font-size:22px;margin:4px 0 0;}
+.login-card p{margin:0 0 12px;color:#aab3bf;font-size:13px;}
+.login-card label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#aab3bf;}
+.login-card input{padding:11px;background:#1f2530;color:#eef1f4;border:1px solid #2a313c;border-radius:5px;font-size:14px;}
+.login-card button{margin-top:8px;padding:11px;border:0;border-radius:5px;background:#e07b39;color:#1a1305;font-weight:700;cursor:pointer;}
+.login-card button:disabled{opacity:.6;cursor:wait;}
+#loginError{min-height:18px;color:#ea9999;font-size:12px;text-align:center;}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="loginScreen" hidden>
+  <form id="loginForm" class="login-card">
+    <div class="login-brand">PERFINORTE · EXPEDIÇÃO</div>
+    <h1>Mapa de Entregas</h1>
+    <p>Acesso restrito</p>
+    <label for="loginUser">Usuário</label>
+    <input id="loginUser" autocomplete="username" required>
+    <label for="loginPassword">Senha</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" required>
+    <button id="loginButton" type="submit">Entrar</button>
+    <div id="loginError" role="alert"></div>
+  </form>
+</div>
+<div id="app" hidden>
   <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
   <aside id="sidebar">
     <div class="brand">
@@ -944,7 +969,9 @@
  * navegador (não digite/transcreva, pra não errar nenhum caractere).
  * Exemplo: "https://script.google.com/macros/s/AKfycb.../exec"
  * ===================================================================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbxq2r5WwP_DxFUpO7jV7XthtIGbTLlie8Od799ehwYANEabahf5TitwIt9RqVhXyft6/exec";
+const API_BASE = "https://mapa-entregas-api.babzinhaa14.workers.dev";
+const API_URL = API_BASE + "/api";
+let TOKEN_SESSAO = sessionStorage.getItem("mapa_entregas_token") || "";
 
 /* Dados de exemplo usados só se a API_URL acima ficar vazia. */
 const DADOS_EXEMPLO = [
@@ -1354,23 +1381,25 @@ function formatarDataBR_(iso){
 /* ===== COMUNICAÇÃO COM A API (esta página é externa ao Apps Script agora —
    GitHub Pages — então TUDO passa por fetch(), nunca google.script.run). ===== */
 async function chamarAPI_GET_(params){
-  // "_t" no final força o navegador a nunca reaproveitar uma resposta em
-  // cache — sem isso, às vezes ele mostra dados antigos mesmo já tendo
-  // mudado na planilha de verdade.
   const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
   const qs = new URLSearchParams(comCacheBusting).toString();
-  const resp = await fetch(API_URL + '?' + qs, { cache: 'no-store' });
+  const resp = await fetch(API_URL + '?' + qs, {
+    cache: 'no-store',
+    headers: { 'Authorization': 'Bearer ' + TOKEN_SESSAO }
+  });
+  if (resp.status === 401) { encerrarSessao_(); throw new Error('Sessão inválida ou expirada.'); }
   return await resp.json();
 }
 async function chamarAPI_POST_(corpo){
-  // Content-Type "text/plain" de propósito — evita o preflight de CORS
-  // (OPTIONS) que o Apps Script Web App não sabe responder; o Apps Script
-  // lê e interpreta o corpo como JSON normalmente do mesmo jeito.
   const resp = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+      'Authorization': 'Bearer ' + TOKEN_SESSAO
+    },
     body: JSON.stringify(corpo)
   });
+  if (resp.status === 401) { encerrarSessao_(); throw new Error('Sessão inválida ou expirada.'); }
   return await resp.json();
 }
 
@@ -1395,8 +1424,7 @@ async function carregarEntregas(){
   }
 
   try{
-    const resp = await fetch(API_URL + '?formato=dados');
-    const dados = await resp.json();
+    const dados = await chamarAPI_GET_({ formato: 'dados' });
     todasEntregas = protegerEdicoesRecentes_(Array.isArray(dados) ? dados : []);
     document.getElementById('ultimaAtualizacao').textContent =
       'atualizado ' + new Date().toLocaleTimeString('pt-BR');
@@ -2446,6 +2474,7 @@ carregarPreferencias();
 restaurarSidebar_();
 restaurarSidebarDireito_();
 
+function iniciarMapaAutenticado_(){
 initMap();
 // A Perfinorte é buscada e centralizada ANTES das entregas — assim a
 // primeira coisa que a câmera mostra é a Perfinorte, e só depois (se tiver
@@ -2467,6 +2496,68 @@ const INTERVALO_ATUALIZACAO_MS = 10000;
 setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
 setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
 setInterval(carregarLocalizacoesMotoristas, 15000); // localização atualiza a cada 15s
+}
+function encerrarSessao_(){
+  TOKEN_SESSAO = '';
+  sessionStorage.removeItem('mapa_entregas_token');
+  document.getElementById('app').hidden = true;
+  document.getElementById('loginScreen').hidden = false;
+}
+async function validarSessao_(){
+  if (!TOKEN_SESSAO) return false;
+  try {
+    const r = await fetch(API_BASE + '/auth/validate', {
+      headers: { 'Authorization': 'Bearer ' + TOKEN_SESSAO }
+    });
+    if (!r.ok) return false;
+    const j = await r.json();
+    return j.valid === true;
+  } catch(e) { return false; }
+}
+async function enviarLogin_(e){
+  e.preventDefault();
+  const btn = document.getElementById('loginButton');
+  const msg = document.getElementById('loginError');
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  msg.textContent = '';
+  try {
+    const r = await fetch(API_BASE + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('loginUser').value.trim(),
+        password: document.getElementById('loginPassword').value
+      })
+    });
+    const j = await r.json();
+    if (!r.ok || !j.token) throw new Error(j.error || 'Falha no login');
+    TOKEN_SESSAO = j.token;
+    sessionStorage.setItem('mapa_entregas_token', TOKEN_SESSAO);
+    document.getElementById('loginScreen').hidden = true;
+    document.getElementById('app').hidden = false;
+    iniciarMapaAutenticado_();
+  } catch(err) {
+    msg.textContent = err.message || 'Não foi possível entrar.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+async function iniciarAutenticacao_(){
+  if (await validarSessao_()) {
+    document.getElementById('loginScreen').hidden = true;
+    document.getElementById('app').hidden = false;
+    iniciarMapaAutenticado_();
+  } else {
+    TOKEN_SESSAO = '';
+    sessionStorage.removeItem('mapa_entregas_token');
+    document.getElementById('loginScreen').hidden = false;
+    document.getElementById('app').hidden = true;
+  }
+}
+document.getElementById('loginForm').addEventListener('submit', enviarLogin_);
+iniciarAutenticacao_();
 
 // ===== NOVA ENTREGA (modal) =====
 
