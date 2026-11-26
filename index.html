@@ -3103,6 +3103,27 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trip-occurrence strong{font-weight:600;color:#52677d;}
 .trip-occurrence small{color:#9aa5b2;font-size:8px;}
 
+
+#modalAcaoViagemOverlay{padding:18px;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);}
+#modalAcaoViagemOverlay.show{display:flex;}
+.trips-action-modal{width:min(610px,calc(100vw - 32px));}
+.trips-action-modal #formAcaoViagem{display:flex;flex:1;min-height:0;flex-direction:column;overflow:auto;}
+.trips-action-modal .trips-modal-body{padding:20px 24px;}
+.trips-action-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;}
+.trips-action-form-grid .span-2{grid-column:1/-1;}
+.trips-action-confirmation{display:flex;align-items:center;gap:11px;margin-bottom:15px;padding:12px;border:1px solid #dce9ed;border-radius:10px;background:#f5fafb;}
+.trips-action-confirm-icon{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:9px;background:#e6f3f0;color:#21806e;font-size:14px;font-weight:850;}
+.trips-action-confirmation>div{display:flex;flex-direction:column;gap:3px;}
+.trips-action-confirmation strong{color:#334b60;font-size:10.5px;}
+.trips-action-confirmation small{color:#8795a4;font-size:9px;line-height:1.4;}
+.trips-action-summary{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;padding:11px 12px;border:1px solid #e1eaf0;border-radius:9px;background:#f7fafc;}
+.trips-action-summary strong{color:#2d465c;font-size:11px;}
+.trips-action-summary span{color:#8290a0;font-size:9px;}
+.trips-action-hint{margin:13px 0 0;padding:10px 11px;border:1px solid #e0e9ef;border-radius:8px;background:#f6f9fb;color:#75899a;font-size:9px;line-height:1.5;}
+.trips-action-error{margin:0 24px 12px;padding:10px 12px;border:1px solid #f0d7d1;border-radius:8px;background:#fff5f2;color:#a44e3e;font-size:10px;line-height:1.4;}
+.trips-action-error[hidden]{display:none!important;}
+@media(max-width:600px){.trips-action-form-grid{grid-template-columns:1fr;}.trips-action-form-grid .span-2{grid-column:1;}.trips-action-modal .trips-modal-body{padding:16px;}}
+
 </style>
 </head>
 <body>
@@ -3634,6 +3655,27 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <footer class="trips-modal-actions">
         <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
         <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<div id="modalAcaoViagemOverlay" class="modal-overlay" aria-hidden="true">
+  <div class="trips-modal trips-action-modal" role="dialog" aria-modal="true" aria-labelledby="tituloAcaoViagem">
+    <header class="trips-modal-head">
+      <div>
+        <div class="trips-modal-kicker">PERFINORTE · CONTROLE DA VIAGEM</div>
+        <h2 id="tituloAcaoViagem">Registrar ação</h2>
+        <p id="subtituloAcaoViagem">Informe os dados para atualizar o histórico.</p>
+      </div>
+      <button type="button" class="trips-modal-close" onclick="fecharModalAcaoViagem_()" aria-label="Fechar">×</button>
+    </header>
+    <form id="formAcaoViagem" onsubmit="salvarAcaoViagemUI_(event)">
+      <div id="conteudoAcaoViagem" class="trips-modal-body"></div>
+      <div id="erroAcaoViagem" class="trips-action-error" hidden></div>
+      <footer class="trips-modal-actions">
+        <button type="button" class="trips-cancel" onclick="fecharModalAcaoViagem_()">Cancelar</button>
+        <button type="submit" class="trips-save" id="btnSalvarAcaoViagem">Salvar registro</button>
       </footer>
     </form>
   </div>
@@ -5625,71 +5667,166 @@ async function alterarStatusViagemUI_(id,status){
     await carregarViagens_();
   }catch(err){mostrarToast(err.message||String(err),true);}
 }
-async function registrarOcorrenciaViagemUI_(id){
-  const tipoNum=prompt('Tipo de ocorrência:\n1 - Pane mecânica\n2 - Acidente\n3 - Veículo indisponível\n4 - Bloqueio/interdição\n5 - Outra ocorrência','1');
-  if(tipoNum===null)return;
-  const tipos={'1':'PANE','2':'ACIDENTE','3':'VEICULO_INDISPONIVEL','4':'BLOQUEIO','5':'OUTRA'};
-  const tipo=tipos[String(tipoNum).trim()];
-  if(!tipo){mostrarToast('Tipo de ocorrência inválido.',true);return;}
-  const descricao=prompt('Descreva o que aconteceu:');
-  if(!descricao||!descricao.trim())return;
-  try{
-    const res=await chamarAPI_POST_({acao:'registrarOcorrenciaViagem',dados:{viagemId:id,tipo:tipo,descricao:descricao.trim()}});
-    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível registrar a ocorrência.');
-    mostrarToast('Ocorrência registrada. A viagem foi interrompida quando aplicável.');
-    await carregarViagens_();
-  }catch(err){mostrarToast(err.message||String(err),true);}
+
+/* ===== AÇÕES DE VIAGEM EM MODAL PRÓPRIO ===== */
+let acaoViagemAtual_ = null;
+const motivosAtrasoViagem_=[
+  "Atraso na produção","Falta de matéria-prima ou estoque","Atraso de fornecedor",
+  "Reprogramação da produção","Problema de transporte/logística","Indisponibilidade do cliente",
+  "Alteração solicitada pelo cliente","Informações pendentes do pedido","Problema operacional",
+  "Condições externas","Erro no planejamento do prazo","Outros"
+];
+
+function abrirModalAcaoViagem_(config){
+  acaoViagemAtual_=Object.assign({},config);
+  renderizarModalAcaoViagem_();
+  const modal=document.getElementById('modalAcaoViagemOverlay');
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
 }
-async function atualizarParadaViagemUI_(id,status){
-  let motivo='',observacoes='';
-  if(status==='ENTREGUE'){
-    if(!confirm('Confirmar que esta entrega foi realizada? O status da entrega original também será atualizado.'))return;
-  }else{
-    motivo=prompt(status==='REPROGRAMAR'?'Motivo da reprogramação:':'Motivo da não entrega:');
-    if(motivo===null)return;
-    observacoes=prompt('Observação adicional (opcional):')||'';
-  }
-  const payload={id:id,status:status,motivo:motivo,observacoes:observacoes};
-  try{
-    let res=await chamarAPI_POST_({acao:'atualizarParadaViagem',dados:payload});
-    if(res&&!res.ok&&status==='ENTREGUE'&&/motivo/i.test(res.erro||'')){
-      const lista=['Atraso na produção','Falta de matéria-prima ou estoque','Atraso de fornecedor','Reprogramação da produção','Problema de transporte/logística','Indisponibilidade do cliente','Alteração solicitada pelo cliente','Informações pendentes do pedido','Problema operacional','Condições externas','Erro no planejamento do prazo','Outros'];
-      motivo=prompt('A entrega está atrasada. Informe o motivo:\n'+lista.map((x,i)=>(i+1)+' - '+x).join('\n'));
-      if(motivo===null)return;
-      const numero=Number(motivo);
-      const selecionado=Number.isInteger(numero)&&numero>=1&&numero<=lista.length?lista[numero-1]:motivo;
-      observacoes=selecionado==='Outros'?(prompt('Descreva o motivo:')||''):'';
-      res=await chamarAPI_POST_({acao:'atualizarParadaViagem',dados:{...payload,motivoAtraso:selecionado,observacoes:observacoes}});
+function fecharModalAcaoViagem_(){
+  const modal=document.getElementById('modalAcaoViagemOverlay');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+  acaoViagemAtual_=null;
+}
+function erroModalAcaoViagem_(mensagem){
+  const el=document.getElementById('erroAcaoViagem');
+  el.textContent=mensagem;
+  el.hidden=false;
+}
+function renderizarModalAcaoViagem_(){
+  const a=acaoViagemAtual_;
+  if(!a)return;
+  const title=document.getElementById('tituloAcaoViagem');
+  const subtitle=document.getElementById('subtituloAcaoViagem');
+  const content=document.getElementById('conteudoAcaoViagem');
+  const submit=document.getElementById('btnSalvarAcaoViagem');
+  const error=document.getElementById('erroAcaoViagem');
+  error.hidden=true;error.textContent='';
+  if(a.tipo==='ocorrencia'){
+    title.textContent='Registrar ocorrência';
+    subtitle.textContent='Descreva o imprevisto. Pane, acidente ou indisponibilidade interrompem a viagem.';
+    submit.textContent='Registrar ocorrência';
+    content.innerHTML=
+      '<div class="trips-action-form-grid">'+
+        '<label class="trips-field span-2">Tipo de ocorrência<select id="acaoTipoOcorrencia" required><option value="PANE">Pane mecânica</option><option value="ACIDENTE">Acidente</option><option value="VEICULO_INDISPONIVEL">Veículo indisponível</option><option value="BLOQUEIO">Bloqueio ou interdição</option><option value="OUTRA">Outra ocorrência</option></select></label>'+
+        '<label class="trips-field span-2">Descrição<textarea id="acaoDescricaoOcorrencia" rows="4" required placeholder="O que aconteceu? Informe o impacto nas entregas e na operação."></textarea></label>'+
+      '</div>'+
+      '<p class="trips-action-hint">As entregas já concluídas permanecem concluídas. As demais continuam independentes e poderão ser reprogramadas.</p>';
+  }else if(a.tipo==='parada'){
+    const entregue=a.status==='ENTREGUE';
+    title.textContent=entregue?'Confirmar entrega':a.status==='REPROGRAMAR'?'Reprogramar entrega':'Registrar não entrega';
+    subtitle.textContent=entregue?'Confirme a conclusão desta parada. O status da entrega principal também será atualizado.':'Registre o motivo e preserve a entrega para acompanhamento ou reprogramação.';
+    submit.textContent=entregue?'Confirmar como entregue':'Salvar resultado';
+    let extras='';
+    if(entregue&&a.motivoObrigatorio){
+      extras='<label class="trips-field span-2">Motivo do atraso<select id="acaoMotivoAtraso" required><option value="">Selecione o motivo</option>'+motivosAtrasoViagem_.map(x=>'<option value="'+escaparViagem_(x)+'">'+escaparViagem_(x)+'</option>').join('')+'</select></label>';
     }
-    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível atualizar a parada.');
-    mostrarToast(status==='ENTREGUE'?'Entrega concluída e vinculada à viagem.':'Resultado da parada registrado.');
-    await carregarViagens_();
-  }catch(err){mostrarToast(err.message||String(err),true);}
+    if(!entregue){
+      extras+='<label class="trips-field span-2">Motivo<input id="acaoMotivoParada" required value="'+escaparViagem_(a.motivo||'')+'" placeholder="'+(a.status==='REPROGRAMAR'?'Ex.: pane mecânica, pedido não pronto...':'Ex.: cliente ausente, recusa...')+'"></label>';
+    }
+    content.innerHTML=
+      '<div class="trips-action-confirmation"><span class="trips-action-confirm-icon">'+(entregue?'✓':'!')+'</span><div><strong>'+(entregue?'A entrega será marcada como concluída.':a.status==='REPROGRAMAR'?'A entrega será liberada para uma nova viagem.':'A parada será registrada como não entregue.')+'</strong><small>O histórico da viagem e da entrega será preservado.</small></div></div>'+
+      '<div class="trips-action-form-grid">'+
+        '<label class="trips-field span-2">Nota(s) fiscal(is)<input id="acaoNfsParada" value="'+escaparViagem_(a.nfs||'')+'" placeholder="Informe uma ou mais NFs, separadas por vírgula"></label>'+
+        extras+
+        '<label class="trips-field span-2">Observações<textarea id="acaoObsParada" rows="3" placeholder="Detalhes adicionais (opcional)">'+escaparViagem_(a.observacoes||'')+'</textarea></label>'+
+      '</div>'+
+      (entregue&&a.motivoObrigatorio&&document.getElementById('acaoMotivoAtraso')?'<p class="trips-action-hint">A regra de justificativa de atraso está ativa. Selecione o motivo para concluir.</p>':'');
+  }else if(a.tipo==='fechamento'){
+    title.textContent='Fechar viagem';
+    subtitle.textContent='Informe as leituras e despesas finais para apurar o custo e realizar o rateio.';
+    submit.textContent='Apurar custo e encerrar';
+    content.innerHTML=
+      '<div class="trips-action-summary"><strong>'+escaparViagem_(a.numero||'Viagem')+'</strong><span>'+escaparViagem_(a.veiculo||'')+' · '+escaparViagem_(a.motorista||'')+'</span></div>'+
+      '<div class="trips-action-form-grid">'+
+        '<label class="trips-field">Hodômetro final (km)<input id="acaoHodometroFinal" type="number" min="0" step="0.1" value="'+(a.hodometroFinal??'')+'" placeholder="Opcional"></label>'+
+        '<label class="trips-field">Combustível realizado (R$)<input id="acaoCombustivelReal" type="number" min="0" step="0.01" value="'+(a.combustivelReal??'')+'" placeholder="Opcional"></label>'+
+        '<label class="trips-field">Pedágios reais (R$)<input id="acaoPedagios" type="number" min="0" step="0.01" value="'+(a.pedagios??0)+'"></label>'+
+        '<label class="trips-field">Outras despesas (R$)<input id="acaoDespesasExtras" type="number" min="0" step="0.01" value="'+(a.despesasExtras??0)+'"></label>'+
+      '</div>'+
+      '<p class="trips-action-hint">O custo da viagem será dividido igualmente apenas entre as paradas marcadas como entregues. Antes de fechar, marque as demais como não entregues ou reprogramadas.</p>';
+  }
 }
-async function finalizarViagemUI_(id){
+function registrarOcorrenciaViagemUI_(id){
+  abrirModalAcaoViagem_({tipo:'ocorrencia',viagemId:id});
+}
+function atualizarParadaViagemUI_(id,status){
+  const stop=(viagensDados_.viagens||[]).flatMap(v=>v.paradas||[]).find(p=>String(p.id)===String(id));
+  abrirModalAcaoViagem_({
+    tipo:'parada',id:id,status:status,nfs:stop?stop.nfs:'',
+    motivo:stop?stop.motivo:'',observacoes:stop?stop.observacoes:'',
+    motivoObrigatorio:false
+  });
+}
+function finalizarViagemUI_(id){
   const viagem=(viagensDados_.viagens||[]).find(v=>String(v.id)===String(id));
   if(!viagem)return;
-  const hodometroFinal=prompt('Hodômetro final (opcional). Informe apenas se tiver a leitura:',viagem.hodometroFinal||'');
-  if(hodometroFinal===null)return;
-  const combustivelReal=prompt('Custo real do combustível em R$ (opcional). Deixe em branco se não tiver:',viagem.combustivelReal||'');
-  if(combustivelReal===null)return;
-  const pedagios=prompt('Pedágios reais em R$:',String(viagem.pedagios||0));
-  if(pedagios===null)return;
-  const despesasExtras=prompt('Outras despesas reais em R$:',String(viagem.despesasExtras||0));
-  if(despesasExtras===null)return;
-  if(!confirm('Encerrar esta viagem? Entregas pendentes precisam ser marcadas como reprogramadas ou não entregues. O custo será rateado somente entre as entregas concluídas.'))return;
+  abrirModalAcaoViagem_({
+    tipo:'fechamento',id:id,numero:viagem.numero,
+    veiculo:viagem.veiculoNome+' · '+viagem.placa,motorista:viagem.motorista,
+    hodometroFinal:viagem.hodometroFinal??'',
+    combustivelReal:viagem.combustivelReal??'',
+    pedagios:viagem.pedagios||0,despesasExtras:viagem.despesasExtras||0
+  });
+}
+async function salvarAcaoViagemUI_(event){
+  event.preventDefault();
+  const a=acaoViagemAtual_;
+  if(!a)return;
+  const btn=document.getElementById('btnSalvarAcaoViagem');
+  btn.disabled=true;
   try{
-    const res=await chamarAPI_POST_({acao:'atualizarStatusViagem',dados:{
-      id:id,status:'CONCLUIR',
-      hodometroFinal:hodometroFinal.trim()?Number(hodometroFinal.replace(',','.')):null,
-      combustivelReal:combustivelReal.trim()?Number(combustivelReal.replace(',','.')):null,
-      pedagios:Number(String(pedagios).replace(',','.'))||0,
-      despesasExtras:Number(String(despesasExtras).replace(',','.'))||0
-    }});
-    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível finalizar a viagem.');
-    mostrarToast('Viagem encerrada. '+res.entregasConcluidas+' entrega(s) receberam rateio.');
+    let res;
+    if(a.tipo==='ocorrencia'){
+      const tipo=document.getElementById('acaoTipoOcorrencia').value;
+      const descricao=document.getElementById('acaoDescricaoOcorrencia').value.trim();
+      if(!descricao)throw new Error('Descreva a ocorrência.');
+      res=await chamarAPI_POST_({acao:'registrarOcorrenciaViagem',dados:{viagemId:a.viagemId,tipo:tipo,descricao:descricao}});
+    }else if(a.tipo==='parada'){
+      const entregue=a.status==='ENTREGUE';
+      const motivoAtraso=entregue&&a.motivoObrigatorio?document.getElementById('acaoMotivoAtraso').value:'';
+      const motivo=!entregue?document.getElementById('acaoMotivoParada').value.trim():'';
+      const observacoes=document.getElementById('acaoObsParada').value.trim();
+      if(!entregue&&!motivo)throw new Error('Informe o motivo.');
+      if(entregue&&a.motivoObrigatorio&&!motivoAtraso)throw new Error('Selecione o motivo do atraso.');
+      if(entregue&&a.motivoObrigatorio&&motivoAtraso==='Outros'&&!observacoes)throw new Error('Descreva a ocorrência no campo de observações.');
+      const nfs=document.getElementById('acaoNfsParada').value.trim();
+      res=await chamarAPI_POST_({acao:'atualizarParadaViagem',dados:{
+        id:a.id,status:a.status,motivo:motivo,motivoAtraso:motivoAtraso,
+        observacoes:observacoes,nfs:nfs
+      }});
+      if(res&&!res.ok&&entregue&&/motivo/i.test(res.erro||'')&&!a.motivoObrigatorio){
+        a.motivoObrigatorio=true;
+        renderizarModalAcaoViagem_();
+        btn.disabled=false;
+        return;
+      }
+    }else if(a.tipo==='fechamento'){
+      const value=id=>{const v=document.getElementById(id).value.trim();return v===''?null:Number(v.replace(',','.'));};
+      const hodometroFinal=value('acaoHodometroFinal');
+      const combustivelReal=value('acaoCombustivelReal');
+      const pedagios=value('acaoPedagios')??0;
+      const despesasExtras=value('acaoDespesasExtras')??0;
+      if(hodometroFinal!==null&&!Number.isFinite(hodometroFinal))throw new Error('Hodômetro final inválido.');
+      if(combustivelReal!==null&&!Number.isFinite(combustivelReal))throw new Error('Valor de combustível inválido.');
+      res=await chamarAPI_POST_({acao:'atualizarStatusViagem',dados:{
+        id:a.id,status:'CONCLUIR',hodometroFinal:hodometroFinal,
+        combustivelReal:combustivelReal,pedagios:pedagios,despesasExtras:despesasExtras
+      }});
+    }
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível salvar a ação.');
+    fecharModalAcaoViagem_();
+    if(a.tipo==='ocorrencia')mostrarToast('Ocorrência registrada. As paradas continuam com seus status individuais.');
+    else if(a.tipo==='parada')mostrarToast(a.status==='ENTREGUE'?'Entrega concluída e vinculada à viagem.':'Resultado da parada registrado.');
+    else mostrarToast('Viagem encerrada. '+res.entregasConcluidas+' entrega(s) receberam rateio.');
     await carregarViagens_();
-  }catch(err){mostrarToast(err.message||String(err),true);}
+  }catch(err){
+    erroModalAcaoViagem_(err.message||String(err));
+  }finally{
+    if(document.getElementById('modalAcaoViagemOverlay').classList.contains('show'))btn.disabled=false;
+  }
 }
 
 function mostrarView(modo){
