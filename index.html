@@ -1910,6 +1910,169 @@ button,input,select,textarea{font-family:var(--font-ui);}
 }
 
 </style>
+<style>
+
+/* ===== NOVA ENTREGA V3 · fluxo guiado em três etapas ===== */
+#modalOverlay .delivery-stepper{
+  display:flex;align-items:center;gap:9px;padding:15px 24px;
+  background:#172330;border-bottom:1px solid #2a3b4d;
+}
+#modalOverlay .delivery-step{
+  display:flex;align-items:center;gap:7px;min-width:0;color:#7f93a8;
+}
+#modalOverlay .delivery-step-index{
+  width:25px;height:25px;flex:0 0 25px;display:flex;align-items:center;justify-content:center;
+  border:1px solid #40556a;border-radius:50%;background:#202e3c;color:#a9bacb;
+  font-family:var(--font-mono);font-size:9px;font-weight:600;transition:all .16s;
+}
+#modalOverlay .delivery-step-label{
+  color:#8fa2b6;font-family:var(--font-ui);font-size:10px;font-weight:600;
+  letter-spacing:-.015em;white-space:nowrap;
+}
+#modalOverlay .delivery-step.active .delivery-step-index{
+  border-color:#2cabbc;background:#2cabbc;color:#08232a;
+  box-shadow:0 0 0 3px rgba(44,171,188,.12);
+}
+#modalOverlay .delivery-step.active .delivery-step-label{color:#edf4f8;}
+#modalOverlay .delivery-step.completed .delivery-step-index{
+  border-color:rgba(54,179,126,.55);background:rgba(54,179,126,.16);color:#5cdda2;
+}
+#modalOverlay .delivery-step.completed .delivery-step-label{color:#64c99c;}
+#modalOverlay .delivery-step-connector{
+  flex:1 1 26px;min-width:12px;height:1px;background:#35495d;
+}
+#modalOverlay .delivery-step-connector:after{
+  content:"";display:block;width:0;height:1px;background:#3acb91;transition:width .2s;
+}
+#modalOverlay .delivery-step.completed+.delivery-step-connector:after{width:100%;}
+#modalOverlay .delivery-step-panel{min-width:0;}
+#modalOverlay #etapaCliente{
+  padding:18px 18px 20px;border:1px solid #304457;border-radius:12px;
+  background:linear-gradient(155deg,#1c2a38 0%,#192633 100%);
+}
+#modalOverlay #etapaCliente .modal-section-heading{margin-bottom:16px;}
+#modalOverlay .delivery-step-hint{
+  margin:10px 0 0;color:#8196aa;font-family:var(--font-ui);
+  font-size:9.5px;line-height:1.45;
+}
+#modalOverlay #etapaEndereco{padding:16px 18px 18px;}
+#modalOverlay .saved-addresses{margin:0 0 10px;}
+#modalOverlay .saved-address-options{display:flex;flex-direction:column;gap:7px;}
+#modalOverlay .saved-addresses .memoria-titulo{
+  margin:0 0 8px;color:#a9bbcc;font-family:var(--font-ui);
+  font-size:10px;font-weight:700;letter-spacing:-.01em;text-transform:none;line-height:1.4;
+}
+#modalOverlay .saved-addresses .memoria-endereco{
+  position:relative;display:flex;align-items:center;gap:10px;width:100%;
+  min-height:58px;margin:0;padding:10px 11px;
+  border:1px solid #3a4e62;border-radius:9px;background:#202d3b;
+  color:#e1eaf2;text-align:left;transition:border-color .15s,background .15s;
+}
+#modalOverlay .saved-addresses .memoria-endereco:hover{
+  border-color:#4c8192;background:#233647;
+}
+#modalOverlay .saved-addresses .memoria-endereco.selected{
+  border-color:#39bd89;background:rgba(54,179,126,.12);
+  box-shadow:inset 0 0 0 1px rgba(54,179,126,.12);
+}
+#modalOverlay .address-option-icon{
+  width:30px;height:30px;flex:0 0 30px;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(242,138,49,.25);border-radius:8px;
+  background:rgba(242,138,49,.1);color:#ffb16d;font-size:16px;
+}
+#modalOverlay .address-option-copy{min-width:0;display:flex;flex:1;flex-direction:column;gap:3px;}
+#modalOverlay .address-option-copy strong{
+  color:#b7c8d8;font-family:var(--font-ui);font-size:9px;font-weight:650;letter-spacing:.01em;
+}
+#modalOverlay .address-option-copy>span{
+  color:#e3ebf3;font-family:var(--font-ui);font-size:10.5px;font-weight:500;
+  line-height:1.4;overflow-wrap:anywhere;
+}
+#modalOverlay .address-option-arrow{color:#8ca1b5;font-size:19px;line-height:1;}
+#modalOverlay .saved-addresses .memoria-endereco.selected .address-option-arrow{color:#55d99c;}
+#modalOverlay .no-saved-addresses{
+  display:flex;flex-direction:column;gap:4px;padding:12px;
+  border:1px dashed #40566b;border-radius:9px;background:rgba(255,255,255,.02);
+}
+#modalOverlay .no-saved-addresses strong{
+  color:#dce6ef;font-family:var(--font-ui);font-size:10px;font-weight:650;
+}
+#modalOverlay .no-saved-addresses span{
+  color:#91a5b8;font-family:var(--font-ui);font-size:9.5px;line-height:1.4;
+}
+#modalOverlay .btn-add-new-address{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;min-height:39px;margin:4px 0 0;padding:8px 12px;
+  border:1px dashed #536b82;border-radius:9px;background:rgba(255,255,255,.025);
+  color:#ffb16d;font-family:var(--font-ui);font-size:10.5px;font-weight:650;
+}
+#modalOverlay .btn-add-new-address:hover{border-color:#f28a31;background:rgba(242,138,49,.07);}
+#modalOverlay .btn-add-new-address span{font-size:16px;line-height:0;}
+#modalOverlay .selected-address-card{
+  margin:0 0 10px;padding:12px 13px;border:1px solid rgba(54,179,126,.42);
+  border-radius:10px;background:rgba(54,179,126,.1);
+}
+#modalOverlay .selected-address-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+#modalOverlay .selected-address-status{
+  display:inline-flex;align-items:center;gap:6px;color:#65dba4;
+  font-family:var(--font-ui);font-size:9.5px;font-weight:700;
+}
+#modalOverlay .selected-address-dot{width:7px;height:7px;border-radius:50%;background:#42d99b;box-shadow:0 0 0 3px rgba(66,217,155,.12);}
+#modalOverlay .selected-address-type{
+  color:#9acbb6;font-family:var(--font-ui);font-size:8.5px;font-weight:600;
+}
+#modalOverlay .selected-address-card>strong{
+  display:block;color:#e0f0e8;font-family:var(--font-ui);font-size:10.5px;
+  font-weight:600;line-height:1.5;overflow-wrap:anywhere;
+}
+#modalOverlay .btn-change-address{
+  margin-top:8px;padding:5px 0;border:0;background:none;color:#70d5a5;
+  font-family:var(--font-ui);font-size:9.5px;font-weight:650;cursor:pointer;
+}
+#modalOverlay .btn-change-address:hover{color:#a0edc6;text-decoration:underline;}
+#modalOverlay .manual-address-form{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:10px;
+  padding:14px;border:1px solid #3a5065;border-radius:11px;background:#1b2937;
+}
+#modalOverlay .manual-address-heading{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:2px;
+}
+#modalOverlay .manual-address-heading strong{
+  display:block;color:#edf3f8;font-family:var(--font-ui);font-size:11px;font-weight:750;
+}
+#modalOverlay .manual-address-heading p{
+  margin:3px 0 0;color:#91a5b9;font-family:var(--font-ui);font-size:9.5px;line-height:1.4;
+}
+#modalOverlay .btn-back-addresses{
+  flex:0 0 auto;padding:6px 8px;border:1px solid #41586e;border-radius:7px;
+  background:#243648;color:#becbd7;font-family:var(--font-ui);font-size:9px;font-weight:600;
+}
+#modalOverlay .btn-back-addresses:hover{background:#2d4357;color:#fff;}
+#modalOverlay .mini-map-panel{margin-top:12px;padding-top:12px;border-top:1px solid #304457;}
+#modalOverlay #miniMap{height:185px;}
+#modalOverlay .scheduling-section{padding:17px 18px 18px;}
+#modalOverlay .scheduling-section>.field{margin-bottom:14px;}
+#modalOverlay .modal-footer-delivery .btn-step-back{
+  margin-right:auto;border:1px solid #3b5064;background:#202f3e;color:#c6d2df;
+}
+#modalOverlay .modal-footer-delivery .btn-step-back:hover{background:#2a3d50;color:#fff;}
+#modalOverlay .modal-footer-delivery .btn-step-continue:disabled{
+  border-color:#596575;background:#4a5562;color:#bac4ce;opacity:.55;cursor:not-allowed;box-shadow:none;
+}
+#modalOverlay .modal-footer-delivery .btn-step-continue span{font-size:15px;line-height:1;}
+@media(max-width:620px){
+  #modalOverlay .delivery-stepper{gap:6px;padding:12px 14px;}
+  #modalOverlay .delivery-step{gap:5px;}
+  #modalOverlay .delivery-step-index{width:23px;height:23px;flex-basis:23px;font-size:8.5px;}
+  #modalOverlay .delivery-step-label{font-size:9px;}
+  #modalOverlay .delivery-step-connector{min-width:8px;}
+  #modalOverlay #etapaCliente,#modalOverlay #etapaEndereco,#modalOverlay .scheduling-section{padding:13px 12px;}
+  #modalOverlay .manual-address-form{padding:11px;}
+  #modalOverlay .manual-address-heading{flex-direction:column;}
+  #modalOverlay .btn-back-addresses{align-self:flex-start;}
+}
+
+</style>
 </head>
 <body>
 <div id="loginScreen" hidden>
@@ -2127,7 +2290,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <div class="modal-heading-copy">
         <div class="modal-kicker">PERFINORTE · EXPEDIÇÃO</div>
         <h2 id="tituloNovaEntrega">Nova entrega</h2>
-        <p>Cadastre o cliente, confirme o destino e programe a entrega.</p>
+        <p>Conclua as etapas para programar uma nova entrega.</p>
       </div>
       <button class="modal-close" onclick="fecharModal()" aria-label="Fechar modal">&times;</button>
     </div>
@@ -2143,7 +2306,24 @@ button,input,select,textarea{font-family:var(--font-ui);}
 
     <div class="modal-body modal-delivery-body">
       <div id="modoIndividual">
-        <section class="modal-client-step" aria-labelledby="tituloIdentificacaoCliente">
+        <div class="delivery-stepper" id="deliveryStepper" aria-label="Etapas do cadastro">
+          <div class="delivery-step active" data-step="1">
+            <span class="delivery-step-index">01</span>
+            <span class="delivery-step-label">Cliente</span>
+          </div>
+          <span class="delivery-step-connector"></span>
+          <div class="delivery-step" data-step="2">
+            <span class="delivery-step-index">02</span>
+            <span class="delivery-step-label">Endereço</span>
+          </div>
+          <span class="delivery-step-connector"></span>
+          <div class="delivery-step" data-step="3">
+            <span class="delivery-step-index">03</span>
+            <span class="delivery-step-label">Programação</span>
+          </div>
+        </div>
+
+        <section id="etapaCliente" class="delivery-step-panel modal-client-step" aria-labelledby="tituloIdentificacaoCliente">
           <div class="modal-section-heading">
             <span class="modal-step-number">01</span>
             <div>
@@ -2160,20 +2340,41 @@ button,input,select,textarea{font-family:var(--font-ui);}
               </button>
             </div>
             <div id="buscaResultado" class="busca-resultado"></div>
+            <p class="delivery-step-hint">Após localizar o cliente, avance para escolher o endereço de entrega.</p>
           </div>
         </section>
 
-        <div id="camposManuais" class="modal-delivery-columns" style="display:none; flex-direction:column; gap:14px;">
-          <section class="modal-section address-section" aria-labelledby="tituloEnderecoEntrega">
-            <div class="modal-section-heading">
-              <span class="modal-step-number">02</span>
-              <div>
-                <h3 id="tituloEnderecoEntrega">Endereço de entrega</h3>
-                <p>Escolha um endereço já utilizado ou informe um novo.</p>
-              </div>
+        <section id="etapaEndereco" class="delivery-step-panel modal-section address-section" style="display:none;" aria-labelledby="tituloEnderecoEntrega">
+          <div class="modal-section-heading">
+            <span class="modal-step-number">02</span>
+            <div>
+              <h3 id="tituloEnderecoEntrega">Endereço de entrega</h3>
+              <p>Selecione um endereço já utilizado ou adicione um novo destino.</p>
             </div>
+          </div>
 
-            <div id="enderecosMemoria" class="saved-addresses" style="display:none;"></div>
+          <div id="enderecosMemoria" class="saved-addresses" style="display:none;"></div>
+          <button type="button" id="btnNovoEndereco" class="btn-add-new-address" onclick="abrirNovoEndereco_()">
+            <span aria-hidden="true">＋</span> Adicionar outro endereço
+          </button>
+
+          <div id="enderecoSelecionadoCard" class="selected-address-card" style="display:none;">
+            <div class="selected-address-top">
+              <span class="selected-address-status"><span class="selected-address-dot"></span>Endereço selecionado</span>
+              <span id="enderecoSelecionadoTipo" class="selected-address-type">Salvo</span>
+            </div>
+            <strong id="enderecoSelecionadoTexto"></strong>
+            <button type="button" class="btn-change-address" onclick="trocarEnderecoNovaEntrega_()">Trocar endereço</button>
+          </div>
+
+          <div id="camposManuais" class="manual-address-form" style="display:none;">
+            <div class="manual-address-heading">
+              <div>
+                <strong>Novo endereço</strong>
+                <p>Preencha os dados do destino. O CEP é opcional.</p>
+              </div>
+              <button type="button" id="btnVoltarEnderecos" class="btn-back-addresses" onclick="voltarParaEnderecosSalvos_()" style="display:none;">← Endereços salvos</button>
+            </div>
 
             <div class="field cep-field">
               <label for="novoCep">CEP <span class="optional-label">Opcional</span></label>
@@ -2210,60 +2411,60 @@ button,input,select,textarea{font-family:var(--font-ui);}
               <span aria-hidden="true">✓</span> Aplicar endereço
             </button>
             <div id="enderecoResultado" class="busca-resultado address-result"></div>
+          </div>
 
-            <div class="mini-map-panel">
-              <div class="mini-map-heading">
-                <span class="mini-map-heading-icon">⌖</span>
-                <div>
-                  <strong>Localização no mapa</strong>
-                  <small>Confira o ponto antes de salvar</small>
-                </div>
-              </div>
-              <div id="miniMap"></div>
-              <div id="miniMapAviso" class="mini-map-aviso">O mapa será exibido após confirmar o endereço.</div>
-            </div>
-          </section>
-
-          <section class="modal-section scheduling-section" aria-labelledby="tituloProgramacaoEntrega">
-            <div class="modal-section-heading">
-              <span class="modal-step-number">03</span>
+          <div id="miniMapPanel" class="mini-map-panel" style="display:none;">
+            <div class="mini-map-heading">
+              <span class="mini-map-heading-icon">⌖</span>
               <div>
-                <h3 id="tituloProgramacaoEntrega">Programação</h3>
-                <p>Defina o responsável e a previsão de entrega.</p>
+                <strong>Localização no mapa</strong>
+                <small>Confira o ponto antes de salvar</small>
               </div>
             </div>
+            <div id="miniMap"></div>
+            <div id="miniMapAviso" class="mini-map-aviso">Arraste o pino se o local não estiver certinho.</div>
+          </div>
+        </section>
 
-            <div class="field">
-              <label for="novoMotorista">Motorista</label>
-              <select id="novoMotorista">
-                <option value="">Selecione um motorista...</option>
-              </select>
+        <section id="etapaProgramacao" class="delivery-step-panel modal-section scheduling-section" style="display:none;" aria-labelledby="tituloProgramacaoEntrega">
+          <div class="modal-section-heading">
+            <span class="modal-step-number">03</span>
+            <div>
+              <h3 id="tituloProgramacaoEntrega">Programação</h3>
+              <p>Defina o responsável e a previsão de entrega.</p>
             </div>
-            <div class="field">
-              <label for="novaData">Data prevista</label>
-              <input type="date" id="novaData">
-            </div>
-            <div class="field">
-              <label>Período</label>
-              <div class="period-toggle delivery-period-toggle" id="novoPeriodoToggle">
-                <button type="button" data-p="MANHÃ">Manhã</button>
-                <button type="button" data-p="TARDE">Tarde</button>
-              </div>
-            </div>
-            <div class="field">
-              <label for="novaObs">Observações <span class="optional-label">Opcional</span></label>
-              <textarea id="novaObs" placeholder="Instruções para a entrega, referência do local..." rows="4"></textarea>
-            </div>
+          </div>
 
-            <div class="delivery-summary-note">
-              <span class="delivery-summary-icon">✓</span>
-              <div>
-                <strong>Conferência antes de salvar</strong>
-                <p>Confira o endereço, motorista, data e período selecionados.</p>
-              </div>
+          <div class="field">
+            <label for="novoMotorista">Motorista</label>
+            <select id="novoMotorista">
+              <option value="">Selecione um motorista...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="novaData">Data prevista</label>
+            <input type="date" id="novaData">
+          </div>
+          <div class="field">
+            <label>Período</label>
+            <div class="period-toggle delivery-period-toggle" id="novoPeriodoToggle">
+              <button type="button" data-p="MANHÃ">Manhã</button>
+              <button type="button" data-p="TARDE">Tarde</button>
             </div>
-          </section>
-        </div>
+          </div>
+          <div class="field">
+            <label for="novaObs">Observações <span class="optional-label">Opcional</span></label>
+            <textarea id="novaObs" placeholder="Instruções para a entrega, referência do local..." rows="4"></textarea>
+          </div>
+
+          <div class="delivery-summary-note">
+            <span class="delivery-summary-icon">✓</span>
+            <div>
+              <strong>Conferência antes de salvar</strong>
+              <p>Confira o endereço, motorista, data e período selecionados.</p>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div id="modoLote" class="modal-batch-mode" style="display:none;">
@@ -2287,8 +2488,12 @@ button,input,select,textarea{font-family:var(--font-ui);}
 
     <div class="modal-footer modal-footer-delivery">
       <button type="button" class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button type="button" class="btn-primary" id="btnSalvarNovo" onclick="salvarNova()" disabled>
-        Salvar entrega <span aria-hidden="true">→</span>
+      <button type="button" class="btn-secondary btn-step-back" id="btnVoltarEtapa" onclick="voltarEtapaNovaEntrega_()" style="display:none;">← Voltar</button>
+      <button type="button" class="btn-primary btn-step-continue" id="btnContinuarEtapa" onclick="continuarEtapaNovaEntrega_()" disabled>
+        Continuar <span aria-hidden="true">→</span>
+      </button>
+      <button type="button" class="btn-primary" id="btnSalvarNovo" onclick="salvarNova()" disabled style="display:none;">
+        Salvar entrega <span aria-hidden="true">✓</span>
       </button>
       <button type="button" class="btn-primary" id="btnSalvarLote" onclick="processarLote_()" style="display:none;">
         Adicionar todas <span aria-hidden="true">→</span>
@@ -4079,6 +4284,13 @@ function popularSelectMotoristas_(){
 
 function abrirModal(){
   document.getElementById('modalOverlay').classList.add('show');
+  etapaNovaEntregaAtual = 1;
+  enderecoEscolhidoNovaEntrega = '';
+  enderecoOrigemEscolhidoNovaEntrega = '';
+  enderecoSugeridoCadastroAtual = '';
+  novoEnderecoIniciado = false;
+  enderecosMemoriaAtuais = [];
+  enderecosMemoriaOrigens = [];
   document.getElementById('novoCodigo').value = '';
   document.getElementById('novoCep').value = '';
   document.getElementById('novaRua').value = '';
@@ -4327,8 +4539,15 @@ function alternarModoNovaEntrega_(modo){
   document.querySelectorAll('#modoNovaEntregaToggle button').forEach(b => b.classList.toggle('active', b.dataset.modo === modo));
   document.getElementById('modoIndividual').style.display = modo === 'individual' ? 'block' : 'none';
   document.getElementById('modoLote').style.display = modo === 'lote' ? 'block' : 'none';
-  document.getElementById('btnSalvarNovo').style.display = modo === 'individual' ? 'inline-block' : 'none';
-  document.getElementById('btnSalvarLote').style.display = modo === 'lote' ? 'inline-block' : 'none';
+
+  if (modo === 'individual'){
+    definirEtapaNovaEntrega_(etapaNovaEntregaAtual || 1);
+  } else {
+    document.getElementById('btnVoltarEtapa').style.display = 'none';
+    document.getElementById('btnContinuarEtapa').style.display = 'none';
+    document.getElementById('btnSalvarNovo').style.display = 'none';
+  }
+  document.getElementById('btnSalvarLote').style.display = modo === 'lote' ? 'inline-flex' : 'none';
 
   if (modo === 'lote' && document.getElementById('loteLinhas').children.length === 0){
     adicionarLinhaLote_();
@@ -4646,12 +4865,12 @@ function tentarSepararEndereco_(texto){
    passar pelos campos). */
 async function confirmarEndereco_(endereco){
   const resultado = document.getElementById('enderecoResultado');
-  enderecoAplicado = endereco;
+  enderecoAplicado = '';
 
   if (!API_URL){
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Configure a API_URL no início do arquivo.';
-    return;
+    return false;
   }
 
   resultado.className = 'busca-resultado carregando';
@@ -4663,14 +4882,21 @@ async function confirmarEndereco_(endereco){
       resultado.className = 'busca-resultado erro';
       resultado.textContent = res.erro;
       document.getElementById('miniMap').style.display = 'none';
-      return;
+      enderecoAplicado = '';
+      atualizarNavegacaoNovaEntrega_();
+      return false;
     }
+    enderecoAplicado = endereco;
     resultado.className = 'busca-resultado ok';
     resultado.innerHTML = 'Local encontrado ✓<br><small>' + endereco + '</small>';
     mostrarMiniMap_(res.lat, res.lng);
+    return true;
   }catch(err){
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Erro: ' + err;
+    enderecoAplicado = '';
+    atualizarNavegacaoNovaEntrega_();
+    return false;
   }
 }
 
@@ -4684,10 +4910,13 @@ async function aplicarEndereco(){
     document.getElementById('miniMap').style.display = 'none';
     return;
   }
-  await confirmarEndereco_(endereco);
+  const confirmado = await confirmarEndereco_(endereco);
+  if (confirmado) selecionarEnderecoNovaEntrega_(endereco,'novo');
 }
 
 function mostrarMiniMap_(lat, lng){
+  const painel = document.getElementById('miniMapPanel');
+  if (painel) painel.style.display = 'block';
   const container = document.getElementById('miniMap');
   container.style.display = 'block';
   coordsAjustadasManualmente = null; // reseta — novo endereço aplicado, ajuste antigo não vale mais
@@ -4717,35 +4946,238 @@ function mostrarMiniMap_(lat, lng){
 }
 
 let enderecosMemoriaAtuais = [];
+let enderecosMemoriaOrigens = [];
+let etapaNovaEntregaAtual = 1;
+let enderecoEscolhidoNovaEntrega = '';
+let enderecoOrigemEscolhidoNovaEntrega = '';
+let enderecoSugeridoCadastroAtual = '';
+let novoEnderecoIniciado = false;
 
-async function mostrarEnderecosMemoria_(codigo){
+function atualizarNavegacaoNovaEntrega_(){
+  const btnVoltar = document.getElementById('btnVoltarEtapa');
+  const btnContinuar = document.getElementById('btnContinuarEtapa');
+  const btnSalvar = document.getElementById('btnSalvarNovo');
+  const ehIndividual = document.getElementById('modoIndividual').style.display !== 'none';
+  if (!ehIndividual) return;
+
+  if (btnVoltar) btnVoltar.style.display = etapaNovaEntregaAtual > 1 ? 'inline-flex' : 'none';
+  if (btnContinuar){
+    btnContinuar.style.display = etapaNovaEntregaAtual < 3 ? 'inline-flex' : 'none';
+    btnContinuar.disabled = etapaNovaEntregaAtual === 1
+      ? !clienteEncontrado
+      : !(enderecoEscolhidoNovaEntrega && enderecoAplicado === enderecoEscolhidoNovaEntrega);
+  }
+  if (btnSalvar){
+    btnSalvar.style.display = etapaNovaEntregaAtual === 3 ? 'inline-flex' : 'none';
+    btnSalvar.disabled = !(clienteEncontrado && enderecoEscolhidoNovaEntrega && enderecoAplicado === enderecoEscolhidoNovaEntrega);
+  }
+}
+
+function definirEtapaNovaEntrega_(etapa){
+  etapaNovaEntregaAtual = Math.max(1, Math.min(3, Number(etapa) || 1));
+  const etapas = [
+    ['etapaCliente',1],['etapaEndereco',2],['etapaProgramacao',3]
+  ];
+  etapas.forEach(function(item){
+    const painel = document.getElementById(item[0]);
+    if (painel) painel.style.display = etapaNovaEntregaAtual === item[1] ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('#deliveryStepper .delivery-step').forEach(function(el){
+    const numero = Number(el.dataset.step);
+    el.classList.toggle('active', numero === etapaNovaEntregaAtual);
+    el.classList.toggle('completed', numero < etapaNovaEntregaAtual);
+    if (numero === etapaNovaEntregaAtual) el.setAttribute('aria-current','step');
+    else el.removeAttribute('aria-current');
+  });
+
+  atualizarNavegacaoNovaEntrega_();
+  const corpo = document.querySelector('#modalOverlay .modal-delivery-body');
+  if (corpo) corpo.scrollTop = 0;
+
+  if (etapaNovaEntregaAtual === 2 && !enderecosMemoriaAtuais.length && !enderecoEscolhidoNovaEntrega){
+    abrirNovoEndereco_();
+  }
+}
+
+function continuarEtapaNovaEntrega_(){
+  if (etapaNovaEntregaAtual === 1){
+    if (!clienteEncontrado){
+      mostrarToast('Busque um cliente antes de continuar.', true);
+      return;
+    }
+    definirEtapaNovaEntrega_(2);
+    return;
+  }
+
+  if (etapaNovaEntregaAtual === 2){
+    if (!enderecoEscolhidoNovaEntrega || enderecoAplicado !== enderecoEscolhidoNovaEntrega){
+      mostrarToast('Selecione um endereço ou aplique um novo antes de continuar.', true);
+      return;
+    }
+    definirEtapaNovaEntrega_(3);
+  }
+}
+
+function voltarEtapaNovaEntrega_(){
+  if (etapaNovaEntregaAtual > 1) definirEtapaNovaEntrega_(etapaNovaEntregaAtual - 1);
+}
+
+function limparSelecaoEnderecoNovaEntrega_(){
+  enderecoEscolhidoNovaEntrega = '';
+  enderecoOrigemEscolhidoNovaEntrega = '';
+  enderecoAplicado = '';
+  coordsAjustadasManualmente = null;
+  const card = document.getElementById('enderecoSelecionadoCard');
+  const mapa = document.getElementById('miniMapPanel');
+  if (card) card.style.display = 'none';
+  if (mapa) mapa.style.display = 'none';
+  atualizarNavegacaoNovaEntrega_();
+}
+
+function abrirNovoEndereco_(){
+  limparSelecaoEnderecoNovaEntrega_();
+  novoEnderecoIniciado = true;
+
+  const form = document.getElementById('camposManuais');
+  const lista = document.getElementById('enderecosMemoria');
+  const btnNovo = document.getElementById('btnNovoEndereco');
+  const btnVoltar = document.getElementById('btnVoltarEnderecos');
+  const resultado = document.getElementById('enderecoResultado');
+  const miniMap = document.getElementById('miniMap');
+
+  // Ao criar um novo endereço, não reaproveita os campos do endereço padrão antigo.
+  ['novoCep','novaRua','novoNumero','novoBairro','novaCidade','novoUf'].forEach(function(id){
+    const campo = document.getElementById(id);
+    if (campo) campo.value = '';
+  });
+  if (resultado){resultado.className='busca-resultado address-result';resultado.textContent='';}
+  if (miniMap) miniMap.style.display='none';
+  if (form) form.style.display='grid';
+  if (btnNovo) btnNovo.style.display='none';
+  if (btnVoltar) btnVoltar.style.display = enderecosMemoriaAtuais.length ? 'inline-flex' : 'none';
+  if (lista) lista.style.display = enderecosMemoriaAtuais.length ? 'block' : 'none';
+  atualizarNavegacaoNovaEntrega_();
+
+  const cep = document.getElementById('novoCep');
+  if (cep && document.getElementById('etapaEndereco').style.display !== 'none') cep.focus();
+}
+
+function voltarParaEnderecosSalvos_(){
+  const form = document.getElementById('camposManuais');
+  const btnNovo = document.getElementById('btnNovoEndereco');
+  const btnVoltar = document.getElementById('btnVoltarEnderecos');
+  const lista = document.getElementById('enderecosMemoria');
+  if (form) form.style.display='none';
+  if (btnVoltar) btnVoltar.style.display='none';
+  if (lista) lista.style.display = enderecosMemoriaAtuais.length ? 'block' : 'none';
+  if (btnNovo) btnNovo.style.display = 'inline-flex';
+  limparSelecaoEnderecoNovaEntrega_();
+}
+
+function trocarEnderecoNovaEntrega_(){
+  limparSelecaoEnderecoNovaEntrega_();
+  const lista = document.getElementById('enderecosMemoria');
+  const btnNovo = document.getElementById('btnNovoEndereco');
+  const form = document.getElementById('camposManuais');
+  if (form) form.style.display='none';
+  if (lista) lista.style.display = enderecosMemoriaAtuais.length ? 'block' : 'none';
+  if (btnNovo) btnNovo.style.display = 'inline-flex';
+  if (!enderecosMemoriaAtuais.length) abrirNovoEndereco_();
+}
+
+function selecionarEnderecoNovaEntrega_(endereco, origem){
+  enderecoEscolhidoNovaEntrega = endereco;
+  enderecoOrigemEscolhidoNovaEntrega = origem || 'salvo';
+  enderecoAplicado = endereco;
+
+  const texto = document.getElementById('enderecoSelecionadoTexto');
+  const tipo = document.getElementById('enderecoSelecionadoTipo');
+  const card = document.getElementById('enderecoSelecionadoCard');
+  const lista = document.getElementById('enderecosMemoria');
+  const btnNovo = document.getElementById('btnNovoEndereco');
+  const btnVoltar = document.getElementById('btnVoltarEnderecos');
+  const form = document.getElementById('camposManuais');
+
+  if (texto) texto.textContent = endereco;
+  if (tipo) tipo.textContent = origem === 'novo' ? 'Novo endereço' : (origem === 'cadastro' ? 'Endereço do cadastro' : 'Endereço salvo');
+  if (card) card.style.display = 'block';
+  if (lista) lista.style.display = 'none';
+  if (btnNovo) btnNovo.style.display = 'none';
+  if (btnVoltar) btnVoltar.style.display = 'none';
+  if (form) form.style.display = 'none';
+
+  document.querySelectorAll('#enderecosMemoria .memoria-endereco').forEach(function(botao){
+    const indice = Number(botao.dataset.enderecoIndex);
+    botao.classList.toggle('selected', enderecosMemoriaAtuais[indice] === endereco);
+  });
+  atualizarNavegacaoNovaEntrega_();
+  const mapa = document.getElementById('miniMapPanel');
+  if (mapa) mapa.style.display = 'block';
+  setTimeout(function(){ if (miniMap) miniMap.invalidateSize(); },120);
+}
+
+function renderEnderecosMemoria_(){
+  const container = document.getElementById('enderecosMemoria');
+  if (!container) return;
+  if (!enderecosMemoriaAtuais.length){
+    container.innerHTML = '<div class="no-saved-addresses"><strong>Nenhum endereço anterior encontrado.</strong><span>Adicione o destino desta entrega para continuar.</span></div>';
+    container.style.display = 'block';
+    return;
+  }
+
+  let html = '<div class="memoria-titulo">Endereços já usados por esse cliente</div><div class="saved-address-options">';
+  enderecosMemoriaAtuais.forEach(function(endereco, indice){
+    const origem = enderecosMemoriaOrigens[indice] || 'historico';
+    const rotulo = origem === 'cadastro' ? 'Endereço do cadastro' : (origem === 'novo' ? 'Novo endereço' : 'Usado anteriormente');
+    html += '<button type="button" class="memoria-endereco" data-endereco-index="' + indice + '" onclick="usarEnderecoMemoria_(' + indice + ')">' +
+      '<span class="address-option-icon">⌖</span>' +
+      '<span class="address-option-copy"><strong>' + escapeAttr_(rotulo) + '</strong><span>' + escapeAttr_(endereco) + '</span></span>' +
+      '<span class="address-option-arrow">›</span></button>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  container.style.display = 'block';
+}
+
+async function mostrarEnderecosMemoria_(codigo, enderecoSugerido){
   const container = document.getElementById('enderecosMemoria');
   container.style.display = 'none';
   container.innerHTML = '';
   enderecosMemoriaAtuais = [];
+  enderecosMemoriaOrigens = [];
 
   try{
     const res = await chamarAPI_GET_({ formato: 'enderecosCliente', codigo: codigo });
-    const enderecos = (res && Array.isArray(res.enderecos)) ? res.enderecos : [];
-    if (!enderecos.length) return;
+    const historicos = (res && Array.isArray(res.enderecos)) ? res.enderecos : [];
+    const vistos = new Set();
 
-    enderecosMemoriaAtuais = enderecos.map(e => e.endereco);
-    let html = '<div class="memoria-titulo">📍 Endereços já usados por esse cliente — clique pra usar</div>';
-    enderecosMemoriaAtuais.forEach((end, i) => {
-      html += '<button type="button" class="memoria-endereco" onclick="usarEnderecoMemoria_(' + i + ')">' + end + '</button>';
-    });
-    container.innerHTML = html;
-    container.style.display = 'block';
+    function adicionar(endereco, origem){
+      const texto = String(endereco || '').trim();
+      if (!texto) return;
+      const chave = texto.toLocaleLowerCase('pt-BR');
+      if (vistos.has(chave)) return;
+      vistos.add(chave);
+      enderecosMemoriaAtuais.push(texto);
+      enderecosMemoriaOrigens.push(origem);
+    }
+
+    if (enderecoSugerido) adicionar(enderecoSugerido,'cadastro');
+    historicos.forEach(function(item){ adicionar(item && item.endereco ? item.endereco : item,'historico'); });
+    renderEnderecosMemoria_();
+    return enderecosMemoriaAtuais.length > 0;
   }catch(err){
-    // silencioso — não atrapalha o fluxo normal de busca se isso falhar
+    renderEnderecosMemoria_();
+    return false;
   }
 }
 
 async function usarEnderecoMemoria_(indice){
   const endereco = enderecosMemoriaAtuais[indice];
   if (!endereco) return;
-  await confirmarEndereco_(endereco);
-  mostrarToast('Endereço aplicado — pode salvar direto ou trocar antes.');
+  const confirmado = await confirmarEndereco_(endereco);
+  if (!confirmado) return;
+  selecionarEnderecoNovaEntrega_(endereco, enderecosMemoriaOrigens[indice] || 'salvo');
 }
 
 async function buscarCliente(){
@@ -4753,8 +5185,15 @@ async function buscarCliente(){
   const resultado = document.getElementById('buscaResultado');
   document.getElementById('camposManuais').style.display = 'none';
   document.getElementById('btnSalvarNovo').disabled = true;
+  document.getElementById('btnContinuarEtapa').disabled = true;
   document.getElementById('enderecosMemoria').style.display = 'none';
   document.getElementById('enderecosMemoria').innerHTML = '';
+  document.getElementById('btnNovoEndereco').style.display = 'none';
+  document.getElementById('enderecoSelecionadoCard').style.display = 'none';
+  document.getElementById('miniMapPanel').style.display = 'none';
+  enderecosMemoriaAtuais = [];
+  enderecosMemoriaOrigens = [];
+  limparSelecaoEnderecoNovaEntrega_();
   clienteEncontrado = null;
 
   if (!codigo){
@@ -4779,18 +5218,15 @@ async function buscarCliente(){
       resultado.textContent = info.erro || 'Cliente não encontrado.';
       return;
     }
+
     clienteEncontrado = info;
     resultado.className = 'busca-resultado ok';
     resultado.innerHTML = '<b>' + info.fantasia + '</b>' + (info.vendedor ? ' · ' + info.vendedor : '');
 
-    // mostra os endereços já usados por esse cliente antes, se tiver algum
-    // — ela pode escolher um em vez de digitar tudo de novo
-    mostrarEnderecosMemoria_(codigo);
-
-    // se a rota sugerida já vier pronta e no padrão, confia nela e aplica
-    // direto — não precisa a pessoa preencher/clicar em nada
     const jaNoPadrao = enderecoNoPadraoJS_(info.rotaSugerida);
     const partes = tentarSepararEndereco_(info.rotaSugerida);
+    enderecoSugeridoCadastroAtual = jaNoPadrao ? info.rotaSugerida.trim() : '';
+
     if (partes){
       document.getElementById('novaRua').value = partes.rua;
       document.getElementById('novoNumero').value = partes.numero;
@@ -4798,29 +5234,22 @@ async function buscarCliente(){
       document.getElementById('novaCidade').value = partes.cidade;
       document.getElementById('novoUf').value = partes.uf;
     } else if (info.rotaSugerida){
-      // texto antigo fora do padrão — usa só como dica no campo Rua
       document.getElementById('novaRua').value = info.rotaSugerida;
     }
-
-    // CEP e número cadastrados na ROTAS_CLIENTES (colunas E e F) — pré-
-    // preenche pra só precisar clicar em "Buscar CEP"
-    if (info.cep){
-      document.getElementById('novoCep').value = formatarCepValor_(info.cep);
-    }
+    if (info.cep) document.getElementById('novoCep').value = formatarCepValor_(info.cep);
     if (info.numero && !document.getElementById('novoNumero').value){
       document.getElementById('novoNumero').value = String(info.numero).toUpperCase();
     }
 
-    document.getElementById('camposManuais').style.display = 'flex';
-    document.getElementById('btnSalvarNovo').disabled = false;
-
-    if (jaNoPadrao){
-      await confirmarEndereco_(info.rotaSugerida.trim()); // usa o texto original direto, já é confiável
-    }
+    await mostrarEnderecosMemoria_(codigo, enderecoSugeridoCadastroAtual);
+    definirEtapaNovaEntrega_(1);
+    document.getElementById('btnContinuarEtapa').disabled = false;
   }catch(err){
     barra.parar();
     resultado.className = 'busca-resultado erro';
     resultado.textContent = 'Erro: ' + err;
+    clienteEncontrado = null;
+    atualizarNavegacaoNovaEntrega_();
   }
 }
 
@@ -4834,7 +5263,7 @@ document.getElementById('novoPeriodoToggle').addEventListener('click', (e) => {
 async function salvarNova(){
   if (!clienteEncontrado) return;
 
-  const endereco = enderecoAplicado || construirEndereco_();
+  const endereco = enderecoEscolhidoNovaEntrega || enderecoAplicado || construirEndereco_();
   if (!endereco){
     mostrarToast('Preencha rua, bairro, cidade e UF, e clique em Aplicar.', true);
     return;
