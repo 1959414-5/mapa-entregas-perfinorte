@@ -2778,6 +2778,185 @@ button,input,select,textarea{font-family:var(--font-ui);}
   #modalVeiculoOverlay .vehicles-field.span-2,
   #modalVeiculoOverlay .vehicles-field.span-3{grid-column:1/-1;}
 }
+
+/* ===== DASHBOARD EM DUAS ÁREAS: ENTREGAS E FROTA ===== */
+.dashboard-mode-tabs{
+  display:flex;align-items:stretch;gap:8px;margin:0 0 18px;padding:5px;
+  width:max-content;max-width:100%;border:1px solid #dce5ed;border-radius:13px;
+  background:rgba(255,255,255,.82);box-shadow:0 4px 14px rgba(22,43,62,.035);
+}
+.dashboard-mode-tabs button{
+  min-width:178px;display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;
+  align-items:center;column-gap:9px;padding:9px 13px;border:1px solid transparent;
+  border-radius:9px;background:transparent;color:#40546a;text-align:left;
+  font:750 12px var(--font-ui);cursor:pointer;transition:all .16s ease;
+}
+.dashboard-mode-tabs button:hover{background:#f3f7fa;}
+.dashboard-mode-tabs button.active{
+  background:#173149;color:#fff;border-color:#173149;
+  box-shadow:0 5px 14px rgba(23,49,73,.16);
+}
+.dashboard-tab-icon{
+  grid-row:1/3;width:28px;height:28px;display:grid;place-items:center;
+  border-radius:8px;background:#e8f2f5;color:#247b8f;font-size:15px;
+}
+.dashboard-mode-tabs button.active .dashboard-tab-icon{background:rgba(255,255,255,.14);color:#fff;}
+.dashboard-mode-tabs button small{display:block;margin-top:2px;color:#8794a4;font-size:9px;font-weight:500;}
+.dashboard-mode-tabs button.active small{color:#b7c8d7;}
+#dashboardView.dashboard-frota-ativa #dashEntregasSection{display:none!important;}
+#dashboardView:not(.dashboard-frota-ativa) #dashFrotaSection{display:none!important;}
+#dashboardView.dashboard-frota-ativa .dashboard-reason-toggle{display:none!important;}
+#dashboardView.dashboard-frota-ativa .dashboard-header{margin-bottom:14px;}
+
+.fleet-dashboard-section{display:block;min-width:0;}
+.fleet-dashboard-header{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  margin-bottom:17px;padding:18px 20px;border:1px solid #dce6ed;border-radius:15px;
+  background:linear-gradient(112deg,#fff 0%,#f8fbfd 68%,#eef5f7 100%);
+  box-shadow:0 5px 18px rgba(22,43,62,.035);
+}
+.fleet-dashboard-kicker{color:#2d8192;font:750 9px var(--font-mono);letter-spacing:.17em;}
+.fleet-dashboard-header h2{margin:5px 0 4px;color:#1b3045;font-size:22px;letter-spacing:-.035em;}
+.fleet-dashboard-header p{margin:0;color:#708096;font-size:11px;line-height:1.5;}
+.fleet-dashboard-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;}
+.fleet-refresh-button{
+  height:39px;padding:0 13px;border:1px solid #d3e0e8;border-radius:9px;
+  background:#fff;color:#3a5369;font:700 11px var(--font-ui);cursor:pointer;
+  box-shadow:0 2px 7px rgba(20,40,60,.035);transition:all .15s ease;
+}
+.fleet-refresh-button:hover{border-color:#a9c4d0;background:#f4f9fa;transform:translateY(-1px);}
+#dashFrotaPrecoReferencia{min-width:300px;max-width:355px;}
+.fleet-dashboard-kpis{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin-bottom:15px;
+}
+.fleet-kpi{
+  min-width:0;min-height:106px;display:flex;align-items:flex-start;gap:11px;
+  padding:15px 14px;border:1px solid #e0e8ef;border-radius:13px;
+  background:linear-gradient(145deg,#fff,#f9fbfd);
+  box-shadow:0 5px 17px rgba(22,43,62,.04);transition:transform .15s ease,box-shadow .15s ease;
+}
+.fleet-kpi:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(22,43,62,.075);}
+.fleet-kpi-icon{
+  width:31px;height:31px;flex:0 0 31px;display:grid;place-items:center;
+  border-radius:9px;background:#e8f4ef;color:#16845b;font-size:13px;font-weight:800;
+}
+.fleet-kpi>div{min-width:0;display:flex;flex-direction:column;gap:5px;}
+.fleet-kpi small{color:#78889a;font-size:8px;font-weight:800;letter-spacing:.085em;text-transform:uppercase;line-height:1.35;}
+.fleet-kpi strong{color:#1b3045;font-size:22px;line-height:1.1;font-weight:850;letter-spacing:-.045em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+.fleet-kpi em{color:#8794a4;font-size:9px;font-style:normal;line-height:1.35;}
+.fleet-kpi-blue .fleet-kpi-icon{background:#eaf3f8;color:#3284a3;}
+.fleet-kpi-amber .fleet-kpi-icon{background:#fff4e3;color:#bb812c;}
+.fleet-kpi-violet .fleet-kpi-icon{background:#f0edfb;color:#7969b8;}
+.fleet-kpi-teal .fleet-kpi-icon{background:#e7f5f3;color:#238c84;}
+.fleet-kpi-cost .fleet-kpi-icon{background:#edf1f5;color:#456078;}
+.fleet-dashboard-grid{
+  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:13px;margin-bottom:14px;
+}
+.fleet-dashboard-card{
+  min-width:0;padding:16px 17px;border:1px solid #dfe7ee;border-radius:14px;
+  background:linear-gradient(145deg,#fff 0%,#fbfcfe 100%);
+  box-shadow:0 5px 18px rgba(22,43,62,.04);
+}
+.fleet-dashboard-span-4{grid-column:span 4;}
+.fleet-dashboard-span-8{grid-column:span 8;}
+.fleet-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.fleet-card-heading>div>span{display:block;margin-bottom:4px;color:#7e9aaa;font:750 8px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;}
+.fleet-card-heading h3{margin:0;color:#1e3348;font-size:13px;font-weight:800;letter-spacing:-.015em;}
+.fleet-card-heading p{margin:4px 0 0;color:#8a96a5;font-size:9px;line-height:1.45;}
+.fleet-card-tag{
+  flex:none;padding:5px 7px;border:1px solid #e0e9ef;border-radius:99px;
+  background:#f5f9fb;color:#7891a0;font:8px var(--font-mono);letter-spacing:.04em;
+}
+.fleet-dashboard-loading{padding:25px 10px;text-align:center;color:#96a2b0;font-size:10px;}
+.fleet-donut-layout{min-height:145px;display:flex;align-items:center;justify-content:center;gap:24px;}
+.fleet-donut{
+  width:126px;height:126px;flex:0 0 126px;display:grid;place-items:center;
+  border-radius:50%;position:relative;box-shadow:inset 0 0 0 1px rgba(25,53,70,.035);
+}
+.fleet-donut:before{content:"";position:absolute;inset:15px;border-radius:50%;background:#fff;box-shadow:0 2px 9px rgba(25,53,70,.06);}
+.fleet-donut>div{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.fleet-donut>div strong{color:#1d3348;font-size:24px;font-weight:850;letter-spacing:-.05em;}
+.fleet-donut>div small{color:#8794a3;font-size:9px;text-transform:uppercase;letter-spacing:.08em;}
+.fleet-donut-legend{display:flex;flex-direction:column;gap:13px;min-width:0;flex:1;}
+.fleet-donut-legend>div{display:grid;grid-template-columns:9px minmax(0,1fr) auto;align-items:center;gap:7px;color:#687a8f;font-size:10px;}
+.fleet-donut-legend strong{color:#263d53;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;}
+.fleet-donut-legend strong small{color:#8b98a7;font-size:9px;font-weight:500;}
+.fleet-dot{width:8px;height:8px;border-radius:50%;}
+.fleet-dot.own{background:#16885d;}.fleet-dot.third{background:#e7a746;}
+.fleet-chart-note{margin-top:12px;padding-top:9px;border-top:1px solid #edf1f4;color:#98a3b0;font-size:8.5px;line-height:1.45;}
+.fleet-bars-content{display:flex;flex-direction:column;gap:14px;padding:8px 1px 2px;}
+.fleet-horizontal-bar{display:flex;flex-direction:column;gap:6px;}
+.fleet-horizontal-label{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#607388;font-size:10px;}
+.fleet-horizontal-label span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fleet-horizontal-label strong{color:#294157;font:750 10px var(--font-mono);white-space:nowrap;}
+.fleet-horizontal-track{height:8px;border-radius:99px;background:#edf2f5;overflow:hidden;}
+.fleet-horizontal-track i{display:block;height:100%;min-width:0;border-radius:99px;box-shadow:0 2px 5px rgba(27,109,119,.12);}
+.fleet-cost-content{min-height:160px;display:flex;flex-direction:column;justify-content:center;gap:13px;}
+.fleet-cost-row .fleet-horizontal-label strong{color:#176c65;}
+.fleet-empty-state{
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  padding:18px 15px;border:1px dashed #dbe5eb;border-radius:11px;background:#f8fbfc;
+}
+.fleet-empty-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:#eaf3f5;color:#317f8c;font-weight:800;}
+.fleet-empty-state strong{color:#354b60;font-size:11px;}
+.fleet-empty-state p{margin:0;color:#8593a2;font-size:9.5px;line-height:1.5;}
+.fleet-empty-state button{margin-top:2px;padding:8px 11px;border:1px solid #d5e3e8;border-radius:8px;background:#fff;color:#2c7182;font-size:9.5px;font-weight:750;cursor:pointer;}
+.fleet-capacity-content{display:flex;flex-direction:column;gap:12px;padding:2px 0;}
+.fleet-capacity-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
+.fleet-capacity-meta>span{display:flex;flex-direction:column;min-width:0;gap:2px;}
+.fleet-capacity-meta strong{color:#425a70;font-size:10px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fleet-capacity-meta small{color:#a0aab6;font-size:8.5px;}
+.fleet-capacity-meta>b{flex:none;color:#29445a;font:750 10px var(--font-mono);}
+.fleet-capacity-track{height:8px;border-radius:99px;background:#edf2f5;overflow:hidden;}
+.fleet-capacity-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#167f69,#50b4a0);box-shadow:0 2px 6px rgba(31,143,121,.16);}
+.fleet-pending-content{display:flex;flex-direction:column;gap:10px;}
+.fleet-pending-summary{display:flex;align-items:baseline;gap:7px;padding:10px 11px;border-radius:9px;background:#fff7eb;border:1px solid #f1e4ce;}
+.fleet-pending-summary strong{color:#a86c25;font-size:22px;font-weight:850;}
+.fleet-pending-summary span{color:#8d795e;font-size:9px;}
+.fleet-pending-list{display:flex;flex-direction:column;gap:8px;}
+.fleet-pending-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:7px;border-bottom:1px solid #eef1f4;}
+.fleet-pending-item:last-child{border-bottom:0;padding-bottom:0;}
+.fleet-pending-item>span{display:flex;flex-direction:column;min-width:0;gap:2px;}
+.fleet-pending-item strong{color:#40546a;font-size:9.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fleet-pending-item small{color:#a1845b;font-size:8px;}
+.fleet-pending-item button{flex:none;padding:5px 8px;border:1px solid #e0e7ed;border-radius:7px;background:#fff;color:#5b6e82;font-size:8.5px;font-weight:700;cursor:pointer;}
+.fleet-pending-complete{padding:16px 13px;border:1px solid #dceee4;border-radius:10px;background:#f2faf5;}
+.fleet-pending-complete strong{color:#287951;font-size:11px;}
+.fleet-pending-complete p{margin:5px 0 0;color:#789487;font-size:9px;line-height:1.5;}
+.fleet-dashboard-footnote{padding:7px 2px;color:#929eaa;font-size:8.5px;line-height:1.5;}
+
+@media(max-width:1320px){
+  .fleet-dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .fleet-dashboard-span-4{grid-column:span 6;}
+  .fleet-dashboard-span-8{grid-column:span 6;}
+}
+@media(max-width:900px){
+  .fleet-dashboard-header{align-items:flex-start;flex-direction:column;}
+  .fleet-dashboard-actions{width:100%;justify-content:flex-start;}
+  #dashFrotaPrecoReferencia{min-width:280px;}
+  .fleet-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .fleet-dashboard-span-4,.fleet-dashboard-span-8{grid-column:span 1;}
+}
+@media(max-width:650px){
+  .dashboard-mode-tabs{width:100%;}
+  .dashboard-mode-tabs button{min-width:0;flex:1;padding:8px;}
+  .dashboard-mode-tabs button small{font-size:8px;}
+  .fleet-dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .fleet-dashboard-grid{grid-template-columns:1fr;}
+  .fleet-dashboard-span-4,.fleet-dashboard-span-8{grid-column:1;}
+  .fleet-dashboard-actions{align-items:stretch;flex-direction:column;}
+  #dashFrotaPrecoReferencia{min-width:0;max-width:none;width:100%;}
+  .fleet-refresh-button{width:100%;}
+  .fleet-donut-layout{gap:14px;}
+  .fleet-donut{width:108px;height:108px;flex-basis:108px;}
+}
+@media(max-width:430px){
+  .fleet-dashboard-kpis{grid-template-columns:1fr 1fr;}
+  .fleet-kpi{padding:11px 9px;gap:7px;}
+  .fleet-kpi-icon{width:26px;height:26px;flex-basis:26px;}
+  .fleet-kpi strong{font-size:18px;}
+}
+
 </style>
 </head>
 <body>
@@ -2957,9 +3136,9 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <div class="dashboard-shell">
         <header class="dashboard-header">
           <div>
-            <div class="dashboard-eyebrow">PERFINORTE · EXPEDIÇÃO</div>
-            <h1>Inteligência de entregas</h1>
-            <p>Visão estratégica da distribuição, carteira de clientes e eficiência da expedição.</p>
+            <div class="dashboard-eyebrow">PERFINORTE · INTELIGÊNCIA OPERACIONAL</div>
+            <h1 id="dashboardTitulo">Inteligência de entregas</h1>
+            <p id="dashboardSubtitulo">Visão estratégica da distribuição, carteira de clientes e eficiência da expedição.</p>
           </div>
           <div class="dashboard-header-actions">
             <span id="dashboardGeradoEm"></span>
@@ -2971,6 +3150,17 @@ button,input,select,textarea{font-family:var(--font-ui);}
             <button type="button" class="dashboard-export" onclick="exportarDashboardPDF_()">Exportar PDF</button>
           </div>
         </header>
+        <nav class="dashboard-mode-tabs" role="tablist" aria-label="Área do dashboard">
+          <button id="tabDashboardEntregas" class="active" type="button" role="tab" aria-selected="true" aria-controls="dashEntregasSection" onclick="alternarPainelDashboard_('entregas')">
+            <span class="dashboard-tab-icon">↗</span> Entregas
+            <small>Comercial e expedição</small>
+          </button>
+          <button id="tabDashboardFrota" type="button" role="tab" aria-selected="false" aria-controls="dashFrotaSection" onclick="alternarPainelDashboard_('frota')">
+            <span class="dashboard-tab-icon">▣</span> Gestão de frota
+            <small>Custos, capacidade e cadastro</small>
+          </button>
+        </nav>
+        <div id="dashEntregasSection">
         <section class="dashboard-filters" aria-label="Filtros do dashboard">
           <label>Previsão original de<input id="dashDataDe" type="date" onchange="atualizarDashboard_()"></label>
           <label>Até<input id="dashDataAte" type="date" onchange="atualizarDashboard_()"></label>
@@ -3069,6 +3259,74 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </table></div>
         </article>
         <footer id="dashboardRodape" class="dashboard-footnote"></footer>
+        </div>
+
+        <section id="dashFrotaSection" class="fleet-dashboard-section" aria-label="Indicadores e gráficos de gestão de frota">
+          <header class="fleet-dashboard-header">
+            <div>
+              <div class="fleet-dashboard-kicker">FROTA · VISÃO ANALÍTICA</div>
+              <h2>Gestão de frota</h2>
+              <p>Composição, capacidade, parâmetros de consumo e custo operacional por veículo.</p>
+            </div>
+            <div class="fleet-dashboard-actions">
+              <div id="dashFrotaPrecoReferencia" class="vehicles-price-reference">
+                <div class="vehicles-price-copy">
+                  <div class="vehicles-price-title">Referência de combustível · Paraná</div>
+                  <div class="vehicles-price-values"><span><b>Diesel</b><strong>Consultando...</strong></span></div>
+                  <small>Atualizando cotação...</small>
+                </div>
+              </div>
+              <button type="button" class="fleet-refresh-button" onclick="carregarVeiculos_()">↻ Atualizar frota</button>
+            </div>
+          </header>
+
+          <div id="dashFrotaKpis" class="fleet-dashboard-kpis" aria-label="Indicadores da frota">
+            <div class="fleet-dashboard-loading">Carregando indicadores da frota...</div>
+          </div>
+
+          <section class="fleet-dashboard-grid" aria-label="Análises da frota">
+            <article class="fleet-dashboard-card fleet-dashboard-span-4">
+              <div class="fleet-card-heading">
+                <div><span>01 / Composição</span><h3>Perfil da frota</h3><p>Distribuição dos veículos ativos por vínculo.</p></div>
+                <span class="fleet-card-tag">ATIVOS</span>
+              </div>
+              <div id="dashFrotaComposicao" class="fleet-composition-content"><div class="fleet-dashboard-loading">Calculando composição...</div></div>
+            </article>
+
+            <article class="fleet-dashboard-card fleet-dashboard-span-4">
+              <div class="fleet-card-heading">
+                <div><span>02 / Abastecimento</span><h3>Combustível cadastrado</h3><p>Tipo de combustível definido para cálculo.</p></div>
+                <span class="fleet-card-tag">ATIVOS</span>
+              </div>
+              <div id="dashFrotaCombustivel" class="fleet-bars-content"><div class="fleet-dashboard-loading">Calculando distribuição...</div></div>
+            </article>
+
+            <article class="fleet-dashboard-card fleet-dashboard-span-4">
+              <div class="fleet-card-heading">
+                <div><span>03 / Eficiência</span><h3>Custo estimado por km</h3><p>Combustível e manutenção, quando informados.</p></div>
+                <span class="fleet-card-tag">R$/KM</span>
+              </div>
+              <div id="dashFrotaCustos" class="fleet-cost-content"><div class="fleet-dashboard-loading">Calculando custos...</div></div>
+            </article>
+
+            <article class="fleet-dashboard-card fleet-dashboard-span-8">
+              <div class="fleet-card-heading">
+                <div><span>04 / Capacidade</span><h3>Capacidade de carga por veículo</h3><p>Comparativo dos veículos ativos com capacidade cadastrada.</p></div>
+                <span class="fleet-card-tag">KG</span>
+              </div>
+              <div id="dashFrotaCapacidade" class="fleet-capacity-content"><div class="fleet-dashboard-loading">Calculando capacidades...</div></div>
+            </article>
+
+            <article class="fleet-dashboard-card fleet-dashboard-span-4">
+              <div class="fleet-card-heading">
+                <div><span>05 / Qualidade cadastral</span><h3>Parâmetros pendentes</h3><p>Veículos que ainda precisam de dados para estimar custos.</p></div>
+                <span id="dashFrotaPendenciasTag" class="fleet-card-tag">CADASTRO</span>
+              </div>
+              <div id="dashFrotaPendencias" class="fleet-pending-content"><div class="fleet-dashboard-loading">Verificando cadastros...</div></div>
+            </article>
+          </section>
+          <footer id="dashFrotaRodape" class="fleet-dashboard-footnote">Os indicadores são calculados com os dados disponíveis no cadastro. Quilometragem, consumo ou custos não informados não são estimados artificialmente.</footer>
+        </section>
       </div>
     </section>
 
@@ -3078,21 +3336,13 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <div>
             <div class="vehicles-eyebrow">PERFINORTE · GESTÃO DE FROTA</div>
             <h1>Veículos</h1>
-            <p>Cadastro da frota, capacidade de carga e parâmetros para estimar o custo operacional por quilômetro.</p>
+            <p>Cadastro, características e parâmetros individuais dos veículos da frota própria e terceirizada.</p>
           </div>
           <div class="vehicles-header-actions">
-            <div id="veiculosPrecoReferencia" class="vehicles-price-reference">
-              <div class="vehicles-price-copy">
-                <div class="vehicles-price-title">Referência de combustível · Paraná</div>
-                <div class="vehicles-price-values"><span><b>Diesel</b><strong>Consultando...</strong></span></div>
-                <small>Atualizando cotação...</small>
-              </div>
-            </div>
-            <button class="vehicles-action" type="button" onclick="carregarVeiculos_()">↻ Atualizar</button>
+            <button class="vehicles-action" type="button" onclick="carregarVeiculos_()">↻ Atualizar cadastro</button>
             <button class="vehicles-action primary" type="button" onclick="abrirModalVeiculo_()">＋ Novo veículo</button>
           </div>
         </header>
-        <section id="veiculosKpis" class="vehicles-kpis" aria-label="Resumo da frota"></section>
         <section class="vehicles-panel">
           <div class="vehicles-toolbar">
             <div class="vehicles-tabs" role="group" aria-label="Filtrar categoria da frota">
@@ -4526,6 +4776,7 @@ async function carregarVeiculos_(){
     precosCombustivelCache_=respostas[1]&&respostas[1].ok?respostas[1]:null;
     renderizarVeiculos_();
     renderizarReferenciaPrecoVeiculos_();
+    renderizarDashboardFrota_();
   }catch(err){
     if(area)area.innerHTML='<div class="vehicles-empty">Não foi possível carregar os veículos.<br><small>'+escaparVeiculoUI_(err.message||err)+'</small></div>';
     mostrarToast('Falha ao carregar cadastro de veículos.',true);
@@ -4534,7 +4785,7 @@ async function carregarVeiculos_(){
   }
 }
 function renderizarReferenciaPrecoVeiculos_(){
-  const el=document.getElementById('veiculosPrecoReferencia');
+  const el=document.getElementById('dashFrotaPrecoReferencia');
   if(!el)return;
   if(!precosCombustivelCache_){
     el.innerHTML='<div class="vehicles-price-copy"><div class="vehicles-price-title">Referência de combustível · Paraná</div><strong class="vehicles-price-unavailable">Indisponível</strong><small>Informe um preço manual no cadastro</small></div>';
@@ -4555,17 +4806,7 @@ function definirFiltroVeiculos_(filtro,botao){
 }
 function renderizarVeiculos_(){
   const area=document.getElementById('veiculosTabelaContainer');
-  const kpis=document.getElementById('veiculosKpis');
-  if(!area||!kpis)return;
-  const ativos=veiculosCache_.filter(v=>v.ativo!==false);
-  const proprios=ativos.filter(v=>String(v.propriedade).toUpperCase()==='PROPRIO').length;
-  const terceiros=ativos.filter(v=>String(v.propriedade).toUpperCase()==='TERCEIRIZADO').length;
-  const comConsumo=ativos.filter(v=>numeroVeiculoUI_(v.consumoKmL)).length;
-  kpis.innerHTML=
-    '<article class="vehicles-kpi"><small>Veículos ativos</small><strong>'+ativos.length+'</strong><span>Cadastros disponíveis para operação</span></article>'+
-    '<article class="vehicles-kpi"><small>Frota própria</small><strong>'+proprios+'</strong><span>Veículos vinculados à Perfinorte</span></article>'+
-    '<article class="vehicles-kpi"><small>Terceirizados</small><strong>'+terceiros+'</strong><span>Cadastro separado da frota própria</span></article>'+
-    '<article class="vehicles-kpi"><small>Com consumo informado</small><strong>'+comConsumo+' / '+ativos.length+'</strong><span>Prontos para estimar custo de combustível</span></article>';
+  if(!area)return;
 
   const busca=String((document.getElementById('veiculosBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
   let lista=veiculosCache_.filter(function(v){
@@ -4737,6 +4978,182 @@ async function alternarSituacaoVeiculo_(id,ativo){
   }catch(err){mostrarToast(err.message||String(err),true);}
 }
 
+
+/* ===== DASHBOARD: ALTERNÂNCIA ENTRE ENTREGAS E FROTA ===== */
+let painelDashboardAtual_ = 'entregas';
+
+function alternarPainelDashboard_(painel){
+  if(painel!=='entregas'&&painel!=='frota')return;
+  painelDashboardAtual_=painel;
+  const view=document.getElementById('dashboardView');
+  const frota= painel==='frota';
+  view.classList.toggle('dashboard-frota-ativa',frota);
+
+  const tabEntregas=document.getElementById('tabDashboardEntregas');
+  const tabFrota=document.getElementById('tabDashboardFrota');
+  tabEntregas.classList.toggle('active',!frota);
+  tabFrota.classList.toggle('active',frota);
+  tabEntregas.setAttribute('aria-selected',String(!frota));
+  tabFrota.setAttribute('aria-selected',String(frota));
+
+  document.getElementById('dashboardTitulo').textContent=frota?'Gestão de frota':'Inteligência de entregas';
+  document.getElementById('dashboardSubtitulo').textContent=frota
+    ?'Composição, capacidade, consumo e custos operacionais da frota.'
+    :'Visão estratégica da distribuição, carteira de clientes e eficiência da expedição.';
+
+  if(frota){
+    if(veiculosCache_.length){
+      renderizarReferenciaPrecoVeiculos_();
+      renderizarDashboardFrota_();
+    }else{
+      carregarVeiculos_();
+    }
+  }else{
+    atualizarDashboard_();
+    setTimeout(function(){if(dashGeoMapa_)dashGeoMapa_.invalidateSize();},120);
+  }
+}
+
+function formatarKgFrota_(valor){
+  return Number(valor||0).toLocaleString('pt-BR',{maximumFractionDigits:0})+' kg';
+}
+
+function renderizarDashboardFrota_(){
+  const kpis=document.getElementById('dashFrotaKpis');
+  if(!kpis)return;
+
+  const ativos=veiculosCache_.filter(v=>v.ativo!==false);
+  const proprios=ativos.filter(v=>String(v.propriedade||'').toUpperCase()==='PROPRIO');
+  const terceiros=ativos.filter(v=>String(v.propriedade||'').toUpperCase()==='TERCEIRIZADO');
+  const comConsumo=ativos.filter(v=>numeroVeiculoUI_(v.consumoKmL));
+  const calculaveis=ativos.map(v=>({veiculo:v,custo:custoKmVeiculoUI_(v)})).filter(x=>x.custo!==null);
+  const capacidadeConhecida=ativos.map(v=>numeroVeiculoUI_(v.pesoMaximoKg)).filter(Boolean);
+  const capacidadeTotal=capacidadeConhecida.reduce((s,v)=>s+v,0);
+  const mediaCusto=calculaveis.length
+    ?calculaveis.reduce((s,x)=>s+x.custo,0)/calculaveis.length
+    :null;
+  const pctProprios=ativos.length?proprios.length/ativos.length*100:0;
+  const pctTerceiros=ativos.length?terceiros.length/ativos.length*100:0;
+
+  kpis.innerHTML=
+    '<article class="fleet-kpi fleet-kpi-green"><span class="fleet-kpi-icon">▣</span><div><small>Veículos ativos</small><strong>'+ativos.length+'</strong><em>Disponíveis para operação</em></div></article>'+
+    '<article class="fleet-kpi fleet-kpi-blue"><span class="fleet-kpi-icon">▤</span><div><small>Frota própria</small><strong>'+proprios.length+'</strong><em>'+(ativos.length?Math.round(pctProprios)+'% da frota ativa':'Sem veículos ativos')+'</em></div></article>'+
+    '<article class="fleet-kpi fleet-kpi-amber"><span class="fleet-kpi-icon">♧</span><div><small>Terceirizados</small><strong>'+terceiros.length+'</strong><em>'+(ativos.length?Math.round(pctTerceiros)+'% da frota ativa':'Sem veículos ativos')+'</em></div></article>'+
+    '<article class="fleet-kpi fleet-kpi-violet"><span class="fleet-kpi-icon">◉</span><div><small>Consumo informado</small><strong>'+comConsumo.length+' / '+ativos.length+'</strong><em>Consumo médio em km/L</em></div></article>'+
+    '<article class="fleet-kpi fleet-kpi-teal"><span class="fleet-kpi-icon">↗</span><div><small>Capacidade cadastrada</small><strong>'+formatarKgFrota_(capacidadeTotal)+'</strong><em>'+capacidadeConhecida.length+' de '+ativos.length+' veículos com capacidade</em></div></article>'+
+    '<article class="fleet-kpi fleet-kpi-cost"><span class="fleet-kpi-icon">R$</span><div><small>Custo médio estimado</small><strong>'+(mediaCusto===null?'Pendente':moedaVeiculoUI_(mediaCusto)+'/km')+'</strong><em>'+(calculaveis.length?calculaveis.length+' veículo(s) com cálculo completo':'Informe consumo e preço para calcular')+'</em></div></article>';
+
+  const composicao=document.getElementById('dashFrotaComposicao');
+  if(composicao){
+    const pctOwn=ativos.length?proprios.length/ativos.length*100:0;
+    composicao.innerHTML=
+      '<div class="fleet-donut-layout">'+
+        '<div class="fleet-donut" style="background:conic-gradient(#16885d 0 '+pctOwn+'%,#e7a746 '+pctOwn+'% 100%)"><div><strong>'+ativos.length+'</strong><small>veículos</small></div></div>'+
+        '<div class="fleet-donut-legend">'+
+          '<div><i class="fleet-dot own"></i><span>Frota própria</span><strong>'+proprios.length+' <small>('+Math.round(pctProprios)+'%)</small></strong></div>'+
+          '<div><i class="fleet-dot third"></i><span>Terceirizados</span><strong>'+terceiros.length+' <small>('+Math.round(pctTerceiros)+'%)</small></strong></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="fleet-chart-note">Composição calculada sobre os veículos ativos cadastrados.</div>';
+  }
+
+  const fuelEl=document.getElementById('dashFrotaCombustivel');
+  if(fuelEl){
+    const fuelDefs=[
+      {key:'DIESEL',label:'Diesel',color:'#16885d'},
+      {key:'GASOLINA',label:'Gasolina',color:'#389bb7'},
+      {key:'ETANOL',label:'Etanol',color:'#dda13e'},
+      {key:'OUTRO',label:'Não definido',color:'#a5b0bd'}
+    ];
+    const counts={DIESEL:0,GASOLINA:0,ETANOL:0,OUTRO:0};
+    ativos.forEach(v=>{
+      let tipo=String(v.combustivelCalculo||'').toUpperCase();
+      if(!tipo){
+        const motor=String(v.combustivelMotor||'').toUpperCase();
+        tipo=motor==='DIESEL'?'DIESEL':motor==='GASOLINA'?'GASOLINA':'OUTRO';
+      }
+      if(!Object.prototype.hasOwnProperty.call(counts,tipo))tipo='OUTRO';
+      counts[tipo]++;
+    });
+    const maxFuel=Math.max(1,...fuelDefs.map(f=>counts[f.key]));
+    fuelEl.innerHTML=fuelDefs.map(f=>
+      '<div class="fleet-horizontal-bar">'+
+        '<div class="fleet-horizontal-label"><span>'+f.label+'</span><strong>'+counts[f.key]+'</strong></div>'+
+        '<div class="fleet-horizontal-track"><i style="width:'+(counts[f.key]/maxFuel*100)+'%;background:'+f.color+'"></i></div>'+
+      '</div>'
+    ).join('')+
+    '<div class="fleet-chart-note">'+ativos.length+' veículo(s) ativo(s) considerados.</div>';
+  }
+
+  const costsEl=document.getElementById('dashFrotaCustos');
+  if(costsEl){
+    if(!calculaveis.length){
+      costsEl.innerHTML=
+        '<div class="fleet-empty-state"><span class="fleet-empty-icon">R$</span>'+
+        '<strong>Custos aguardando parâmetros</strong>'+
+        '<p>Nenhum veículo possui consumo e preço suficientes para estimar o custo por km. O painel será preenchido automaticamente quando os dados forem cadastrados.</p>'+
+        '<button type="button" onclick="mostrarView(\'veiculos\')">Completar cadastro</button></div>';
+    }else{
+      const sorted=calculaveis.slice().sort((a,b)=>b.custo-a.custo);
+      const maxCost=Math.max(...sorted.map(x=>x.custo),.01);
+      costsEl.innerHTML=sorted.map(x=>{
+        const v=x.veiculo, nome=v.nomeExibicao||[v.marca,v.modelo].filter(Boolean).join(' ')||'Veículo';
+        return '<div class="fleet-horizontal-bar fleet-cost-row"><div class="fleet-horizontal-label"><span>'+escaparVeiculoUI_(nome)+'</span><strong>'+moedaVeiculoUI_(x.custo)+'/km</strong></div><div class="fleet-horizontal-track"><i style="width:'+Math.max(2,x.custo/maxCost*100)+'%;background:linear-gradient(90deg,#167f69,#4bb5a0)"></i></div></div>';
+      }).join('')+'<div class="fleet-chart-note">Somente veículos com parâmetros suficientes entram neste comparativo.</div>';
+    }
+  }
+
+  const capacityEl=document.getElementById('dashFrotaCapacidade');
+  if(capacityEl){
+    const dadosCapacidade=ativos.map(v=>({
+      nome:v.nomeExibicao||[v.marca,v.modelo].filter(Boolean).join(' ')||'Veículo',
+      placa:v.placa||'',
+      peso:numeroVeiculoUI_(v.pesoMaximoKg)
+    })).filter(v=>v.peso).sort((a,b)=>b.peso-a.peso);
+    if(!dadosCapacidade.length){
+      capacityEl.innerHTML='<div class="fleet-empty-state"><strong>Capacidade não cadastrada</strong><p>Informe a capacidade máxima no cadastro dos veículos para visualizar o comparativo.</p></div>';
+    }else{
+      const maxPeso=Math.max(...dadosCapacidade.map(v=>v.peso));
+      capacityEl.innerHTML=dadosCapacidade.map(v=>
+        '<div class="fleet-capacity-row"><div class="fleet-capacity-meta"><span><strong>'+escaparVeiculoUI_(v.nome)+'</strong><small>'+escaparVeiculoUI_(v.placa)+'</small></span><b>'+formatarKgFrota_(v.peso)+'</b></div><div class="fleet-capacity-track"><i style="width:'+Math.max(2,v.peso/maxPeso*100)+'%"></i></div></div>'
+      ).join('');
+    }
+  }
+
+  const pendingEl=document.getElementById('dashFrotaPendencias');
+  if(pendingEl){
+    const pendentes=ativos.filter(v=>custoKmVeiculoUI_(v)===null);
+    const tag=document.getElementById('dashFrotaPendenciasTag');
+    if(tag)tag.textContent=pendentes.length+' PENDENTE(S)';
+    if(!pendentes.length){
+      pendingEl.innerHTML='<div class="fleet-pending-complete"><strong>✓ Parâmetros completos</strong><p>Todos os veículos ativos possuem dados suficientes para o cálculo atual.</p></div>';
+    }else{
+      pendingEl.innerHTML='<div class="fleet-pending-summary"><strong>'+pendentes.length+'</strong><span>veículo(s) precisam de informações</span></div>'+
+        '<div class="fleet-pending-list">'+pendentes.slice(0,6).map(v=>{
+          const nome=v.nomeExibicao||[v.marca,v.modelo].filter(Boolean).join(' ')||'Veículo';
+          const faltas=[];
+          if(!numeroVeiculoUI_(v.consumoKmL))faltas.push('consumo');
+          if(!precoCombustivelVeiculo_(v))faltas.push('preço');
+          return '<div class="fleet-pending-item"><span><strong>'+escaparVeiculoUI_(nome)+'</strong><small>Falta informar: '+faltas.join(' e ')+'</small></span><button type="button" data-editar-frota="'+escaparVeiculoUI_(v.id)+'">Editar</button></div>';
+        }).join('')+'</div>';
+      pendingEl.querySelectorAll('[data-editar-frota]').forEach(btn=>{
+        btn.addEventListener('click',()=>editarVeiculoPeloDashboard_(btn.getAttribute('data-editar-frota')));
+      });
+    }
+  }
+
+  const rodape=document.getElementById('dashFrotaRodape');
+  if(rodape){
+    const atualizado=new Date().toLocaleString('pt-BR');
+    rodape.textContent='Atualizado em '+atualizado+'. Indicadores baseados no cadastro atual. Quilometragem rodada, abastecimentos e custos de viagem ainda não são medidos por esta tela.';
+  }
+}
+
+function editarVeiculoPeloDashboard_(id){
+  mostrarView('veiculos');
+  setTimeout(function(){abrirModalVeiculo_(id);},120);
+}
+
 function mostrarView(modo){
   modoAtual = modo;
   const mapa = modo === 'mapa';
@@ -4766,8 +5183,8 @@ function mostrarView(modo){
   } else if (tabela){
     renderTabela();
   } else if (dashboard){
-    atualizarDashboard_();
-    setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
+    alternarPainelDashboard_(painelDashboardAtual_);
+    if(painelDashboardAtual_==='entregas')setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
   } else if (veiculos){
     carregarVeiculos_();
   }
