@@ -3094,6 +3094,13 @@ button,input,select,textarea{font-family:var(--font-ui);}
 }
 @media(max-width:430px){.trips-kpis{gap:8px;}.trips-kpi{padding:12px;}.trips-kpi strong{font-size:22px;}}
 
+
+.trip-occurrences{margin-top:12px;padding-top:10px;border-top:1px solid #e8edf2;}
+.trip-occurrence{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;color:#748397;font-size:9px;}
+.trip-occurrence>span{font-weight:800;color:#a36b2a;text-transform:uppercase;font-size:8px;letter-spacing:.05em;}
+.trip-occurrence strong{font-weight:600;color:#52677d;}
+.trip-occurrence small{color:#9aa5b2;font-size:8px;}
+
 </style>
 </head>
 <body>
@@ -3605,6 +3612,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
             <div class="trips-slider-value"><input id="viagemValorSlider" type="range" min="0" max="10000" step="25" value="0" oninput="sincronizarValorViagem_('slider')"><input id="viagemValorNegociado" type="number" min="0" max="10000" step="0.01" value="0" oninput="sincronizarValorViagem_('input')" aria-label="Valor negociado em reais"><span>R$</span></div>
           </div>
           <div class="trips-form-grid trips-extra-grid">
+            <label class="trips-field">Hodômetro inicial<input id="viagemHodometroInicial" type="number" min="0" step="0.1" placeholder="Opcional, em km"></label>
             <label class="trips-field">Pedágios estimados (R$)<input id="viagemPedagios" type="number" min="0" step="0.01" value="0"></label>
             <label class="trips-field">Outras despesas estimadas (R$)<input id="viagemExtras" type="number" min="0" step="0.01" value="0"></label>
             <label class="trips-field span-2">Observações<textarea id="viagemObservacoes" rows="2" placeholder="Informações de carregamento, restrições, horário combinado..."></textarea></label>
@@ -5454,6 +5462,7 @@ function renderizarViagens_(){
       :v.status==='EM_ANDAMENTO'
         ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
         :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
+    const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||'')+'</small></div>').join('');
     const paradas=(v.paradas||[]).map(p=>{
       const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
       const buttons=encerrada||stopClosed?'':(
@@ -5467,7 +5476,7 @@ function renderizarViagens_(){
       '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
       '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span></div>'+
       '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
-      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+'</div>'+
+      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+(ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
       '</article>';
   }).join('')+'</div>';
 }
@@ -5479,7 +5488,7 @@ function abrirModalViagem_(){
   const form=document.getElementById('formViagem');
   if(!form)return;
   form.reset();
-  document.getElementById('viagemData').value=new Date().toISOString().slice(0,10);
+  const hoje=new Date();document.getElementById('viagemData').value=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
   document.getElementById('viagemPeriodo').value='';
   document.getElementById('viagemPedagios').value='0';
   document.getElementById('viagemExtras').value='0';
@@ -5588,6 +5597,7 @@ async function salvarViagemUI_(event){
     veiculoId:veiculoId,
     motorista:document.getElementById('viagemMotorista').value.trim(),
     valorNegociado:veiculo.propriedade==='TERCEIRIZADO'?document.getElementById('viagemValorNegociado').value:'',
+    hodometroInicial:document.getElementById('viagemHodometroInicial').value,
     pedagios:document.getElementById('viagemPedagios').value,
     despesasExtras:document.getElementById('viagemExtras').value,
     observacoes:document.getElementById('viagemObservacoes').value.trim(),
