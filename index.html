@@ -6003,9 +6003,14 @@ function renderizarGeografiaDashboard_(lista){
   const resumo=document.getElementById('dashGeoResumo');
   const cidadesEl=document.getElementById('dashGeoCidadesTotal');
   const coberturaEl=document.getElementById('dashGeoCobertura');
+
+  // Linhas de AVISO são registros operacionais, não entregas reais.
+  // Elas não devem inflar "Cidade não identificada" nem a cobertura geográfica.
+  const entregasGeograficas=lista.filter(d=>String(d.endereco||'').trim().toUpperCase()!=='AVISO');
+
   const porCidade={};
   let totalComCoords=0;
-  lista.forEach(d=>{
+  entregasGeograficas.forEach(d=>{
     const nome=String(d.cidade||'').trim()||'Cidade não identificada';
     const key=nome.toLocaleLowerCase('pt-BR');
     if(!porCidade[key])porCidade[key]={nome:nome,total:0,latSum:0,lngSum:0,coords:0};
@@ -6018,12 +6023,12 @@ function renderizarGeografiaDashboard_(lista){
   const cidades=Object.values(porCidade).sort((a,b)=>b.total-a.total);
   const comPonto=cidades.filter(c=>c.coords>0);
   if(cidadesEl)cidadesEl.textContent=formatarNumeroDashboard_(cidades.length);
-  if(coberturaEl)coberturaEl.textContent=(lista.length?Math.round(totalComCoords/lista.length*100):0)+'%';
+  if(coberturaEl)coberturaEl.textContent=(entregasGeograficas.length?Math.round(totalComCoords/entregasGeograficas.length*100):0)+'%';
   if(cityEl){
     const max=Math.max(1,...cidades.map(c=>c.total));
     cityEl.innerHTML=cidades.length?cidades.slice(0,8).map(c=>'<div class="dash-city-item"><div><span class="dash-city-name" title="'+escapeAttr_(c.nome)+'">'+escapeAttr_(c.nome)+'</span><div class="dash-city-track"><div class="dash-city-fill" style="width:'+(c.total/max*100)+'%"></div></div></div><span class="dash-city-count">'+c.total+'</span></div>').join(''):'<div class="dash-empty">Sem cidades identificadas nos filtros.</div>';
   }
-  if(resumo)resumo.textContent='Entregas com coordenadas: '+formatarNumeroDashboard_(totalComCoords)+' de '+formatarNumeroDashboard_(lista.length)+'. As bolhas representam a quantidade de entregas localizadas em cada cidade.';
+  if(resumo)resumo.textContent='Entregas com coordenadas: '+formatarNumeroDashboard_(totalComCoords)+' de '+formatarNumeroDashboard_(entregasGeograficas.length)+'. Avisos operacionais não entram na distribuição geográfica. As bolhas representam a quantidade de entregas localizadas em cada cidade.';
   const mapa=inicializarMapaGeograficoDashboard_();
   if(!mapa||!dashGeoCamada_)return;
   dashGeoCamada_.clearLayers();
@@ -6031,7 +6036,7 @@ function renderizarGeografiaDashboard_(lista){
   comPonto.forEach(c=>{
     const lat=c.latSum/c.coords,lng=c.lngSum/c.coords;
     pontos.push([lat,lng]);
-    const share=lista.length?c.total/lista.length*100:0;
+    const share=entregasGeograficas.length?c.total/entregasGeograficas.length*100:0;
     const marker=L.circleMarker([lat,lng],{
       radius:Math.min(22,7+Math.sqrt(c.total)*2.2),
       color:'#116d82',weight:2,opacity:.95,fillColor:'#31b5c2',fillOpacity:.72
