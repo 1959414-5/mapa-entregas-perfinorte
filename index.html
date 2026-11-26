@@ -4308,7 +4308,13 @@ function abrirModal(){
   document.getElementById('enderecoResultado').className = 'busca-resultado';
   document.getElementById('enderecoResultado').textContent = '';
   document.getElementById('miniMap').style.display = 'none';
+  document.getElementById('miniMapPanel').style.display = 'none';
   document.getElementById('camposManuais').style.display = 'none';
+  document.getElementById('enderecosMemoria').style.display = 'none';
+  document.getElementById('enderecosMemoria').innerHTML = '';
+  document.getElementById('btnNovoEndereco').style.display = 'none';
+  document.getElementById('btnVoltarEnderecos').style.display = 'none';
+  document.getElementById('enderecoSelecionadoCard').style.display = 'none';
   document.getElementById('salvarProgresso').style.display = 'none';
   document.getElementById('salvarProgresso').innerHTML = '';
   document.getElementById('btnSalvarNovo').disabled = true;
@@ -5046,11 +5052,7 @@ function abrirNovoEndereco_(){
   const resultado = document.getElementById('enderecoResultado');
   const miniMap = document.getElementById('miniMap');
 
-  // Ao criar um novo endereço, não reaproveita os campos do endereço padrão antigo.
-  ['novoCep','novaRua','novoNumero','novoBairro','novaCidade','novoUf'].forEach(function(id){
-    const campo = document.getElementById(id);
-    if (campo) campo.value = '';
-  });
+  novoEnderecoIniciado = true;
   if (resultado){resultado.className='busca-resultado address-result';resultado.textContent='';}
   if (miniMap) miniMap.style.display='none';
   if (form) form.style.display='grid';
@@ -5077,10 +5079,19 @@ function voltarParaEnderecosSalvos_(){
 
 function trocarEnderecoNovaEntrega_(){
   limparSelecaoEnderecoNovaEntrega_();
+  novoEnderecoIniciado = false;
+  ['novoCep','novaRua','novoNumero','novoBairro','novaCidade','novoUf'].forEach(function(id){
+    const campo = document.getElementById(id);
+    if (campo) campo.value = '';
+  });
+  const resultado = document.getElementById('enderecoResultado');
+  if (resultado){resultado.className='busca-resultado address-result';resultado.textContent='';}
   const lista = document.getElementById('enderecosMemoria');
   const btnNovo = document.getElementById('btnNovoEndereco');
+  const btnVoltar = document.getElementById('btnVoltarEnderecos');
   const form = document.getElementById('camposManuais');
   if (form) form.style.display='none';
+  if (btnVoltar) btnVoltar.style.display='none';
   if (lista) lista.style.display = enderecosMemoriaAtuais.length ? 'block' : 'none';
   if (btnNovo) btnNovo.style.display = 'inline-flex';
   if (!enderecosMemoriaAtuais.length) abrirNovoEndereco_();
@@ -5193,7 +5204,13 @@ async function buscarCliente(){
   document.getElementById('miniMapPanel').style.display = 'none';
   enderecosMemoriaAtuais = [];
   enderecosMemoriaOrigens = [];
+  novoEnderecoIniciado = false;
+  ['novoCep','novaRua','novoNumero','novoBairro','novaCidade','novoUf'].forEach(function(id){
+    const campo = document.getElementById(id);
+    if (campo) campo.value = '';
+  });
   limparSelecaoEnderecoNovaEntrega_();
+  document.getElementById('btnVoltarEnderecos').style.display = 'none';
   clienteEncontrado = null;
 
   if (!codigo){
@@ -5227,17 +5244,17 @@ async function buscarCliente(){
     const partes = tentarSepararEndereco_(info.rotaSugerida);
     enderecoSugeridoCadastroAtual = jaNoPadrao ? info.rotaSugerida.trim() : '';
 
-    if (partes){
+    if (!jaNoPadrao && partes){
       document.getElementById('novaRua').value = partes.rua;
       document.getElementById('novoNumero').value = partes.numero;
       document.getElementById('novoBairro').value = partes.bairro;
       document.getElementById('novaCidade').value = partes.cidade;
       document.getElementById('novoUf').value = partes.uf;
-    } else if (info.rotaSugerida){
+    } else if (!jaNoPadrao && info.rotaSugerida){
       document.getElementById('novaRua').value = info.rotaSugerida;
     }
-    if (info.cep) document.getElementById('novoCep').value = formatarCepValor_(info.cep);
-    if (info.numero && !document.getElementById('novoNumero').value){
+    if (!jaNoPadrao && info.cep) document.getElementById('novoCep').value = formatarCepValor_(info.cep);
+    if (!jaNoPadrao && info.numero && !document.getElementById('novoNumero').value){
       document.getElementById('novoNumero').value = String(info.numero).toUpperCase();
     }
 
