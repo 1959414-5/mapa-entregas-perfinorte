@@ -2496,13 +2496,13 @@ carregarLocalizacoesMotoristas();
 // aquela rodada e tenta de novo em 10s). Pode ajustar o número abaixo se
 // quiser mais ou menos frequente.
 const INTERVALO_ATUALIZACAO_MS = 10000;
-setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
-setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
-setInterval(carregarLocalizacoesMotoristas, 15000); // localização atualiza a cada 15s
+iniciarAtualizacaoAutomatica_();
 }
 function encerrarSessao_(){
   TOKEN_SESSAO = '';
   localStorage.removeItem('mapa_entregas_token');
+  pararAtualizacaoAutomatica_();
+  document.getElementById('loginPassword').value = '';
   document.getElementById('app').hidden = true;
   document.getElementById('loginScreen').hidden = false;
 }
@@ -2519,8 +2519,21 @@ async function validarSessao_(){
 }
 let loginEmAndamento_ = false;
 let mapaJaInicializado_ = false;
+let timerEntregas_ = null;
+let timerConfirmacoes_ = null;
+let timerLocalizacoes_ = null;
+function iniciarAtualizacaoAutomatica_(){
+  if (timerEntregas_ !== null) return;
+  timerEntregas_ = setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
+  timerConfirmacoes_ = setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
+  timerLocalizacoes_ = setInterval(carregarLocalizacoesMotoristas, 15000);
+}
+function pararAtualizacaoAutomatica_(){
+  clearInterval(timerEntregas_); clearInterval(timerConfirmacoes_); clearInterval(timerLocalizacoes_);
+  timerEntregas_ = timerConfirmacoes_ = timerLocalizacoes_ = null;
+}
 function iniciarMapaUmaVez_(){
-  if (mapaJaInicializado_) return;
+  if (mapaJaInicializado_) { iniciarAtualizacaoAutomatica_(); return; }
   mapaJaInicializado_ = true;
   iniciarMapaAutenticado_();
 }
