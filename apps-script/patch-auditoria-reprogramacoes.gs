@@ -143,6 +143,12 @@ function obterIdEstavelEntrega_(hist, linha) {
   return id;
 }
 
+function ehAvisoSemCodigo_(hist, linha) {
+  const endereco = String(hist.getRange(linha, MAPA_CFG.COL_ENDERECO).getValue() || "").trim().toUpperCase();
+  const codigo = String(hist.getRange(linha, CFG.COL_ID_HIST).getValue() || "").trim();
+  return endereco === "AVISO" && !codigo;
+}
+
 function inicializarAuditoriaEntregas() {
   const ss = SpreadsheetApp.getActive();
   const hist = ss.getSheetByName(CFG.HIST);
@@ -156,12 +162,16 @@ function inicializarAuditoriaEntregas() {
 
   const total = lastRow - 1;
   const clientes = hist.getRange(2, MAPA_CFG.COL_FANTASIA, total, 1).getValues();
+  const codigos = hist.getRange(2, CFG.COL_ID_HIST, total, 1).getValues();
+  const enderecos = hist.getRange(2, MAPA_CFG.COL_ENDERECO, total, 1).getValues();
   const dados = hist.getRange(2, MAPA_CFG.COL_PREVISAO, total,
     AUDITORIA_ENTREGAS_CFG_.COL_ID - MAPA_CFG.COL_PREVISAO + 1).getValues();
 
   let alterou = false;
   const metadados = dados.map(function(r, i) {
-    const temEntrega = String(clientes[i][0] || "").trim() !== "";
+    const ehAvisoSemCodigo = String(enderecos[i][0] || "").trim().toUpperCase() === "AVISO"
+      && !String(codigos[i][0] || "").trim();
+    const temEntrega = String(clientes[i][0] || "").trim() !== "" && !ehAvisoSemCodigo;
     const original = r[AUDITORIA_ENTREGAS_CFG_.COL_PREVISAO_ORIGINAL - MAPA_CFG.COL_PREVISAO];
     const idAtual = r[AUDITORIA_ENTREGAS_CFG_.COL_ID - MAPA_CFG.COL_PREVISAO];
 
@@ -196,6 +206,7 @@ function inicializarAuditoriaEntregas() {
 }
 
 function garantirAuditoriaLinha_(hist, linha) {
+  if (ehAvisoSemCodigo_(hist, linha)) return { previsaoOriginal: "", id: "" };
   const cfg = AUDITORIA_ENTREGAS_CFG_;
   const atual = hist.getRange(linha, cfg.COL_PREVISAO_ORIGINAL, 1, 2).getValues()[0];
   let original = atual[0];
@@ -228,6 +239,7 @@ function contarReprogramacoesPorId_() {
 }
 
 function registrarReprogramacao_(hist, linha, anterior, nova, motivo, observacao) {
+  if (ehAvisoSemCodigo_(hist, linha)) return 0;
   const antigoIso = normalizarDataAuditoria_(anterior);
   const novoIso = normalizarDataAuditoria_(nova);
   if (!antigoIso || !novoIso || antigoIso === novoIso) return 0;
@@ -273,6 +285,9 @@ function concluirEntrega(linha, motivo, observacao) {
   if (!hist) return { ok: false, erro: "Aba HISTORICO_ENTREGAS não encontrada." };
   if (!linhaNum || linhaNum < 2 || linhaNum > hist.getLastRow()) {
     return { ok: false, erro: "Linha inválida. Atualize a página e tente novamente." };
+  }
+  if (ehAvisoSemCodigo_(hist, linhaNum)) {
+    return { ok: false, erro: "Registro de AVISO sem código não é uma entrega." };
   }
 
   const lock = LockService.getScriptLock();
@@ -429,7 +444,7 @@ function registrarEdicaoPrevisaoManual_(e) {
   if (!e || !e.range) return;
   const hist = e.range.getSheet();
   const linha = e.range.getRow();
-  if (linha < 2 || hist.getName() !== CFG.HIST) return;
+  if (linha < 2 || hist.getName() !== CFG.HIST || ehAvisoSemCodigo_(hist, linha)) return;
 
   const novoValor = e.range.getValue();
   const valorAnterior = e.oldValue || "";
@@ -456,6 +471,7 @@ function registrarEdicaoPrevisaoManual_(e) {
  * recebem o timestamp, mas não abrem modal.
  */
 function registrarConclusaoManual_(hist, linha) {
+  if (ehAvisoSemCodigo_(hist, linha)) return;
   const status = String(hist.getRange(linha, MAPA_CFG.COL_STATUS).getValue() || "").trim().toUpperCase();
   if (status !== "ENTREGUE") return;
   const celulaConclusao = hist.getRange(linha, AUDITORIA_ENTREGAS_CFG_.COL_CONCLUSAO);
@@ -526,6 +542,7 @@ function obterEntregasValidas_(filtroMotorista, filtroData) {
 
     const textoEndereco = String(endereco || "").trim();
     const ehAviso = textoEndereco.toUpperCase() === "AVISO";
+    if (ehAviso && !String(codigo || "").trim()) continue;
     if (fm && String(motorista || "").trim().toUpperCase() !== fm) continue;
 
     const dataIso = _toIsoDateString(previsao) || "";
