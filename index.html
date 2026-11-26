@@ -1757,6 +1757,162 @@ button,input,select,textarea{font-family:var(--font-ui);}
 @media(max-width:700px){
   .toolbar-install-button{height:35px;min-height:35px;padding:0 10px;font-size:10px;}
 }
+
+  /* ===== DASHBOARD PREMIUM | INTELIGÊNCIA DE EXPEDIÇÃO ===== */
+  #dashboardView{background:#edf2f7;padding:24px 28px 38px;color:#17283a;}
+  .dashboard-shell{max-width:1760px;}
+  .dashboard-header{
+    position:relative;isolation:isolate;overflow:hidden;align-items:center;
+    min-height:132px;padding:24px 26px;margin-bottom:16px;border-radius:18px;
+    color:#f4f8fc;background:linear-gradient(118deg,#101e2d 0%,#172c40 58%,#1a3a4c 100%);
+    box-shadow:0 12px 30px rgba(19,39,58,.16);
+  }
+  .dashboard-header:before{
+    content:"";position:absolute;z-index:-1;inset:0;opacity:.38;
+    background:radial-gradient(circle at 78% 14%,rgba(38,190,207,.32),transparent 30%),
+      radial-gradient(circle at 98% 95%,rgba(224,123,57,.19),transparent 25%),
+      linear-gradient(135deg,transparent 60%,rgba(255,255,255,.035) 60.2%,transparent 60.6%);
+  }
+  .dashboard-eyebrow{color:#8fb7c8;font-size:9px;letter-spacing:.2em;}
+  .dashboard-header h1{color:#f5f8fb;font-size:29px;letter-spacing:-.045em;margin:7px 0 5px;}
+  .dashboard-header p{color:#b4c3d0;font-size:12px;}
+  .dashboard-header-actions{position:relative;z-index:1;flex-wrap:wrap;justify-content:flex-end;}
+  #dashboardGeradoEm{color:#9fb4c4;}
+  .dashboard-export{background:#d9a36a;color:#182635;border-radius:8px;padding:10px 15px;box-shadow:0 5px 14px rgba(0,0,0,.12);}
+  .dashboard-export:hover{background:#efb777;}
+  .dashboard-reason-toggle{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);}
+  .dashboard-reason-copy strong{color:#e4edf4;}
+  .dashboard-reason-copy small{color:#9eb1c1;}
+  .dashboard-filters{background:rgba(255,255,255,.94);border-color:#dce5ed;border-radius:13px;box-shadow:0 5px 18px rgba(22,43,62,.035);}
+  .dashboard-filters label{color:#718195;}
+  .dashboard-filters input,.dashboard-filters select{border-color:#d9e2eb;background:#f9fbfd;color:#20344a;border-radius:8px;}
+  .dashboard-filters input:focus,.dashboard-filters select:focus{outline:2px solid rgba(31,163,184,.22);border-color:#56aabb;}
+  .dashboard-clear{border-radius:8px;background:#f5f8fb;}
+  .dashboard-kpis{gap:12px;margin-bottom:15px;}
+  .dashboard-kpi{
+    position:relative;overflow:hidden;padding:17px 17px 15px;border:1px solid #e0e8ef;border-radius:13px;
+    background:linear-gradient(145deg,#fff 0%,#f9fbfd 100%);box-shadow:0 5px 18px rgba(22,43,62,.045);
+  }
+  .dashboard-kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#27a8bb,#6c849a);}
+  .dashboard-kpi .k-label{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:#7d8b9c;}
+  .dashboard-kpi .k-value{font-size:26px;color:#1b3045;font-family:var(--font-mono);letter-spacing:-.06em;}
+  .dashboard-kpi .k-note{color:#8795a5;font-size:9px;}
+  .dash-insights-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-bottom:18px;}
+  .dash-panel{
+    min-width:0;padding:17px 18px;border:1px solid #dfe7ee;border-radius:15px;
+    background:linear-gradient(145deg,#fff 0%,#fbfcfe 100%);
+    box-shadow:0 5px 19px rgba(22,43,62,.045);
+  }
+  .dash-span-8{grid-column:span 8;}
+  .dash-span-4{grid-column:span 4;}
+  .dash-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:13px;}
+  .dash-panel-kicker{font:700 8px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:#7b96a8;margin-bottom:5px;}
+  .dash-panel-head h2{margin:0;color:#1d3044;font-size:13px;letter-spacing:-.02em;}
+  .dash-panel-head p{margin:4px 0 0;color:#8795a5;font-size:9px;line-height:1.5;}
+  .dash-panel-tag{flex:none;padding:5px 8px;border:1px solid #dce8ef;border-radius:99px;background:#f3f8fa;color:#668394;font:9px var(--font-mono);}
+  .dash-geo-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(190px,.8fr);gap:14px;align-items:stretch;}
+  #dashMapaGeografico{height:326px;min-height:280px;border:1px solid #dce5ec;border-radius:11px;overflow:hidden;background:#edf2f5;}
+  .dash-geo-side{min-width:0;display:flex;flex-direction:column;}
+  .dash-geo-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px;}
+  .dash-mini-stat{padding:9px 10px;border:1px solid #e6edf2;border-radius:9px;background:#f7fafc;}
+  .dash-mini-stat strong{display:block;color:#1e3448;font:700 16px var(--font-mono);}
+  .dash-mini-stat small{display:block;margin-top:3px;color:#8795a5;font-size:8px;text-transform:uppercase;letter-spacing:.06em;}
+  .dash-city-list{display:flex;flex-direction:column;gap:9px;overflow:auto;max-height:231px;padding:1px 3px 1px 0;}
+  .dash-city-item{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:8px;align-items:center;}
+  .dash-city-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#40556a;font-size:9px;font-weight:700;}
+  .dash-city-track{height:5px;margin-top:5px;border-radius:99px;background:#edf2f6;overflow:hidden;}
+  .dash-city-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1a9caf,#70c5cc);}
+  .dash-city-count{text-align:right;color:#526a7c;font:10px var(--font-mono);}
+  .dash-geo-foot{margin-top:auto;padding-top:10px;color:#93a0ad;font-size:8px;line-height:1.5;}
+  .dash-select-wrap{display:flex;align-items:center;gap:7px;color:#8391a0;font-size:9px;white-space:nowrap;}
+  #dashTopClientesLimite{height:30px;padding:0 22px 0 8px;border:1px solid #d8e2ea;border-radius:7px;background:#f7fafc;color:#30485e;font:10px var(--font-mono);}
+  .dash-client-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:13px;}
+  .dash-client-summary .dash-mini-stat{padding:8px;}
+  .dash-client-summary .dash-mini-stat strong{font-size:14px;}
+  .dash-top-clients{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding:1px 4px 2px 0;}
+  .dash-client-row{display:grid;grid-template-columns:20px minmax(0,1fr) 42px;gap:8px;align-items:center;}
+  .dash-client-rank{color:#8da0ae;font:10px var(--font-mono);}
+  .dash-client-main{min-width:0;}
+  .dash-client-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#354b60;font-size:9px;font-weight:700;}
+  .dash-client-track{height:8px;margin-top:5px;border-radius:3px;background:#edf2f6;overflow:visible;position:relative;transform:skewX(-8deg);}
+  .dash-client-fill{height:100%;min-width:2px;border-radius:3px;background:linear-gradient(90deg,#1c8399,#39b9c5);box-shadow:0 2px 5px rgba(24,137,157,.2);position:relative;}
+  .dash-client-fill:after{content:"";position:absolute;right:-4px;top:-2px;width:5px;height:calc(100% + 4px);background:rgba(35,119,139,.45);transform:skewY(-35deg);border-radius:1px;}
+  .dash-client-value{text-align:right;color:#294158;font:700 10px var(--font-mono);}
+  .dash-client-value small{display:block;color:#93a1af;font:8px var(--font-ui);margin-top:2px;}
+  .dash-panel-foot{margin-top:12px;padding-top:9px;border-top:1px solid #edf1f4;color:#8b99a7;font-size:8px;line-height:1.5;}
+  .dash-cycle-hero{display:flex;align-items:flex-end;gap:20px;padding:10px 0 14px;}
+  .dash-cycle-main strong{display:block;color:#1c3349;font:700 31px var(--font-mono);letter-spacing:-.07em;}
+  .dash-cycle-main span{display:block;margin-top:4px;color:#7f8e9d;font-size:9px;}
+  .dash-cycle-secondary{padding-bottom:3px;}
+  .dash-cycle-secondary strong{display:block;color:#52758a;font:700 18px var(--font-mono);}
+  .dash-cycle-secondary span{display:block;margin-top:3px;color:#8c9aa8;font-size:8px;}
+  .dash-cycle-bars{display:flex;flex-direction:column;gap:9px;margin-top:3px;}
+  .dash-cycle-row{display:grid;grid-template-columns:72px minmax(60px,1fr) 24px;gap:8px;align-items:center;color:#718193;font-size:8px;}
+  .dash-cycle-track{height:8px;border-radius:99px;background:#eef2f5;overflow:hidden;}
+  .dash-cycle-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2b9db0,#74c4ca);}
+  .dash-cycle-count{text-align:right;color:#53697c;font:9px var(--font-mono);}
+  .dash-3d-chart{height:190px;display:flex;align-items:stretch;justify-content:space-around;gap:8px;padding:10px 5px 0;border-bottom:1px solid #e8eef3;perspective:700px;}
+  .dash-3d-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px;transform:rotateX(5deg);transform-style:preserve-3d;}
+  .dash-3d-value{color:#597185;font:10px var(--font-mono);}
+  .dash-3d-bar-wrap{height:126px;width:min(38px,75%);display:flex;align-items:flex-end;justify-content:center;position:relative;transform-style:preserve-3d;}
+  .dash-3d-bar{position:relative;width:100%;min-height:2px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#58c0c9 0%,#167b91 100%);box-shadow:inset 1px 0 rgba(255,255,255,.45),0 5px 11px rgba(28,121,143,.15);transform:translateZ(8px);}
+  .dash-3d-bar:before{content:"";position:absolute;top:3px;right:-8px;width:8px;height:100%;transform:skewY(-35deg);transform-origin:left top;background:linear-gradient(180deg,#267e91,#11576a);border-radius:0 3px 0 0;}
+  .dash-3d-bar:after{content:"";position:absolute;top:-6px;left:2px;width:calc(100% - 2px);height:7px;transform:skewX(-45deg);transform-origin:left bottom;background:#82d3d8;border-radius:3px 3px 0 0;}
+  .dash-3d-label{color:#718294;font-size:8px;white-space:nowrap;}
+  .dash-portfolio-visual{display:flex;align-items:center;gap:17px;padding:14px 0 10px;}
+  .dash-portfolio-ring{width:104px;height:104px;flex:none;border-radius:50%;display:grid;place-items:center;position:relative;box-shadow:inset 0 0 0 1px rgba(30,55,75,.05);}
+  .dash-portfolio-ring:after{content:"";position:absolute;inset:13px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(22,43,62,.06);}
+  .dash-portfolio-ring span{position:relative;z-index:1;color:#223b51;text-align:center;font:700 18px var(--font-mono);}
+  .dash-portfolio-ring small{display:block;margin-top:2px;color:#8998a5;font:8px var(--font-ui);}
+  .dash-portfolio-legend{display:flex;flex-direction:column;gap:9px;min-width:0;}
+  .dash-portfolio-legend div{display:flex;align-items:center;gap:7px;color:#667b8d;font-size:9px;}
+  .dash-portfolio-legend i{width:8px;height:8px;border-radius:2px;flex:none;}
+  .dash-portfolio-legend strong{margin-left:auto;color:#2e465b;font:10px var(--font-mono);}
+  .dash-portfolio-bottom{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .dash-portfolio-bottom .dash-mini-stat strong{font-size:14px;}
+  .dash-section-heading{display:flex;align-items:center;gap:10px;margin:22px 1px 10px;}
+  .dash-section-heading span{color:#7890a2;font:700 8px var(--font-mono);letter-spacing:.17em;text-transform:uppercase;}
+  .dash-section-heading:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,#d4e0e8,transparent);}
+  .dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px;}
+  .dashboard-card{border-color:#dfe7ee;border-radius:14px;padding:17px 18px;background:linear-gradient(145deg,#fff,#fbfcfe);box-shadow:0 5px 18px rgba(22,43,62,.04);}
+  .dashboard-card-heading h2{color:#23394e;font-size:12px;}
+  .dashboard-card-heading>span{color:#8b9aa8;}
+  .dash-bar-track,.dash-stacked{background:#edf2f6;}
+  .dash-bar-fill{background:linear-gradient(90deg,#2b91a5,#76bdc5)!important;}
+  .dash-weekly{border-color:#e6edf2;}
+  .dash-week-bar{background:linear-gradient(180deg,#68bfc8,#246f88);box-shadow:2px 0 0 #175b70;}
+  .dashboard-ranking-card{border-radius:14px;}
+  .dashboard-table th{background:#f2f6f9;color:#81909e;}
+  .dashboard-table td{color:#3d5368;}
+  .dashboard-footnote{color:#8998a6;}
+  #dashMapaGeografico .leaflet-control-zoom a{background:#fff!important;color:#29465a!important;border-color:#d8e2e9!important;}
+  #dashMapaGeografico .leaflet-control-attribution{font-size:8px!important;}
+  @media(max-width:1180px){
+    .dash-span-8{grid-column:span 12;}
+    .dash-span-4{grid-column:span 6;}
+    .dash-geo-layout{grid-template-columns:minmax(0,1.5fr) minmax(180px,.8fr);}
+  }
+  @media(max-width:760px){
+    #dashboardView{padding:13px 10px 25px;}
+    .dashboard-header{padding:18px 16px;border-radius:14px;min-height:0;}
+    .dashboard-header h1{font-size:23px;}
+    .dashboard-header-actions{justify-content:flex-start;gap:8px;}
+    .dashboard-reason-toggle{padding:6px 8px;}
+    .dash-span-8,.dash-span-4{grid-column:span 12;}
+    .dash-geo-layout{grid-template-columns:1fr;}
+    #dashMapaGeografico{height:280px;min-height:250px;}
+    .dash-city-list{max-height:180px;}
+    .dash-panel{padding:14px;}
+    .dash-portfolio-visual{gap:12px;}
+  }
+  @media print{
+    body.imprimir-dashboard #dashboardView{background:#fff!important;}
+    body.imprimir-dashboard .dashboard-header{background:#172c40!important;color:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+    body.imprimir-dashboard .dash-insights-grid{gap:7px;}
+    body.imprimir-dashboard .dash-panel{break-inside:avoid;box-shadow:none!important;}
+    body.imprimir-dashboard #dashMapaGeografico{height:250px;}
+  }
+
 </style>
 <style>
 
@@ -2424,8 +2580,8 @@ button,input,select,textarea{font-family:var(--font-ui);}
         <header class="dashboard-header">
           <div>
             <div class="dashboard-eyebrow">PERFINORTE · EXPEDIÇÃO</div>
-            <h1>Dashboard gerencial</h1>
-            <p>Desempenho das entregas, pontualidade e reprogramações.</p>
+            <h1>Inteligência de entregas</h1>
+            <p>Visão estratégica da distribuição, carteira de clientes e eficiência da expedição.</p>
           </div>
           <div class="dashboard-header-actions">
             <span id="dashboardGeradoEm"></span>
@@ -2448,10 +2604,76 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <label>Período<select id="dashPeriodo" onchange="atualizarDashboard_()">
             <option value="">Todos</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option>
           </select></label>
+          <label>Cidade<select id="dashCidade" onchange="atualizarDashboard_()"><option value="">Todas</option></select></label>
           <button type="button" class="dashboard-clear" onclick="limparFiltrosDashboard_()">Limpar</button>
         </section>
+
         <section id="dashKpis" class="dashboard-kpis" aria-label="Indicadores principais"></section>
-        <section class="dashboard-grid">
+
+        <section class="dash-insights-grid" aria-label="Inteligência estratégica">
+          <article class="dash-panel dash-span-8">
+            <div class="dash-panel-head">
+              <div><div class="dash-panel-kicker">01 / Território</div><h2>Inteligência geográfica da demanda</h2><p>Concentração de entregas por cidade, com pontos agregados e navegação no mapa.</p></div>
+              <span class="dash-panel-tag">MAPA INTERATIVO</span>
+            </div>
+            <div class="dash-geo-layout">
+              <div id="dashMapaGeografico" role="img" aria-label="Mapa interativo da distribuição de entregas por cidade"></div>
+              <div class="dash-geo-side">
+                <div class="dash-geo-stats">
+                  <div class="dash-mini-stat"><strong id="dashGeoCidadesTotal">0</strong><small>Cidades</small></div>
+                  <div class="dash-mini-stat"><strong id="dashGeoCobertura">0%</strong><small>Com coordenadas</small></div>
+                </div>
+                <div id="dashGeoCidades" class="dash-city-list"><div class="dash-empty">Calculando distribuição...</div></div>
+                <div id="dashGeoResumo" class="dash-geo-foot"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="dash-panel dash-span-4">
+            <div class="dash-panel-head">
+              <div><div class="dash-panel-kicker">02 / Clientes</div><h2>Top clientes por frequência</h2><p>Clientes com maior número de registros de entrega no período filtrado.</p></div>
+              <label class="dash-select-wrap">Exibir
+                <select id="dashTopClientesLimite" onchange="atualizarDashboard_()" aria-label="Quantidade de clientes no ranking">
+                  <option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option>
+                </select>
+              </label>
+            </div>
+            <div id="dashTopClientesSummary" class="dash-client-summary"></div>
+            <div id="dashTopClientes" class="dash-top-clients"><div class="dash-empty">Calculando ranking...</div></div>
+            <div id="dashTopClientesRodape" class="dash-panel-foot">Ranking por frequência, não por faturamento ou volume de material.</div>
+          </article>
+
+          <article class="dash-panel dash-span-4">
+            <div class="dash-panel-head">
+              <div><div class="dash-panel-kicker">03 / Eficiência</div><h2>Tempo de ciclo da entrega</h2><p>Intervalo entre o registro de entrada e a conclusão real.</p></div>
+              <span class="dash-panel-tag">ENTRADA → CONCLUSÃO</span>
+            </div>
+            <div id="dashCicloResumo"></div>
+            <div id="dashCicloDistribuicao" class="dash-cycle-bars"></div>
+            <div id="dashCicloRodape" class="dash-panel-foot"></div>
+          </article>
+
+          <article class="dash-panel dash-span-4">
+            <div class="dash-panel-head">
+              <div><div class="dash-panel-kicker">04 / Planejamento</div><h2>Calendário da demanda</h2><p>Distribuição das entregas pela data prevista e dia da semana.</p></div>
+              <span class="dash-panel-tag">VOLUME PREVISTO</span>
+            </div>
+            <div id="dashDiasSemana" class="dash-3d-chart"><div class="dash-empty">Calculando calendário...</div></div>
+            <div id="dashDiasSemanaRodape" class="dash-panel-foot"></div>
+          </article>
+
+          <article class="dash-panel dash-span-4">
+            <div class="dash-panel-head">
+              <div><div class="dash-panel-kicker">05 / Recorrência</div><h2>Perfil da carteira de clientes</h2><p>Clientes recorrentes e clientes com apenas uma entrega no período.</p></div>
+              <span class="dash-panel-tag">BASE ATENDIDA</span>
+            </div>
+            <div id="dashCarteiraResumo"></div>
+            <div id="dashCarteiraRodape" class="dash-panel-foot"></div>
+          </article>
+        </section>
+
+        <div class="dash-section-heading"><span>Indicadores de execução</span></div>
+        <section class="dashboard-grid" aria-label="Indicadores operacionais">
           <article class="dashboard-card dashboard-span-2"><div class="dashboard-card-heading"><h2>Entregas por vendedor e status</h2><span>Volume</span></div><div id="dashPorVendedor" class="dashboard-chart"></div></article>
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Evolução semanal</h2><span>Conclusões</span></div><div id="dashEvolucao" class="dashboard-chart"></div></article>
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Pontualidade por vendedor</h2><span>Prazo original</span></div><div id="dashPontualidade" class="dashboard-chart"></div></article>
@@ -2459,6 +2681,8 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Motivos dos atrasos</h2><span>Conclusões atrasadas</span></div><div id="dashMotivos" class="dashboard-chart"></div></article>
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Reprogramações por entrega</h2><span>Mais reprogramadas</span></div><div id="dashReprogramacoes" class="dashboard-chart"></div></article>
         </section>
+
+        <div class="dash-section-heading"><span>Desempenho comercial</span></div>
         <article class="dashboard-card dashboard-ranking-card">
           <div class="dashboard-card-heading"><h2>Ranking de vendedores</h2><span>Volume, prazo e tempo de ciclo</span></div>
           <div class="dashboard-table-wrap"><table class="dashboard-table">
@@ -3699,6 +3923,7 @@ function mostrarView(modo){
     renderTabela();
   } else {
     atualizarDashboard_();
+    setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
   }
 }
 
@@ -5727,13 +5952,204 @@ function renderDashBarras_(id,linhas){
   const max=Math.max(1,...linhas.map(x=>x.valor));
   el.innerHTML=linhas.map(x=>'<div class="dash-bar-row"><span class="dash-row-label" title="'+escapeAttr_(x.label)+'">'+escapeAttr_(x.label)+'</span><div class="dash-bar-track"><div class="dash-bar-fill" style="width:'+Math.max(x.valor?2:0,x.valor/max*100)+'%;background:'+(x.cor||'#647f9d')+'"></div></div><span class="dash-bar-value">'+x.valor+(x.sufixo||'')+'</span></div>').join('');
 }
+
+let dashGeoMapa_ = null;
+let dashGeoCamada_ = null;
+
+function prepararFiltrosDashboard_(){
+  popularSelectDashboard_('dashVendedor',todasEntregas.map(d=>d.representante),'Todos');
+  popularSelectDashboard_('dashMotorista',todasEntregas.map(d=>d.motorista),'Todos');
+  popularSelectDashboard_('dashCidade',todasEntregas.map(d=>d.cidade),'Todas');
+  dashboardFiltrosInicializados_=true;
+}
+function limparFiltrosDashboard_(){
+  ['dashDataDe','dashDataAte','dashVendedor','dashMotorista','dashStatus','dashPeriodo','dashCidade'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  atualizarDashboard_();
+}
+function dataReferenciaDashboard_(d){return d.previsaoOriginal||d.data||'';}
+function dataConclusaoDashboard_(d){const v=String(d.dataHoraConclusao||'').trim();return /^\d{4}-\d{2}-\d{2}/.test(v)?v.slice(0,10):'';}
+function dataLocalIso_(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+function diferencaDiasIso_(de,ate){if(!de||!ate)return 0;return Math.max(0,Math.floor((new Date(ate+'T12:00:00')-new Date(de+'T12:00:00'))/86400000));}
+function formatarDuracaoHoras_(h){if(!Number.isFinite(h))return 'N/D';if(h<24)return h.toFixed(1).replace('.',',')+' h';return Math.floor(h/24)+' d '+(h%24).toFixed(0)+' h';}
+function renderDashSemDados_(id,msg){const e=document.getElementById(id);if(e)e.innerHTML='<div class="dash-empty">'+msg+'</div>';}
+function renderDashBarras_(id,linhas){
+  const el=document.getElementById(id);if(!el)return;
+  if(!linhas.length){renderDashSemDados_(id,'Sem dados para os filtros selecionados.');return;}
+  const max=Math.max(1,...linhas.map(x=>x.valor));
+  el.innerHTML=linhas.map(x=>'<div class="dash-bar-row"><span class="dash-row-label" title="'+escapeAttr_(x.label)+'">'+escapeAttr_(x.label)+'</span><div class="dash-bar-track"><div class="dash-bar-fill" style="width:'+Math.max(x.valor?2:0,x.valor/max*100)+'%;background:'+(x.cor||'#647f9d')+'"></div></div><span class="dash-bar-value">'+x.valor+(x.sufixo||'')+'</span></div>').join('');
+}
+function formatarNumeroDashboard_(n){return Number(n||0).toLocaleString('pt-BR');}
+function obterCicloDashboard_(d){
+  if(!d.dataEntradaHora||!d.dataHoraConclusao)return null;
+  const a=new Date(d.dataEntradaHora).getTime(),b=new Date(d.dataHoraConclusao).getTime();
+  return Number.isFinite(a)&&Number.isFinite(b)&&b>=a?(b-a)/3600000:null;
+}
+function inicializarMapaGeograficoDashboard_(){
+  const el=document.getElementById('dashMapaGeografico');
+  if(!el||!window.L)return null;
+  if(!dashGeoMapa_){
+    dashGeoMapa_=L.map('dashMapaGeografico',{zoomControl:false,scrollWheelZoom:true}).setView([-23.42,-52.0],7);
+    L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{
+      attribution:'&copy; Esri, HERE, Garmin, Intermap, increment P Corp.',
+      maxZoom:20,maxNativeZoom:16
+    }).addTo(dashGeoMapa_);
+    L.control.zoom({position:'bottomright'}).addTo(dashGeoMapa_);
+    dashGeoCamada_=L.layerGroup().addTo(dashGeoMapa_);
+  }
+  return dashGeoMapa_;
+}
+function renderizarGeografiaDashboard_(lista){
+  const cityEl=document.getElementById('dashGeoCidades');
+  const resumo=document.getElementById('dashGeoResumo');
+  const cidadesEl=document.getElementById('dashGeoCidadesTotal');
+  const coberturaEl=document.getElementById('dashGeoCobertura');
+  const porCidade={};
+  let totalComCoords=0;
+  lista.forEach(d=>{
+    const nome=String(d.cidade||'').trim()||'Cidade não identificada';
+    const key=nome.toLocaleLowerCase('pt-BR');
+    if(!porCidade[key])porCidade[key]={nome:nome,total:0,latSum:0,lngSum:0,coords:0};
+    const c=porCidade[key];c.total++;
+    const lat=Number(d.lat),lng=Number(d.lng);
+    if(d.lat!==null&&d.lat!==''&&d.lng!==null&&d.lng!==''&&Number.isFinite(lat)&&Number.isFinite(lng)){
+      c.latSum+=lat;c.lngSum+=lng;c.coords++;totalComCoords++;
+    }
+  });
+  const cidades=Object.values(porCidade).sort((a,b)=>b.total-a.total);
+  const comPonto=cidades.filter(c=>c.coords>0);
+  if(cidadesEl)cidadesEl.textContent=formatarNumeroDashboard_(cidades.length);
+  if(coberturaEl)coberturaEl.textContent=(lista.length?Math.round(totalComCoords/lista.length*100):0)+'%';
+  if(cityEl){
+    const max=Math.max(1,...cidades.map(c=>c.total));
+    cityEl.innerHTML=cidades.length?cidades.slice(0,8).map(c=>'<div class="dash-city-item"><div><span class="dash-city-name" title="'+escapeAttr_(c.nome)+'">'+escapeAttr_(c.nome)+'</span><div class="dash-city-track"><div class="dash-city-fill" style="width:'+(c.total/max*100)+'%"></div></div></div><span class="dash-city-count">'+c.total+'</span></div>').join(''):'<div class="dash-empty">Sem cidades identificadas nos filtros.</div>';
+  }
+  if(resumo)resumo.textContent='Entregas com coordenadas: '+formatarNumeroDashboard_(totalComCoords)+' de '+formatarNumeroDashboard_(lista.length)+'. As bolhas representam a quantidade de entregas localizadas em cada cidade.';
+  const mapa=inicializarMapaGeograficoDashboard_();
+  if(!mapa||!dashGeoCamada_)return;
+  dashGeoCamada_.clearLayers();
+  const pontos=[];
+  comPonto.forEach(c=>{
+    const lat=c.latSum/c.coords,lng=c.lngSum/c.coords;
+    pontos.push([lat,lng]);
+    const share=lista.length?c.total/lista.length*100:0;
+    const marker=L.circleMarker([lat,lng],{
+      radius:Math.min(22,7+Math.sqrt(c.total)*2.2),
+      color:'#116d82',weight:2,opacity:.95,fillColor:'#31b5c2',fillOpacity:.72
+    });
+    marker.bindPopup('<div style="min-width:150px"><b style="color:#20384d">'+escapeAttr_(c.nome)+'</b><div style="margin-top:5px;color:#63788b;font-size:11px">'+c.total+' entrega(s) · '+share.toFixed(1).replace('.',',')+'% da base filtrada</div><div style="margin-top:4px;color:#8b9aa7;font-size:10px">'+c.coords+' ponto(s) georreferenciado(s)</div></div>');
+    marker.bindTooltip(escapeAttr_(c.nome)+': '+c.total+' entrega(s)');
+    marker.addTo(dashGeoCamada_);
+  });
+  setTimeout(function(){
+    if(!dashGeoMapa_)return;
+    dashGeoMapa_.invalidateSize();
+    if(pontos.length>1)dashGeoMapa_.fitBounds(L.latLngBounds(pontos),{padding:[25,25],maxZoom:10});
+    else if(pontos.length===1)dashGeoMapa_.setView(pontos[0],9);
+    else dashGeoMapa_.setView([-23.42,-52.0],7);
+  },80);
+}
+function renderizarTopClientesDashboard_(lista){
+  const target=document.getElementById('dashTopClientes');
+  const summary=document.getElementById('dashTopClientesSummary');
+  const foot=document.getElementById('dashTopClientesRodape');
+  const select=document.getElementById('dashTopClientesLimite');
+  const limite=select&&[5,10,15,20].includes(Number(select.value))?Number(select.value):10;
+  const grupos={};
+  lista.forEach(d=>{
+    const nome=String(d.cliente||'').trim()||'Não informado';
+    const key=nome.toLocaleLowerCase('pt-BR');
+    if(!grupos[key])grupos[key]={nome:nome,total:0};
+    grupos[key].total++;
+  });
+  const ranking=Object.values(grupos).sort((a,b)=>b.total-a.total||a.nome.localeCompare(b.nome,'pt-BR'));
+  const totalClientes=ranking.length;
+  const recorrentes=ranking.filter(c=>c.total>=2).length;
+  const top5=ranking.slice(0,5).reduce((s,c)=>s+c.total,0);
+  const participacao=lista.length?Math.round(top5/lista.length*100):0;
+  if(summary)summary.innerHTML=
+    '<div class="dash-mini-stat"><strong>'+formatarNumeroDashboard_(totalClientes)+'</strong><small>Clientes</small></div>'+
+    '<div class="dash-mini-stat"><strong>'+formatarNumeroDashboard_(recorrentes)+'</strong><small>Recorrentes</small></div>'+
+    '<div class="dash-mini-stat"><strong>'+participacao+'%</strong><small>Top 5 da base</small></div>';
+  if(target){
+    if(!ranking.length)target.innerHTML='<div class="dash-empty">Sem clientes nos filtros selecionados.</div>';
+    else{
+      const max=Math.max(1,...ranking.slice(0,limite).map(c=>c.total));
+      target.innerHTML=ranking.slice(0,limite).map((c,i)=>{
+        const share=lista.length?c.total/lista.length*100:0;
+        return '<div class="dash-client-row"><span class="dash-client-rank">'+String(i+1).padStart(2,'0')+'</span><div class="dash-client-main"><span class="dash-client-name" title="'+escapeAttr_(c.nome)+'">'+escapeAttr_(c.nome)+'</span><div class="dash-client-track"><div class="dash-client-fill" style="width:'+Math.max(2,c.total/max*100)+'%"></div></div></div><span class="dash-client-value">'+c.total+'<small>'+share.toFixed(1).replace('.',',')+'%</small></span></div>';
+      }).join('');
+    }
+  }
+  if(foot)foot.textContent='Exibindo '+Math.min(limite,totalClientes)+' de '+totalClientes+' clientes. Contagem por registros de entrega. O indicador não representa faturamento nem tonelagem.';
+}
+function renderizarCicloDashboard_(lista){
+  const resumo=document.getElementById('dashCicloResumo');
+  const distribuicao=document.getElementById('dashCicloDistribuicao');
+  const rodape=document.getElementById('dashCicloRodape');
+  const ciclos=lista.filter(d=>String(d.status||'').trim().toUpperCase()==='ENTREGUE').map(obterCicloDashboard_).filter(v=>v!==null);
+  const ordenados=ciclos.slice().sort((a,b)=>a-b);
+  const media=ciclos.length?ciclos.reduce((a,b)=>a+b,0)/ciclos.length:null;
+  const mediana=ordenados.length?(ordenados.length%2?ordenados[(ordenados.length-1)/2]:(ordenados[ordenados.length/2-1]+ordenados[ordenados.length/2])/2):null;
+  if(resumo){
+    resumo.innerHTML=ciclos.length?'<div class="dash-cycle-hero"><div class="dash-cycle-main"><strong>'+formatarDuracaoHoras_(media)+'</strong><span>Tempo médio do ciclo</span></div><div class="dash-cycle-secondary"><strong>'+formatarDuracaoHoras_(mediana)+'</strong><span>Mediana</span></div></div>':'<div class="dash-empty">Sem timestamps suficientes para calcular o ciclo.</div>';
+  }
+  const faixas=[{label:'Até 24 h',n:0},{label:'1 a 3 dias',n:0},{label:'3 a 7 dias',n:0},{label:'Mais de 7 dias',n:0}];
+  ciclos.forEach(h=>{if(h<=24)faixas[0].n++;else if(h<=72)faixas[1].n++;else if(h<=168)faixas[2].n++;else faixas[3].n++;});
+  if(distribuicao){
+    const max=Math.max(1,...faixas.map(x=>x.n));
+    distribuicao.innerHTML=ciclos.length?faixas.map(f=>'<div class="dash-cycle-row"><span>'+f.label+'</span><div class="dash-cycle-track"><div class="dash-cycle-fill" style="width:'+(f.n/max*100)+'%"></div></div><span class="dash-cycle-count">'+f.n+'</span></div>').join(''):'';
+  }
+  if(rodape)rodape.textContent='Amostra: '+ciclos.length+' entrega(s) com entrada e conclusão registradas. Registros antigos sem horário confiável ficam fora do cálculo.';
+}
+function renderizarCalendarioDashboard_(lista){
+  const el=document.getElementById('dashDiasSemana');
+  const rodape=document.getElementById('dashDiasSemanaRodape');
+  const dias=[{n:'Seg',v:0},{n:'Ter',v:0},{n:'Qua',v:0},{n:'Qui',v:0},{n:'Sex',v:0},{n:'Sáb',v:0},{n:'Dom',v:0}];
+  lista.forEach(d=>{
+    const iso=dataReferenciaDashboard_(d);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(iso||'')))return;
+    const dia=new Date(iso+'T12:00:00').getDay();
+    dias[(dia+6)%7].v++;
+  });
+  const max=Math.max(1,...dias.map(d=>d.v));
+  if(el)el.innerHTML=dias.map(d=>{
+    const h=d.v?Math.max(4,d.v/max*112):2;
+    return '<div class="dash-3d-col" title="'+d.n+': '+d.v+' entrega(s)"><span class="dash-3d-value">'+d.v+'</span><div class="dash-3d-bar-wrap"><div class="dash-3d-bar" style="height:'+h+'px"></div></div><span class="dash-3d-label">'+d.n+'</span></div>';
+  }).join('');
+  const pico=dias.slice().sort((a,b)=>b.v-a.v)[0];
+  if(rodape)rodape.textContent='Pico de demanda: '+(pico&&pico.v?pico.n+' ('+pico.v+' entrega(s))':'sem dados com previsão válida')+'. Baseado na data prevista, não na data de conclusão.';
+}
+function renderizarCarteiraDashboard_(lista){
+  const el=document.getElementById('dashCarteiraResumo');
+  const rodape=document.getElementById('dashCarteiraRodape');
+  const grupos={};
+  lista.forEach(d=>{
+    const nome=String(d.cliente||'').trim()||'Não informado';
+    const k=nome.toLocaleLowerCase('pt-BR');
+    grupos[k]=(grupos[k]||0)+1;
+  });
+  const valores=Object.values(grupos);
+  const total=valores.length;
+  const recorrentes=valores.filter(n=>n>=2).length;
+  const pontuais=total-recorrentes;
+  const pct=total?Math.round(recorrentes/total*100):0;
+  const top5=valores.sort((a,b)=>b-a).slice(0,5).reduce((a,b)=>a+b,0);
+  const conc=lista.length?Math.round(top5/lista.length*100):0;
+  if(el){
+    el.innerHTML=total?
+      '<div class="dash-portfolio-visual"><div class="dash-portfolio-ring" style="background:conic-gradient(#2399ad 0% '+pct+'%,#dce6ec '+pct+'% 100%)"><span>'+pct+'%<small>recorrentes</small></span></div><div class="dash-portfolio-legend"><div><i style="background:#2399ad"></i>Recorrentes <strong>'+recorrentes+'</strong></div><div><i style="background:#dce6ec"></i>Uma entrega <strong>'+pontuais+'</strong></div></div></div>'+
+      '<div class="dash-portfolio-bottom"><div class="dash-mini-stat"><strong>'+formatarNumeroDashboard_(total)+'</strong><small>Clientes atendidos</small></div><div class="dash-mini-stat"><strong>'+conc+'%</strong><small>Participação Top 5</small></div></div>'
+      :'<div class="dash-empty">Sem clientes nos filtros selecionados.</div>';
+  }
+  if(rodape)rodape.textContent='Recorrente = 2 ou mais registros de entrega dentro do período filtrado. A concentração Top 5 considera frequência, não receita.';
+}
 function atualizarDashboard_(){
   const gerado=document.getElementById('dashboardGeradoEm');
-  if(gerado)gerado.textContent='Gerado em '+new Date().toLocaleString('pt-BR');
+  if(gerado)gerado.textContent='Atualizado em '+new Date().toLocaleString('pt-BR');
   if(!dashboardFiltrosInicializados_)prepararFiltrosDashboard_();
   const de=valorSelectDashboard_('dashDataDe'),ate=valorSelectDashboard_('dashDataAte');
   const vendedor=valorSelectDashboard_('dashVendedor'),motorista=valorSelectDashboard_('dashMotorista');
-  const status=valorSelectDashboard_('dashStatus'),periodo=valorSelectDashboard_('dashPeriodo');
+  const status=valorSelectDashboard_('dashStatus'),periodo=valorSelectDashboard_('dashPeriodo'),cidade=valorSelectDashboard_('dashCidade');
   const hoje=dataLocalIso_();
   const lista=todasEntregas.filter(d=>{
     const ref=dataReferenciaDashboard_(d);
@@ -5744,6 +6160,7 @@ function atualizarDashboard_(){
     const stat=String(d.status||'').trim().toUpperCase()||'VAZIO';
     if(status&&stat!==status)return false;
     if(periodo&&String(d.periodo||'')!==periodo)return false;
+    if(cidade&&String(d.cidade||'')!==cidade)return false;
     return true;
   });
   const entregues=lista.filter(d=>String(d.status||'').trim().toUpperCase()==='ENTREGUE');
@@ -5755,17 +6172,23 @@ function atualizarDashboard_(){
   const totalReprogramacoes=lista.reduce((a,d)=>a+Number(d.qtdReprogramacoes||0),0);
   const taxa=lista.length?Math.round(entregues.length/lista.length*100):0;
   const kpis=[
-    ['Entregas no período',lista.length,'Previsão original como referência'],
-    ['Entregues',entregues.length,'Status concluído'],
+    ['Entregas no período',formatarNumeroDashboard_(lista.length),'Previsão original como referência'],
+    ['Entregues',formatarNumeroDashboard_(entregues.length),'Status concluído'],
     ['Taxa de conclusão',taxa+'%','Entregues sobre o total'],
-    ['Em andamento',andamento.length,'Status atual'],
-    ['Em fila',fila.length,'Aguardando execução'],
-    ['Atrasadas',atrasadas.length,'Pendentes após a previsão original']
+    ['Em andamento',formatarNumeroDashboard_(andamento.length),'Status atual'],
+    ['Em fila',formatarNumeroDashboard_(fila.length),'Aguardando execução'],
+    ['Atrasadas',formatarNumeroDashboard_(atrasadas.length),'Pendentes após a previsão original']
   ];
   const kpi=document.getElementById('dashKpis');
   if(kpi)kpi.innerHTML=kpis.map(x=>'<article class="dashboard-kpi"><div class="k-label">'+x[0]+'</div><div class="k-value">'+x[1]+'</div><div class="k-note">'+x[2]+'</div></article>').join('');
 
-  // Barras empilhadas por vendedor e status.
+  renderizarGeografiaDashboard_(lista);
+  renderizarTopClientesDashboard_(lista);
+  renderizarCicloDashboard_(lista);
+  renderizarCalendarioDashboard_(lista);
+  renderizarCarteiraDashboard_(lista);
+
+  // Indicadores de execução existentes, mantidos e atualizados pelos mesmos filtros.
   const mapaVendedor={};
   lista.forEach(d=>{
     const nome=String(d.representante||'').trim()||'Não informado';
@@ -5783,7 +6206,6 @@ function atualizarDashboard_(){
       vendedores.map(([nome,v])=>'<div class="dash-stack-row"><span class="dash-row-label" title="'+escapeAttr_(nome)+'">'+escapeAttr_(nome)+'</span><div class="dash-stacked"><span style="width:'+(v.entregue/v.total*100)+'%;background:#579b78"></span><span style="width:'+(v.andamento/v.total*100)+'%;background:#d3a94a"></span><span style="width:'+(v.fila/v.total*100)+'%;background:#a5afbd"></span></div><span class="dash-row-total">'+v.total+'</span></div>').join('');
   }
 
-  // Evolução semanal de conclusões reais.
   const semanas={};
   entregues.forEach(d=>{
     const iso=dataConclusaoDashboard_(d);if(!iso)return;
@@ -5804,7 +6226,6 @@ function atualizarDashboard_(){
     }
   }
 
-  // Pontualidade somente para entregas com data real de conclusão.
   const pontualidade=vendedores.map(([nome])=>{
     const itens=entregues.filter(d=>(String(d.representante||'').trim()||'Não informado')===nome&&dataConclusaoDashboard_(d)&&d.previsaoOriginal);
     const noPrazo=itens.filter(d=>dataConclusaoDashboard_(d)<=d.previsaoOriginal).length;
@@ -5812,37 +6233,29 @@ function atualizarDashboard_(){
   }).filter(x=>x.total>0).sort((a,b)=>b.valor-a.valor);
   renderDashBarras_('dashPontualidade',pontualidade.map(x=>({label:x.label,valor:x.valor,cor:x.valor>=90?'#579b78':x.valor>=70?'#c59a43':'#bc7067',sufixo:'%'})));
 
-  // Aging de pendências em relação à previsão original.
   const aging=[{label:'1 dia',valor:0},{label:'2 a 3 dias',valor:0},{label:'4 a 7 dias',valor:0},{label:'Mais de 7 dias',valor:0}];
   atrasadas.forEach(d=>{const dias=diferencaDiasIso_(d.previsaoOriginal,hoje);if(dias===1)aging[0].valor++;else if(dias<=3)aging[1].valor++;else if(dias<=7)aging[2].valor++;else aging[3].valor++;});
   renderDashBarras_('dashAging',aging);
 
-  // Motivos registrados nas conclusões atrasadas.
   const motivos={};entregues.forEach(d=>{const m=String(d.motivoAtraso||'').trim();if(m)motivos[m]=(motivos[m]||0)+1;});
   renderDashBarras_('dashMotivos',Object.entries(motivos).sort((a,b)=>b[1]-a[1]).map(([label,valor])=>({label,valor})));
 
-  // Entregas com mais alterações de previsão.
   const maiores=lista.filter(d=>Number(d.qtdReprogramacoes||0)>0).sort((a,b)=>Number(b.qtdReprogramacoes||0)-Number(a.qtdReprogramacoes||0)).slice(0,8)
     .map(d=>({label:(d.cliente||'Entrega')+' · '+(d.codigo||'sem código'),valor:Number(d.qtdReprogramacoes||0),cor:'#c58b4f'}));
   renderDashBarras_('dashReprogramacoes',maiores);
 
-  // Ranking e tempo de ciclo: entrada até conclusão real.
   const ranking=vendedores.map(([nome,v])=>{
     const itens=entregues.filter(d=>(String(d.representante||'').trim()||'Não informado')===nome);
-    const ciclos=itens.map(d=>{
-      if(!d.dataEntradaHora||!d.dataHoraConclusao)return null;
-      const a=new Date(d.dataEntradaHora).getTime(),b=new Date(d.dataHoraConclusao).getTime();
-      return Number.isFinite(a)&&Number.isFinite(b)&&b>=a?(b-a)/3600000:null;
-    }).filter(x=>x!==null);
+    const ciclos=itens.map(obterCicloDashboard_).filter(x=>x!==null);
     const avaliadas=itens.filter(d=>d.dataHoraConclusao&&d.previsaoOriginal);
     const noPrazo=avaliadas.filter(d=>dataConclusaoDashboard_(d)<=d.previsaoOriginal).length;
     return {nome,total:v.total,entregues:v.entregue,pendentes:v.total-v.entregue,ciclo:ciclos.length?ciclos.reduce((a,b)=>a+b,0)/ciclos.length:null,pontualidade:avaliadas.length?Math.round(noPrazo/avaliadas.length*100):null};
   }).sort((a,b)=>b.total-a.total);
   const tbody=document.getElementById('dashRanking');
-  if(tbody)tbody.innerHTML=ranking.length?ranking.map(x=>'<tr><td><b>'+escapeAttr_(x.nome)+'</b></td><td>'+x.total+'</td><td>'+x.entregues+'</td><td>'+x.pendentes+'</td><td>'+formatarDuracaoHoras_(x.ciclo)+'</td><td class="dash-pct">'+(x.pontualidade===null?'—':x.pontualidade+'%')+'</td></tr>').join(''):'<tr><td colspan="6" class="dash-empty">Sem dados para os filtros selecionados.</td></tr>';
+  if(tbody)tbody.innerHTML=ranking.length?ranking.map(x=>'<tr><td><b>'+escapeAttr_(x.nome)+'</b></td><td>'+x.total+'</td><td>'+x.entregues+'</td><td>'+x.pendentes+'</td><td>'+formatarDuracaoHoras_(x.ciclo)+'</td><td class="dash-pct">'+(x.pontualidade===null?'N/D':x.pontualidade+'%')+'</td></tr>').join(''):'<tr><td colspan="6" class="dash-empty">Sem dados para os filtros selecionados.</td></tr>';
 
   const rodape=document.getElementById('dashboardRodape');
-  if(rodape)rodape.textContent='Base: '+lista.length+' entrega(s) filtrada(s). '+reprogramadas.length+' entrega(s) reprogramada(s), com '+totalReprogramacoes+' alteração(ões) de previsão registradas. A pontualidade usa a previsão original. Entregas antigas sem timestamp de conclusão não entram no cálculo de ciclo ou pontualidade.';
+  if(rodape)rodape.textContent='Base filtrada: '+formatarNumeroDashboard_(lista.length)+' entrega(s). '+reprogramadas.length+' entrega(s) reprogramada(s), com '+totalReprogramacoes+' alteração(ões) registradas. A pontualidade usa a previsão original. O tempo de ciclo considera somente registros com timestamps de entrada e conclusão.';
 }
 
 function exportarDashboardPDF_(){
