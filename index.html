@@ -651,6 +651,35 @@
 .login-card button{margin-top:8px;padding:11px;border:0;border-radius:5px;background:#e07b39;color:#1a1305;font-weight:700;cursor:pointer;}
 .login-card button:disabled{opacity:.6;cursor:wait;}
 #loginError{min-height:18px;color:#ea9999;font-size:12px;text-align:center;}
+
+/* Tela de carregamento inicial: sobreposição visual, sem interferir no mapa. */
+#loadingDados[hidden]{display:none!important;}
+#loadingDados{
+  position:fixed;inset:0;z-index:4500;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(18,22,27,.94);backdrop-filter:blur(5px);
+}
+.loading-dados-card{
+  width:min(420px,100%);padding:34px 30px;text-align:center;
+  background:#181d24;border:1px solid #2a313c;border-radius:12px;
+  box-shadow:0 22px 70px rgba(0,0,0,.45);
+}
+.loading-dados-brand{font-family:Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#aab3bf;}
+.loading-dados-titulo{font-size:21px;font-weight:700;margin:10px 0 7px;}
+.loading-dados-desc{font-size:13px;color:#aab3bf;margin:0;}
+.loading-dados-spinner{
+  width:48px;height:48px;margin:25px auto 18px;border:3px solid #2a313c;
+  border-top-color:#e07b39;border-right-color:#1fb6c9;border-radius:50%;
+  animation:loading-dados-giro .8s linear infinite;
+}
+@keyframes loading-dados-giro{to{transform:rotate(360deg);}}
+.loading-dados-barra{height:4px;overflow:hidden;background:#2a313c;border-radius:10px;margin-top:22px;}
+.loading-dados-barra::after{
+  content:"";display:block;width:38%;height:100%;border-radius:10px;
+  background:linear-gradient(90deg,#e07b39,#1fb6c9);
+  animation:loading-dados-fluxo 1.35s ease-in-out infinite;
+}
+@keyframes loading-dados-fluxo{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+.loading-dados-status{margin-top:12px;font-family:Consolas,monospace;font-size:10px;letter-spacing:.08em;color:#aab3bf;}
 </style>
 </head>
 <body>
@@ -668,6 +697,16 @@
   </form>
 </div>
 <div id="app" hidden>
+  <div id="loadingDados" hidden aria-live="polite" aria-busy="true">
+    <div class="loading-dados-card">
+      <div class="loading-dados-brand">PERFINORTE · EXPEDIÇÃO</div>
+      <div class="loading-dados-spinner" aria-hidden="true"></div>
+      <div class="loading-dados-titulo">Preparando o mapa</div>
+      <p class="loading-dados-desc">Carregando entregas e organizando as informações…</p>
+      <div class="loading-dados-barra" aria-hidden="true"></div>
+      <div class="loading-dados-status">AGUARDE · SINCRONIZANDO DADOS</div>
+    </div>
+  </div>
   <button id="sidebarToggle" onclick="alternarSidebar()" title="Minimizar/maximizar painel">‹</button>
   <aside id="sidebar">
     <div class="brand">
@@ -1423,6 +1462,7 @@ async function carregarEntregas(){
     todasEntregas = DADOS_EXEMPLO;
     populaMotoristas();
     aplicarFiltros();
+    ocultarLoadingDados_();
     return;
   }
 
@@ -1445,6 +1485,8 @@ async function carregarEntregas(){
       // só registra no console pra depuração se precisar
       console.error('Atualização automática falhou:', err);
     }
+  } finally {
+    if (primeiraCarga) ocultarLoadingDados_();
   }
 }
 
@@ -2477,7 +2519,16 @@ carregarPreferencias();
 restaurarSidebar_();
 restaurarSidebarDireito_();
 
+function mostrarLoadingDados_(){
+  const overlay = document.getElementById('loadingDados');
+  if (overlay) overlay.hidden = false;
+}
+function ocultarLoadingDados_(){
+  const overlay = document.getElementById('loadingDados');
+  if (overlay) overlay.hidden = true;
+}
 function iniciarMapaAutenticado_(){
+mostrarLoadingDados_();
 initMap();
 // A Perfinorte é buscada e centralizada ANTES das entregas — assim a
 // primeira coisa que a câmera mostra é a Perfinorte, e só depois (se tiver
