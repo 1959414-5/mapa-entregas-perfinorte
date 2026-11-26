@@ -1356,6 +1356,54 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
   .rail-link,.brand .btn-nova,.toolbar-icon-button,.toolbar-filter-button,.map-actions button,.period-progress>div{transition:none!important;}
 }
 
+
+/* ===== LAYOUT V11 · sidebar operacional simplificada ===== */
+.app-rail .rail-link{width:52px;height:52px;flex-basis:52px;}
+.app-rail .rail-link.active{background:#253343;color:#ff9b45;border-color:#35495d;}
+.app-rail .rail-link.active:before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+#sidebar .brand{padding:17px 18px 14px;}
+#sidebar .brand .operation-title{margin-top:14px;margin-bottom:9px;}
+#sidebar .brand .btn-nova{
+  width:100%;min-width:0;min-height:39px;margin:0 0 8px;padding:8px 10px;
+  display:flex;align-items:center;justify-content:center;white-space:normal;
+}
+#sidebar .brand .brand-action-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:stretch;gap:8px;width:100%;margin:0 0 8px;
+}
+#sidebar .brand .brand-action-row>.btn-nova{
+  width:100%!important;min-width:0!important;min-height:38px;margin:0!important;
+  padding:7px 6px;display:flex!important;line-height:1.25;text-align:center;
+  white-space:normal;overflow-wrap:normal;font-size:10px;
+}
+#sidebar .brand .brand-action-row-tools{margin-top:0;margin-bottom:8px;}
+#sidebar .brand .brand-action-row-tools #rotaToolbar{
+  display:flex;min-width:0;width:100%;gap:0;margin:0;
+}
+#sidebar .brand .brand-action-row-tools #rotaToolbar button{
+  width:100%;min-width:0;min-height:38px;padding:7px 5px;
+  border:1px solid #39495b;border-radius:8px;background:#202d3b;
+  color:#d8e2ec;font-family:var(--font-ui);font-size:10px;font-weight:650;
+  letter-spacing:0;white-space:normal;line-height:1.2;
+}
+#sidebar .brand .brand-action-row-tools>.btn-confirmacoes{
+  display:flex;align-items:center;justify-content:center;width:100%;min-width:0;
+  min-height:38px;margin:0;padding:7px 5px;border:1px solid #39495b;
+  border-radius:8px;background:#202d3b;color:#d8e2ec;font-family:var(--font-ui);
+  font-size:10px;font-weight:650;letter-spacing:0;line-height:1.2;white-space:normal;
+}
+#sidebar .brand .brand-action-row-tools>.btn-confirmacoes.tem-pendentes{
+  background:rgba(255,100,100,.11);color:#ffabab;border-color:#a95358;
+}
+#sidebar .brand #rotaInfo{margin:0 0 8px;font-size:10px;}
+#sidebar .brand .btn-atencao-topo{
+  width:100%;min-height:37px;margin:0;padding:8px 9px;
+  display:flex;align-items:center;justify-content:center;
+}
+#sidebar .controls{padding-top:14px;}
+/* O menu lateral agora controla diretamente Mapa e Tabela. */
+#sidebar .view-title,#sidebar .view-toggle:not(#rotaToolbar){display:none!important;}
+
 </style>
 </head>
 <body>
@@ -1388,23 +1436,14 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
     </a>
     <span class="rail-divider"></span>
-    <a class="rail-link active" href="index.html" title="Mapa de entregas" aria-label="Mapa de entregas">
+    <button id="railMapView" class="rail-link active" type="button" onclick="mostrarView('mapa')" title="Mapa de entregas" aria-label="Mapa de entregas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8.5 4l7 2.5L21 4v13.5L15.5 20l-7-2.5L3 20zM8.5 4v13.5M15.5 6.5V20"/></svg>
-    </a>
-    <a class="rail-link" href="motorista.html" title="Área do motorista" aria-label="Área do motorista">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
-    </a>
-    <button class="rail-link" type="button" onclick="mostrarView('tabela')" title="Tabela de entregas" aria-label="Tabela de entregas">
+    </button>
+    <button id="railTableView" class="rail-link" type="button" onclick="mostrarView('tabela')" title="Tabela de entregas" aria-label="Tabela de entregas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M4 9h16M4 14.5h16M9.5 9v11.5M15 9v11.5"/></svg>
     </button>
-    <a class="rail-link" href="vendedores.html" title="Área comercial" aria-label="Área comercial">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.5-3.2 2.5-5 6-5s5.5 1.8 6 5M16 5.5a3 3 0 0 1 0 5.8M17 15c2.4.4 3.7 2.1 4 5"/></svg>
-    </a>
-    <button class="rail-link" type="button" onclick="abrirModalConfirmacoes()" title="Confirmações do motorista" aria-label="Confirmações do motorista">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 4V2.8h8V4M8 12l2.5 2.5L16 9"/></svg>
-    </button>
     <span class="rail-spacer"></span>
-    <button class="rail-link rail-logout" type="button" onclick="encerrarSessao_()" title="Sair da sessão" aria-label="Sair da sessão">
+    <button id="btnSair" class="rail-link rail-logout" type="button" onclick="encerrarSessao_()" title="Sair da sessão" aria-label="Sair da sessão">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M15 8l4 4-4 4M19 12H9"/></svg>
     </button>
   </nav>
@@ -1420,26 +1459,22 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
 
       <div class="secao-titulo operation-title">Operação</div>
       <button class="btn-nova" onclick="abrirModal()">＋ Nova entrega</button>
+
       <div class="brand-action-row">
         <button class="btn-nova btn-formatar" onclick="abrirModalFormatarEndereco()">⌖ Formatar endereço</button>
         <button class="btn-nova btn-cliente-topo" onclick="abrirModalNovoCliente()">＋ Novo cliente</button>
       </div>
-      <button class="btn-nova btn-atencao-topo" onclick="abrirModalAtencao()">⚠ Linha de atenção</button>
 
-      <div class="secao-titulo view-title">Visualização</div>
-      <div class="view-toggle">
-        <button id="btnVerMapa" class="active" onclick="mostrarView('mapa')">▧ Mapa</button>
-        <button id="btnVerTabela" onclick="mostrarView('tabela')">▦ Tabela</button>
-      </div>
-      <div class="brand-tools">
+      <div class="brand-action-row brand-action-row-tools">
         <div class="view-toggle" id="rotaToolbar">
-          <button onclick="sugerirRota()">⌁ Sugerir rota</button>
-          <button id="btnLimparRota" onclick="limparRotaSugerida()" style="display:none;">× Limpar rota</button>
+          <button type="button" onclick="sugerirRota()">⌁ Sugerir rota</button>
+          <button id="btnLimparRota" type="button" onclick="limparRotaSugerida()" style="display:none;">× Limpar rota</button>
         </div>
-        <div id="rotaInfo" class="rota-info" style="display:none;"></div>
-        <button class="btn-confirmacoes" id="btnConfirmacoes" onclick="abrirModalConfirmacoes()">▣ Confirmações do motorista</button>
-        <button class="btn-sair" id="btnSair" onclick="encerrarSessao_()">↪ Sair da sessão</button>
+        <button class="btn-confirmacoes" id="btnConfirmacoes" onclick="abrirModalConfirmacoes()">▣ Confirmações</button>
       </div>
+      <div id="rotaInfo" class="rota-info" style="display:none;"></div>
+
+      <button class="btn-nova btn-atencao-topo" onclick="abrirModalAtencao()">⚠ Linha de atenção</button>
     </div>
 
     <div class="controls">
@@ -2569,13 +2604,12 @@ async function confirmarTodasPendentes(){
 
 function mostrarView(modo){
   modoAtual = modo;
-  document.getElementById('btnVerMapa').classList.toggle('active', modo === 'mapa');
-  document.getElementById('btnVerTabela').classList.toggle('active', modo === 'tabela');
+  document.getElementById('railMapView').classList.toggle('active', modo === 'mapa');
+  document.getElementById('railTableView').classList.toggle('active', modo === 'tabela');
   document.getElementById('map').style.display = (modo === 'mapa') ? 'block' : 'none';
   document.getElementById('tableView').style.display = (modo === 'tabela') ? 'block' : 'none';
 
-  // o painel direito (lista/estatísticas) é só do mapa — some inteiro na
-  // tabela, junto com o botão de minimizar/maximizar dele, pra não bugar
+  // O painel de entregas é exclusivo do mapa.
   const app = document.getElementById('app');
   app.classList.toggle('tabela-ativa', modo === 'tabela');
   document.getElementById('sidebarDireitoToggle').style.display = (modo === 'tabela') ? 'none' : 'flex';
