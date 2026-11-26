@@ -2252,7 +2252,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
     <div class="map-toolbar">
       <div class="map-search" role="search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
-        <input id="buscaGlobal" type="search" aria-label="Buscar por cliente, cidade, pedido ou motorista" placeholder="Buscar por cliente, cidade, pedido ou motorista..." autocomplete="off" oninput="filtrarBuscaGlobal_(this.value)">
+        <input id="buscaGlobal" type="search" aria-label="Buscar por cliente, cidade, vendedor, pedido ou motorista" placeholder="Buscar por cliente, cidade, vendedor, pedido ou motorista..." autocomplete="off" oninput="filtrarBuscaGlobal_(this.value)">
         <button type="button" class="search-clear" title="Limpar busca" aria-label="Limpar busca" onclick="document.getElementById('buscaGlobal').value='';filtrarBuscaGlobal_('')">×</button>
       </div>
       <div class="map-toolbar-actions">
@@ -5497,7 +5497,7 @@ function normalizarTextoBusca_(valor){
 // Mantém exatamente os mesmos campos e a mesma normalização na busca do mapa e da tabela.
 function entregaCorrespondeBuscaGlobal_(d){
   if (!termoBuscaGlobal) return true;
-  const camposBusca = [d.cliente, d.cidade, d.motorista, d.codigo, d.pedido, d.endereco, d.observacoes, d.linha].join(' ');
+  const camposBusca = [d.cliente, d.cidade, d.motorista, d.representante, d.vendedor, d.codigo, d.pedido, d.endereco, d.observacoes, d.linha].join(' ');
   return normalizarTextoBusca_(camposBusca).includes(termoBuscaGlobal);
 }
 
