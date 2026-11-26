@@ -11,6 +11,7 @@ const APP_FILES = [
   'pwa-register.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'icons/icon-maskable-512.png',
   'icons/apple-touch-icon.png'
 ];
 
