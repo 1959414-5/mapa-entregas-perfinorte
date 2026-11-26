@@ -2403,6 +2403,100 @@ button,input,select,textarea{font-family:var(--font-ui);}
   #modalOverlay .btn-back-addresses{align-self:flex-start;}
 }
 
+
+/* ===== MÓDULO DE VEÍCULOS · FROTA E CUSTO OPERACIONAL ===== */
+#app.veiculos-ativa{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+#app.veiculos-ativa #sidebar,#app.veiculos-ativa #sidebarDireito{display:none!important;}
+#app.veiculos-ativa #sidebarToggle,#app.veiculos-ativa #sidebarDireitoToggle{display:none!important;}
+#app.veiculos-ativa .map-toolbar,#app.veiculos-ativa #config-banner,#app.veiculos-ativa #map,
+#app.veiculos-ativa #mapLegend,#app.veiculos-ativa .map-actions,#app.veiculos-ativa #tableView,
+#app.veiculos-ativa #dashboardView{display:none!important;}
+#veiculosView{display:none;flex:1;min-height:0;overflow:auto;padding:26px 28px 40px;background:#f3f6fa;color:#172033;}
+#app.veiculos-ativa #veiculosView{display:block;}
+.vehicles-shell{width:100%;max-width:1500px;margin:0 auto;}
+.vehicles-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;}
+.vehicles-eyebrow{font:700 10px var(--font-mono);letter-spacing:.15em;color:#788397;}
+.vehicles-header h1{margin:5px 0 4px;font-size:28px;letter-spacing:-.04em;color:#172033;}
+.vehicles-header p{margin:0;color:#697487;font-size:13px;line-height:1.5;}
+.vehicles-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;}
+.vehicles-price-reference{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border:1px solid #dce4ed;border-radius:10px;color:#41516a;font-size:11px;}
+.vehicles-price-reference strong{color:#172033;font-size:12px;}
+.vehicles-price-reference small{display:block;color:#8592a4;font-size:9px;margin-top:2px;}
+.vehicles-action{border:1px solid #d5dfeb;border-radius:9px;background:#fff;color:#33435a;padding:10px 13px;font-size:11px;font-weight:700;cursor:pointer;}
+.vehicles-action.primary{background:#172b3e;border-color:#172b3e;color:#fff;}
+.vehicles-action:hover{filter:brightness(.97);}
+.vehicles-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px;}
+.vehicles-kpi{background:#fff;border:1px solid #dce4ed;border-radius:12px;padding:15px 16px;box-shadow:0 3px 12px rgba(28,45,68,.035);}
+.vehicles-kpi small{display:block;color:#718097;font-size:9px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;}
+.vehicles-kpi strong{display:block;color:#18283b;font-size:25px;line-height:1.2;margin-top:6px;font-variant-numeric:tabular-nums;}
+.vehicles-kpi span{display:block;color:#8a97a8;font-size:10px;margin-top:3px;}
+.vehicles-panel{background:#fff;border:1px solid #dce4ed;border-radius:13px;box-shadow:0 3px 15px rgba(28,45,68,.035);overflow:hidden;}
+.vehicles-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-bottom:1px solid #e7edf3;flex-wrap:wrap;}
+.vehicles-tabs{display:flex;gap:5px;flex-wrap:wrap;}
+.vehicles-tabs button{border:1px solid transparent;border-radius:7px;background:transparent;color:#718097;padding:8px 11px;font-size:10px;font-weight:700;cursor:pointer;}
+.vehicles-tabs button.active{background:#eaf2f7;color:#1c5364;border-color:#d4e5ed;}
+.vehicles-search{height:35px;min-width:180px;max-width:280px;width:100%;border:1px solid #dce4ed;border-radius:8px;padding:0 11px;background:#fbfcfe;color:#26374c;font-size:11px;outline:none;}
+.vehicles-search:focus{border-color:#55a8b8;box-shadow:0 0 0 3px rgba(49,157,177,.1);}
+.vehicles-table-wrap{width:100%;overflow:auto;}
+.vehicles-table{width:100%;border-collapse:collapse;min-width:900px;}
+.vehicles-table th{padding:11px 13px;background:#f7f9fc;color:#7d8a9d;text-align:left;text-transform:uppercase;letter-spacing:.07em;font-size:8px;font-weight:800;white-space:nowrap;}
+.vehicles-table td{padding:13px;border-top:1px solid #edf1f5;color:#42516a;font-size:10.5px;vertical-align:middle;}
+.vehicles-table tbody tr:hover{background:#fbfdff;}
+.vehicles-name{display:flex;align-items:center;gap:10px;min-width:210px;}
+.vehicles-icon{width:35px;height:35px;border-radius:9px;background:#edf4f7;color:#257d91;display:flex;align-items:center;justify-content:center;flex:0 0 35px;}
+.vehicles-icon svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.vehicles-name strong{display:block;color:#1c2e43;font-size:11px;font-weight:750;}
+.vehicles-name small{display:block;color:#8b98a8;font-size:9px;margin-top:3px;}
+.vehicles-plate{display:inline-block;padding:5px 8px;border:1px solid #dce4ed;border-radius:5px;background:#f7f9fc;color:#22354a;font:700 10px var(--font-mono);letter-spacing:.04em;white-space:nowrap;}
+.vehicles-type{display:inline-flex;align-items:center;padding:5px 8px;border-radius:20px;font-size:9px;font-weight:750;white-space:nowrap;}
+.vehicles-type.proprio{background:#e8f5ee;color:#27754e;}
+.vehicles-type.terceirizado{background:#fff2e5;color:#a65c1d;}
+.vehicles-muted{color:#95a1b0!important;}
+.vehicles-cost{font-weight:750;color:#1e5967!important;font-variant-numeric:tabular-nums;}
+.vehicles-status{font-size:9px;font-weight:750;}
+.vehicles-status.active{color:#22875d;}
+.vehicles-status.inactive{color:#a0a9b5;}
+.vehicles-row-actions{display:flex;gap:6px;white-space:nowrap;}
+.vehicles-row-actions button{border:1px solid #dce4ed;background:#fff;border-radius:6px;padding:6px 8px;color:#52637a;font-size:9px;font-weight:700;cursor:pointer;}
+.vehicles-row-actions button:hover{background:#f2f6fa;}
+.vehicles-empty{padding:35px 16px;text-align:center;color:#8996a8;font-size:11px;}
+.vehicles-footnote{padding:13px 17px;border-top:1px solid #e7edf3;color:#8491a2;font-size:9px;line-height:1.55;}
+.vehicles-footnote strong{color:#5a687d;}
+.vehicles-modal{width:min(760px,calc(100vw - 28px));max-height:calc(100vh - 32px);overflow:auto;background:#172432;border:1px solid #34475a;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.35);}
+.vehicles-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:19px 21px;border-bottom:1px solid #334354;}
+.vehicles-modal-head .kicker{font:700 9px var(--font-mono);letter-spacing:.13em;color:#8ea2b8;}
+.vehicles-modal-head h2{margin:5px 0 3px;color:#f3f6fa;font-size:19px;}
+.vehicles-modal-head p{margin:0;color:#a8b6c6;font-size:11px;}
+.vehicles-modal-close{width:30px;height:30px;border:1px solid #405368;border-radius:7px;background:#223244;color:#c4d0dc;font-size:19px;cursor:pointer;}
+.vehicles-form{padding:18px 21px;}
+.vehicles-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;}
+.vehicles-field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.vehicles-field.span-2{grid-column:span 2;}
+.vehicles-field.span-3{grid-column:1/-1;}
+.vehicles-field label{color:#9bacc0;font-size:9px;font-weight:700;letter-spacing:.04em;}
+.vehicles-field input,.vehicles-field select,.vehicles-field textarea{width:100%;min-width:0;height:37px;border:1px solid #405266;border-radius:7px;background:#202e3d;color:#edf2f7;padding:0 10px;font:11px var(--font-ui);outline:none;}
+.vehicles-field textarea{height:62px;padding:9px;resize:vertical;}
+.vehicles-field input:focus,.vehicles-field select:focus,.vehicles-field textarea:focus{border-color:#4da8b9;box-shadow:0 0 0 3px rgba(49,157,177,.12);}
+.vehicles-field input::placeholder{color:#74869a;}
+.vehicles-form-hint{grid-column:1/-1;padding:10px 11px;border:1px solid #3b4e61;border-radius:7px;background:#1d2c3a;color:#aebdcc;font-size:9px;line-height:1.5;}
+.vehicles-form-hint strong{color:#e9f0f6;}
+.vehicles-modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:14px 21px;border-top:1px solid #334354;}
+.vehicles-modal-actions button{padding:9px 14px;border-radius:7px;font-size:10px;font-weight:750;cursor:pointer;}
+.vehicles-cancel{border:1px solid #43566a;background:#223244;color:#c7d1dc;}
+.vehicles-save{border:1px solid #2d91a3;background:#2d91a3;color:#fff;}
+@media(max-width:1100px){.vehicles-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.vehicles-header{flex-direction:column;}.vehicles-header-actions{justify-content:flex-start;}}
+@media(max-width:700px){
+  #app.veiculos-ativa{grid-template-columns:54px minmax(0,1fr)!important;}
+  #app.veiculos-ativa #mainContent{grid-column:2;grid-row:1;}
+  #veiculosView{padding:16px 12px 28px;}
+  .vehicles-header h1{font-size:23px;}
+  .vehicles-kpis{gap:8px;}
+  .vehicles-kpi{padding:12px;}
+  .vehicles-kpi strong{font-size:21px;}
+  .vehicles-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .vehicles-field.span-3{grid-column:1/-1;}
+}
+
 </style>
 </head>
 <body>
@@ -2443,6 +2537,9 @@ button,input,select,textarea{font-family:var(--font-ui);}
     </button>
     <button id="railDashboardView" class="rail-link" type="button" onclick="mostrarView('dashboard')" title="Dashboard gerencial" aria-label="Dashboard gerencial">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h17"/><rect x="7" y="11" width="3" height="5" rx=".5"/><rect x="13" y="7" width="3" height="9" rx=".5"/><rect x="19" y="3" width="3" height="13" rx=".5"/></svg>
+    </button>
+    <button id="railVehiclesView" class="rail-link" type="button" onclick="mostrarView('veiculos')" title="Veículos e frota" aria-label="Veículos e frota">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h3l3 3v4h-6z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
     </button>
     <span class="rail-spacer"></span>
     <button id="btnSair" class="rail-link rail-logout" type="button" onclick="encerrarSessao_()" title="Sair da sessão" aria-label="Sair da sessão">
@@ -2693,6 +2790,42 @@ button,input,select,textarea{font-family:var(--font-ui);}
         <footer id="dashboardRodape" class="dashboard-footnote"></footer>
       </div>
     </section>
+
+    <section id="veiculosView" aria-label="Cadastro e gestão de veículos">
+      <div class="vehicles-shell">
+        <header class="vehicles-header">
+          <div>
+            <div class="vehicles-eyebrow">PERFINORTE · GESTÃO DE FROTA</div>
+            <h1>Veículos</h1>
+            <p>Cadastro da frota, capacidade de carga e parâmetros para estimar o custo operacional por quilômetro.</p>
+          </div>
+          <div class="vehicles-header-actions">
+            <div id="veiculosPrecoReferencia" class="vehicles-price-reference">
+              <span>Referência de combustível</span><strong>Consultando...</strong>
+            </div>
+            <button class="vehicles-action" type="button" onclick="carregarVeiculos_()">↻ Atualizar</button>
+            <button class="vehicles-action primary" type="button" onclick="abrirModalVeiculo_()">＋ Novo veículo</button>
+          </div>
+        </header>
+        <section id="veiculosKpis" class="vehicles-kpis" aria-label="Resumo da frota"></section>
+        <section class="vehicles-panel">
+          <div class="vehicles-toolbar">
+            <div class="vehicles-tabs" role="group" aria-label="Filtrar categoria da frota">
+              <button type="button" class="active" data-veiculo-filtro="TODOS" onclick="definirFiltroVeiculos_('TODOS',this)">Todos</button>
+              <button type="button" data-veiculo-filtro="PROPRIO" onclick="definirFiltroVeiculos_('PROPRIO',this)">Frota própria</button>
+              <button type="button" data-veiculo-filtro="TERCEIRIZADO" onclick="definirFiltroVeiculos_('TERCEIRIZADO',this)">Terceirizados</button>
+              <button type="button" data-veiculo-filtro="INATIVO" onclick="definirFiltroVeiculos_('INATIVO',this)">Inativos</button>
+            </div>
+            <input id="veiculosBusca" class="vehicles-search" type="search" placeholder="Buscar por veículo, placa ou transportador..." oninput="renderizarVeiculos_()">
+          </div>
+          <div id="veiculosTabelaContainer"><div class="vehicles-empty">Carregando cadastro de veículos...</div></div>
+          <div class="vehicles-footnote">
+            <strong>Como o custo é estimado:</strong> (preço do combustível por litro ÷ consumo médio em km/L) + manutenção por km.
+            O preço da API é uma média estadual de referência, não o valor exato pago no abastecimento. Quilometragem, pedágios e mão de obra da viagem serão incorporados no módulo de viagens.
+          </div>
+        </section>
+      </div>
+    </section>
   </main>
 
   <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
@@ -2738,6 +2871,125 @@ button,input,select,textarea{font-family:var(--font-ui);}
       </div>
     </div>
   </aside>
+</div>
+
+
+<div id="modalVeiculoOverlay" class="modal-overlay" aria-hidden="true">
+  <div class="vehicles-modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalVeiculo">
+    <div class="vehicles-modal-head">
+      <div>
+        <div class="kicker">PERFINORTE · CADASTRO DE FROTA</div>
+        <h2 id="tituloModalVeiculo">Novo veículo</h2>
+        <p>Informe os dados do veículo e os parâmetros conhecidos de consumo.</p>
+      </div>
+      <button type="button" class="vehicles-modal-close" onclick="fecharModalVeiculo_()" aria-label="Fechar">×</button>
+    </div>
+    <form id="formVeiculo" onsubmit="salvarVeiculoUI_(event)">
+      <input type="hidden" id="veiculoId">
+      <div class="vehicles-form">
+        <div class="vehicles-form-grid">
+          <div class="vehicles-field">
+            <label for="veiculoPropriedade">Vínculo da frota</label>
+            <select id="veiculoPropriedade" required>
+              <option value="PROPRIO">Próprio · Perfinorte</option>
+              <option value="TERCEIRIZADO">Terceirizado</option>
+            </select>
+          </div>
+          <div class="vehicles-field span-2">
+            <label for="veiculoTransportador">Transportador / responsável</label>
+            <input id="veiculoTransportador" placeholder="Ex.: Perfinorte ou João Batistiol" required>
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoTransportadorId">Código do transportador</label>
+            <input id="veiculoTransportadorId" inputmode="numeric" placeholder="Opcional">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoApelido">Nome de exibição</label>
+            <input id="veiculoApelido" placeholder="Ex.: HR HDB">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoPlaca">Placa</label>
+            <input id="veiculoPlaca" placeholder="ABC1D23" required maxlength="8" style="text-transform:uppercase">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoMarca">Marca</label>
+            <input id="veiculoMarca" placeholder="Hyundai" required>
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoModelo">Modelo</label>
+            <input id="veiculoModelo" placeholder="HR HDB" required>
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoAno">Ano</label>
+            <input id="veiculoAno" placeholder="2024/2025">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoCor">Cor</label>
+            <input id="veiculoCor" placeholder="Branca">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoUf">UF</label>
+            <input id="veiculoUf" value="PR" maxlength="2">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoTipo">Tipo do veículo</label>
+            <input id="veiculoTipo" placeholder="Caminhão / Caminonete">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoPeso">Capacidade máxima (kg)</label>
+            <input id="veiculoPeso" type="number" min="0" step="1" placeholder="Não informado">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoCombustivelMotor">Motor</label>
+            <select id="veiculoCombustivelMotor" onchange="ajustarCombustivelVeiculo_()">
+              <option value="DIESEL">Diesel</option>
+              <option value="FLEX">Flex</option>
+              <option value="GASOLINA">Gasolina</option>
+            </select>
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoCombustivelCalculo">Combustível para cálculo</label>
+            <select id="veiculoCombustivelCalculo">
+              <option value="DIESEL">Diesel</option>
+              <option value="GASOLINA">Gasolina</option>
+              <option value="ETANOL">Etanol · preço manual</option>
+            </select>
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoConsumo">Consumo médio (km/L)</label>
+            <input id="veiculoConsumo" type="number" min="0" step="0.1" placeholder="Informe quando souber">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoPrecoManual">Preço manual do combustível (R$/L)</label>
+            <input id="veiculoPrecoManual" type="number" min="0" step="0.001" placeholder="Opcional · sobrescreve a API">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoManutencao">Manutenção e pneus (R$/km)</label>
+            <input id="veiculoManutencao" type="number" min="0" step="0.01" placeholder="Opcional">
+          </div>
+          <div class="vehicles-field">
+            <label for="veiculoAtivo">Situação</label>
+            <select id="veiculoAtivo">
+              <option value="true">Ativo</option>
+              <option value="false">Inativo</option>
+            </select>
+          </div>
+          <div class="vehicles-field span-3">
+            <label for="veiculoObservacoes">Observações</label>
+            <textarea id="veiculoObservacoes" placeholder="Dados a confirmar, particularidades ou observações do cadastro..."></textarea>
+          </div>
+          <div class="vehicles-form-hint">
+            <strong>Importante:</strong> a média de consumo e o custo de manutenção não serão presumidos.
+            Sem esses dados, o sistema mostrará o cadastro como incompleto para cálculo, sem apresentar um custo fictício.
+          </div>
+        </div>
+      </div>
+      <div class="vehicles-modal-actions">
+        <button type="button" class="vehicles-cancel" onclick="fecharModalVeiculo_()">Cancelar</button>
+        <button type="submit" class="vehicles-save" id="btnSalvarVeiculo">Salvar veículo</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div id="modalOverlay" class="modal-overlay">
@@ -3902,31 +4154,282 @@ async function confirmarTodasPendentes(){
 
 /* ===== VISÃO EM TABELA (editar direto, sem precisar abrir a planilha) ===== */
 
-function mostrarView(modo){
-  modoAtual = modo;
-  document.getElementById('railMapView').classList.toggle('active', modo === 'mapa');
-  document.getElementById('railTableView').classList.toggle('active', modo === 'tabela');
-  document.getElementById('railDashboardView').classList.toggle('active', modo === 'dashboard');
-  document.getElementById('map').style.display = (modo === 'mapa') ? 'block' : 'none';
-  document.getElementById('tableView').style.display = (modo === 'tabela') ? 'block' : 'none';
-  document.getElementById('dashboardView').style.display = (modo === 'dashboard') ? 'block' : 'none';
 
-  const app = document.getElementById('app');
-  app.classList.toggle('tabela-ativa', modo === 'tabela');
-  app.classList.toggle('dashboard-ativa', modo === 'dashboard');
-  document.getElementById('sidebarDireitoToggle').style.display = (modo === 'mapa') ? 'flex' : 'none';
+/* ===== CADASTRO DE VEÍCULOS E PARÂMETROS DE CUSTO ===== */
+let veiculosCache_ = [];
+let precosCombustivelCache_ = null;
+let filtroVeiculosAtual_ = 'TODOS';
+let veiculosCarregando_ = false;
 
-  if (modo === 'mapa'){
-    setTimeout(function(){ map.invalidateSize(); }, 50);
-    render();
-  } else if (modo === 'tabela'){
-    renderTabela();
-  } else {
-    atualizarDashboard_();
-    setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
+function numeroVeiculoUI_(valor){
+  if(valor===null||valor===undefined||valor==='')return null;
+  const n=Number(String(valor).replace(',','.'));
+  return Number.isFinite(n)&&n>0?n:null;
+}
+function moedaVeiculoUI_(valor){
+  return Number(valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+function escaparVeiculoUI_(valor){
+  return String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function precoCombustivelVeiculo_(veiculo){
+  const manual=numeroVeiculoUI_(veiculo.precoCombustivelManual);
+  if(manual)return manual;
+  const pacote=precosCombustivelCache_&&precosCombustivelCache_.precos;
+  if(!pacote)return null;
+  const uf=String(veiculo.uf||'PR').toLowerCase();
+  const combustivel=String(veiculo.combustivelCalculo||'DIESEL').toUpperCase();
+  if(combustivel==='ETANOL')return null;
+  const grupo=combustivel==='GASOLINA'?pacote.gasolina:pacote.diesel;
+  if(!grupo)return null;
+  const v=grupo[uf];
+  if(v===undefined||v===null||v==='')return null;
+  const n=Number(String(v).replace(',','.'));
+  return Number.isFinite(n)?n:null;
+}
+function custoKmVeiculoUI_(veiculo){
+  const consumo=numeroVeiculoUI_(veiculo.consumoKmL);
+  const preco=precoCombustivelVeiculo_(veiculo);
+  const manutencao=Number(veiculo.custoManutencaoKm||0);
+  if(!consumo||!preco)return null;
+  return preco/consumo+manutencao;
+}
+function rotuloCombustivelVeiculo_(veiculo){
+  const motor=String(veiculo.combustivelMotor||'DIESEL').toUpperCase();
+  const calc=String(veiculo.combustivelCalculo||'DIESEL').toUpperCase();
+  if(motor==='FLEX')return 'Flex · '+(calc==='ETANOL'?'Etanol':calc==='GASOLINA'?'Gasolina':'Diesel');
+  return calc==='ETANOL'?'Etanol':calc==='GASOLINA'?'Gasolina':'Diesel';
+}
+async function carregarVeiculos_(){
+  if(veiculosCarregando_)return;
+  veiculosCarregando_=true;
+  const area=document.getElementById('veiculosTabelaContainer');
+  if(area&&!veiculosCache_.length)area.innerHTML='<div class="vehicles-empty">Carregando cadastro de veículos...</div>';
+  try{
+    const respostas=await Promise.all([
+      chamarAPI_GET_({formato:'veiculos'}),
+      chamarAPI_GET_({formato:'precosCombustivel'})
+    ]);
+    if(Array.isArray(respostas[0]))veiculosCache_=respostas[0];
+    precosCombustivelCache_=respostas[1]&&respostas[1].ok?respostas[1]:null;
+    renderizarVeiculos_();
+    renderizarReferenciaPrecoVeiculos_();
+  }catch(err){
+    if(area)area.innerHTML='<div class="vehicles-empty">Não foi possível carregar os veículos.<br><small>'+escaparVeiculoUI_(err.message||err)+'</small></div>';
+    mostrarToast('Falha ao carregar cadastro de veículos.',true);
+  }finally{
+    veiculosCarregando_=false;
   }
 }
+function renderizarReferenciaPrecoVeiculos_(){
+  const el=document.getElementById('veiculosPrecoReferencia');
+  if(!el)return;
+  if(!precosCombustivelCache_){
+    el.innerHTML='<span>Preço de referência</span><strong>Indisponível</strong><small>Informe preço manual no cadastro</small>';
+    return;
+  }
+  const p=precosCombustivelCache_.precos||{};
+  const uf='pr';
+  const diesel=p.diesel&&p.diesel[uf]!=null?Number(String(p.diesel[uf]).replace(',','.')):null;
+  const gasolina=p.gasolina&&p.gasolina[uf]!=null?Number(String(p.gasolina[uf]).replace(',','.')):null;
+  const coleta=precosCombustivelCache_.dataColeta||'';
+  const data=coleta?new Date(String(coleta).replace(' ','T')).toLocaleString('pt-BR'):'';
+  el.innerHTML='<div><span>Referência Paraná</span><strong>Diesel '+(diesel?moedaVeiculoUI_(diesel)+'/L':'—')+' · Gasolina '+(gasolina?moedaVeiculoUI_(gasolina)+'/L':'—')+'</strong><small>'+(data?'Coleta '+escaparVeiculoUI_(data):'Preço estadual de referência')+'</small></div>';
+}
+function definirFiltroVeiculos_(filtro,botao){
+  filtroVeiculosAtual_=filtro;
+  document.querySelectorAll('[data-veiculo-filtro]').forEach(function(b){b.classList.toggle('active',b===botao);});
+  renderizarVeiculos_();
+}
+function renderizarVeiculos_(){
+  const area=document.getElementById('veiculosTabelaContainer');
+  const kpis=document.getElementById('veiculosKpis');
+  if(!area||!kpis)return;
+  const ativos=veiculosCache_.filter(v=>v.ativo!==false);
+  const proprios=ativos.filter(v=>String(v.propriedade).toUpperCase()==='PROPRIO').length;
+  const terceiros=ativos.filter(v=>String(v.propriedade).toUpperCase()==='TERCEIRIZADO').length;
+  const comConsumo=ativos.filter(v=>numeroVeiculoUI_(v.consumoKmL)).length;
+  kpis.innerHTML=
+    '<article class="vehicles-kpi"><small>Veículos ativos</small><strong>'+ativos.length+'</strong><span>Cadastros disponíveis para operação</span></article>'+
+    '<article class="vehicles-kpi"><small>Frota própria</small><strong>'+proprios+'</strong><span>Veículos vinculados à Perfinorte</span></article>'+
+    '<article class="vehicles-kpi"><small>Terceirizados</small><strong>'+terceiros+'</strong><span>Cadastro separado da frota própria</span></article>'+
+    '<article class="vehicles-kpi"><small>Com consumo informado</small><strong>'+comConsumo+' / '+ativos.length+'</strong><span>Prontos para estimar custo de combustível</span></article>';
 
+  const busca=String((document.getElementById('veiculosBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  let lista=veiculosCache_.filter(function(v){
+    const propriedade=String(v.propriedade||'').toUpperCase();
+    if(filtroVeiculosAtual_==='INATIVO'&&v.ativo!==false)return false;
+    if(filtroVeiculosAtual_==='PROPRIO'&&(propriedade!=='PROPRIO'||v.ativo===false))return false;
+    if(filtroVeiculosAtual_==='TERCEIRIZADO'&&(propriedade!=='TERCEIRIZADO'||v.ativo===false))return false;
+    if(filtroVeiculosAtual_!=='INATIVO'&&filtroVeiculosAtual_!=='TODOS'&&v.ativo===false)return false;
+    if(busca){
+      const texto=[v.nomeExibicao,v.placa,v.marca,v.modelo,v.transportador,v.propriedade].join(' ').toLocaleLowerCase('pt-BR');
+      if(!texto.includes(busca))return false;
+    }
+    return true;
+  }).sort(function(a,b){
+    const pa=String(a.propriedade||'').toUpperCase()==='TERCEIRIZADO'?1:0;
+    const pb=String(b.propriedade||'').toUpperCase()==='TERCEIRIZADO'?1:0;
+    return pa-pb||String(a.nomeExibicao||a.modelo||'').localeCompare(String(b.nomeExibicao||b.modelo||''),'pt-BR');
+  });
+  if(!lista.length){
+    area.innerHTML='<div class="vehicles-empty">Nenhum veículo encontrado para este filtro.</div>';
+    return;
+  }
+  const rows=lista.map(function(v){
+    const own=String(v.propriedade||'').toUpperCase()==='PROPRIO';
+    const custo=custoKmVeiculoUI_(v);
+    const peso=numeroVeiculoUI_(v.pesoMaximoKg);
+    const consumo=numeroVeiculoUI_(v.consumoKmL);
+    const marcaModelo=[v.marca,v.modelo].filter(Boolean).join(' ');
+    const nome=v.nomeExibicao||marcaModelo||'Veículo sem identificação';
+    const sub=[marcaModelo,v.ano].filter(Boolean).join(' · ');
+    const tipo=own?'<span class="vehicles-type proprio">Frota própria</span>':'<span class="vehicles-type terceirizado">Terceirizado</span>';
+    const ativo=v.ativo===false?'<span class="vehicles-status inactive">Inativo</span>':'<span class="vehicles-status active">Ativo</span>';
+    const custoTxt=custo===null?'<span class="vehicles-muted">Pendente de consumo/preço</span>':'<span class="vehicles-cost">'+moedaVeiculoUI_(custo)+'/km</span>';
+    return '<tr>'+
+      '<td><div class="vehicles-name"><span class="vehicles-icon"><svg viewBox="0 0 24 24"><path d="M3 7h12v10H3zM15 10h3l3 3v4h-6z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg></span><span><strong>'+escaparVeiculoUI_(nome)+'</strong><small>'+escaparVeiculoUI_(sub||v.transportador||'')+'</small></span></div></td>'+
+      '<td><span class="vehicles-plate">'+escaparVeiculoUI_(v.placa||'—')+'</span></td>'+
+      '<td>'+tipo+'<small style="display:block;color:#8b98a8;margin-top:4px">'+escaparVeiculoUI_(v.transportador||'')+'</small></td>'+
+      '<td>'+(peso?Number(peso).toLocaleString('pt-BR')+' kg':'<span class="vehicles-muted">Não informada</span>')+'</td>'+
+      '<td>'+escaparVeiculoUI_(rotuloCombustivelVeiculo_(v))+'</td>'+
+      '<td>'+(consumo?consumo.toLocaleString('pt-BR')+' km/L':'<span class="vehicles-muted">Não informado</span>')+'</td>'+
+      '<td>'+custoTxt+'</td>'+
+      '<td>'+ativo+'</td>'+
+      '<td><div class="vehicles-row-actions"><button type="button" onclick="abrirModalVeiculo_(\''+escaparVeiculoUI_(v.id)+'\')">Editar</button><button type="button" onclick="alternarSituacaoVeiculo_(\''+escaparVeiculoUI_(v.id)+'\','+(v.ativo===false?'true':'false')+')">'+(v.ativo===false?'Ativar':'Inativar')+'</button></div></td>'+
+      '</tr>';
+  }).join('');
+  area.innerHTML='<div class="vehicles-table-wrap"><table class="vehicles-table"><thead><tr><th>Veículo</th><th>Placa</th><th>Vínculo / transportador</th><th>Capacidade</th><th>Combustível</th><th>Consumo</th><th>Custo estimado</th><th>Situação</th><th>Ações</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function definirCampoVeiculoUI_(id,valor){
+  const el=document.getElementById(id);
+  if(el)el.value=valor==null?'':String(valor);
+}
+function abrirModalVeiculo_(id){
+  const v=id?veiculosCache_.find(function(x){return String(x.id)===String(id);}):null;
+  document.getElementById('formVeiculo').reset();
+  definirCampoVeiculoUI_('veiculoId',v?v.id:'');
+  definirCampoVeiculoUI_('veiculoPropriedade',v?v.propriedade:'PROPRIO');
+  definirCampoVeiculoUI_('veiculoTransportador',v?v.transportador:'PERFINORTE INDÚSTRIA E COMÉRCIO DE PERFILADOS LTDA.');
+  definirCampoVeiculoUI_('veiculoTransportadorId',v?v.transportadorId:'13');
+  definirCampoVeiculoUI_('veiculoApelido',v?v.nomeExibicao:'');
+  definirCampoVeiculoUI_('veiculoPlaca',v?v.placa:'');
+  definirCampoVeiculoUI_('veiculoMarca',v?v.marca:'');
+  definirCampoVeiculoUI_('veiculoModelo',v?v.modelo:'');
+  definirCampoVeiculoUI_('veiculoAno',v?v.ano:'');
+  definirCampoVeiculoUI_('veiculoCor',v?v.cor:'');
+  definirCampoVeiculoUI_('veiculoUf',v?v.uf:'PR');
+  definirCampoVeiculoUI_('veiculoTipo',v?v.tipoVeiculo:'');
+  definirCampoVeiculoUI_('veiculoPeso',v&&v.pesoMaximoKg?v.pesoMaximoKg:'');
+  definirCampoVeiculoUI_('veiculoCombustivelMotor',v?v.combustivelMotor:'DIESEL');
+  definirCampoVeiculoUI_('veiculoCombustivelCalculo',v?v.combustivelCalculo:'DIESEL');
+  definirCampoVeiculoUI_('veiculoConsumo',v&&v.consumoKmL?v.consumoKmL:'');
+  definirCampoVeiculoUI_('veiculoPrecoManual',v&&v.precoCombustivelManual?v.precoCombustivelManual:'');
+  definirCampoVeiculoUI_('veiculoManutencao',v&&v.custoManutencaoKm?v.custoManutencaoKm:'');
+  definirCampoVeiculoUI_('veiculoAtivo',v&&v.ativo===false?'false':'true');
+  definirCampoVeiculoUI_('veiculoObservacoes',v?v.observacoes:'');
+  document.getElementById('tituloModalVeiculo').textContent=v?'Editar veículo':'Novo veículo';
+  document.getElementById('btnSalvarVeiculo').textContent=v?'Salvar alterações':'Salvar veículo';
+  document.getElementById('modalVeiculoOverlay').classList.add('show');
+  document.getElementById('modalVeiculoOverlay').setAttribute('aria-hidden','false');
+}
+function fecharModalVeiculo_(){
+  document.getElementById('modalVeiculoOverlay').classList.remove('show');
+  document.getElementById('modalVeiculoOverlay').setAttribute('aria-hidden','true');
+}
+function ajustarCombustivelVeiculo_(){
+  const motor=document.getElementById('veiculoCombustivelMotor').value;
+  const calc=document.getElementById('veiculoCombustivelCalculo');
+  if(motor==='DIESEL')calc.value='DIESEL';
+  else if(motor==='GASOLINA')calc.value='GASOLINA';
+  else if(calc.value==='DIESEL')calc.value='GASOLINA';
+}
+async function salvarVeiculoUI_(event){
+  event.preventDefault();
+  const btn=document.getElementById('btnSalvarVeiculo');
+  btn.disabled=true;btn.textContent='Salvando...';
+  const dados={
+    id:document.getElementById('veiculoId').value,
+    propriedade:document.getElementById('veiculoPropriedade').value,
+    transportador:document.getElementById('veiculoTransportador').value.trim(),
+    transportadorId:document.getElementById('veiculoTransportadorId').value.trim(),
+    nomeExibicao:document.getElementById('veiculoApelido').value.trim(),
+    placa:document.getElementById('veiculoPlaca').value.trim().toUpperCase(),
+    marca:document.getElementById('veiculoMarca').value.trim(),
+    modelo:document.getElementById('veiculoModelo').value.trim(),
+    ano:document.getElementById('veiculoAno').value.trim(),
+    cor:document.getElementById('veiculoCor').value.trim(),
+    uf:document.getElementById('veiculoUf').value.trim().toUpperCase(),
+    tipoVeiculo:document.getElementById('veiculoTipo').value.trim(),
+    pesoMaximoKg:document.getElementById('veiculoPeso').value,
+    combustivelMotor:document.getElementById('veiculoCombustivelMotor').value,
+    combustivelCalculo:document.getElementById('veiculoCombustivelCalculo').value,
+    consumoKmL:document.getElementById('veiculoConsumo').value,
+    precoCombustivelManual:document.getElementById('veiculoPrecoManual').value,
+    custoManutencaoKm:document.getElementById('veiculoManutencao').value,
+    ativo:document.getElementById('veiculoAtivo').value==='true',
+    observacoes:document.getElementById('veiculoObservacoes').value.trim()
+  };
+  try{
+    const res=await chamarAPI_POST_({acao:'salvarVeiculo',veiculo:dados});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível salvar o veículo.');
+    fecharModalVeiculo_();
+    mostrarToast('Cadastro de veículo salvo.');
+    await carregarVeiculos_();
+  }catch(err){
+    mostrarToast(err.message||String(err),true);
+  }finally{
+    btn.disabled=false;btn.textContent=dados.id?'Salvar alterações':'Salvar veículo';
+  }
+}
+async function alternarSituacaoVeiculo_(id,ativo){
+  const v=veiculosCache_.find(function(x){return String(x.id)===String(id);});
+  if(!v)return;
+  const acao=ativo?'reativar':'inativar';
+  if(!confirm('Deseja '+acao+' o veículo '+(v.placa||'')+'?'))return;
+  try{
+    const res=await chamarAPI_POST_({acao:'alterarSituacaoVeiculo',id:id,ativo:ativo});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível alterar a situação.');
+    mostrarToast(ativo?'Veículo reativado.':'Veículo inativado.');
+    await carregarVeiculos_();
+  }catch(err){mostrarToast(err.message||String(err),true);}
+}
+
+function mostrarView(modo){
+  modoAtual = modo;
+  const mapa = modo === 'mapa';
+  const tabela = modo === 'tabela';
+  const dashboard = modo === 'dashboard';
+  const veiculos = modo === 'veiculos';
+
+  document.getElementById('railMapView').classList.toggle('active', mapa);
+  document.getElementById('railTableView').classList.toggle('active', tabela);
+  document.getElementById('railDashboardView').classList.toggle('active', dashboard);
+  document.getElementById('railVehiclesView').classList.toggle('active', veiculos);
+
+  document.getElementById('map').style.display = mapa ? 'block' : 'none';
+  document.getElementById('tableView').style.display = tabela ? 'block' : 'none';
+  document.getElementById('dashboardView').style.display = dashboard ? 'block' : 'none';
+  document.getElementById('veiculosView').style.display = veiculos ? 'block' : 'none';
+
+  const app = document.getElementById('app');
+  app.classList.toggle('tabela-ativa', tabela);
+  app.classList.toggle('dashboard-ativa', dashboard);
+  app.classList.toggle('veiculos-ativa', veiculos);
+  document.getElementById('sidebarDireitoToggle').style.display = mapa ? 'flex' : 'none';
+
+  if (mapa){
+    setTimeout(function(){ map.invalidateSize(); }, 50);
+    render();
+  } else if (tabela){
+    renderTabela();
+  } else if (dashboard){
+    atualizarDashboard_();
+    setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
+  } else if (veiculos){
+    carregarVeiculos_();
+  }
+}
 function escapeAttr_(s){
   return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 }
