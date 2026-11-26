@@ -851,6 +851,24 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
 #sidebar::-webkit-scrollbar{width:5px;}
 #sidebar::-webkit-scrollbar-thumb{background:#344454;border-radius:6px;}
 @media(min-height:850px){.controls{gap:9px;}.controls .secao-titulo{margin-top:5px;}}
+
+/* DESIGN V6: leitura rápida dos cards de entrega */
+#list{padding:6px 8px 14px;}
+.item{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head head" "meta meta" "status status" "warn warn";gap:5px;margin:7px 0;padding:11px 11px 10px;border-radius:10px;}
+.item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#64748b;opacity:.8;}
+.item:has(.status.EMANDAMENTO):before{background:#e8a23d;}
+.item:has(.status.ENTREGUE):before{background:#5fae72;}
+.item:has(.status.EMFILA):before{background:#e56b39;}
+.item .top{grid-area:head;gap:8px;}
+.item .cliente{font-size:13px;line-height:1.35;font-weight:750;white-space:normal;overflow-wrap:anywhere;}
+.item .badge{flex-shrink:0;font-size:9px;padding:4px 7px;}
+.item .meta{grid-area:meta;margin-top:0;padding-top:4px;border-top:1px solid rgba(132,153,174,.14);color:#aebdcd;font-size:10.5px;line-height:1.45;}
+.item .status{grid-area:status;margin:0;padding-top:1px;font-size:9.5px;letter-spacing:.04em;}
+.item .noaddr{grid-area:warn;margin-top:2px;padding:6px 7px;border-radius:6px;background:rgba(229,107,57,.1);border:1px solid rgba(229,107,57,.2);color:#f2ad83;font-size:9.5px;line-height:1.35;}
+.item.active{padding:11px 11px 10px;}
+.item.active:before{width:4px;}
+.item:hover{transform:translateY(-1px);}
+@media(prefers-reduced-motion:reduce){.item:hover{transform:none;}}
 /* Preserve operation on smaller screens: collapse into practical widths, never hide controls. */
 @media(max-width:1180px){
   #app{grid-template-columns:320px minmax(0,1fr) 310px;}
