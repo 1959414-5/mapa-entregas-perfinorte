@@ -4,7 +4,6 @@
     navigator.serviceWorker
       .register('./sw.js', { scope: './' })
       .catch((erro) => {
-        // A instalação PWA não deve interferir no funcionamento normal do sistema.
         console.info('Perfinorte: não foi possível registrar o modo instalável.', erro);
       });
   };
@@ -17,69 +16,93 @@
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true;
 
-    if (emStandalone()) {
-      botao.hidden = true;
-      return;
-    }
-
-    const suportaWebInstall =
+    const supportsWebInstall =
       typeof Navigator !== 'undefined' &&
       typeof Navigator.prototype.install === 'function';
 
     let promptAdiado = null;
 
-    // Chrome 158+: usa a interface nativa do navegador pela Web Install API.
-    if (suportaWebInstall) botao.hidden = false;
+    if (emStandalone()) {
+      botao.hidden = true;
+      return;
+    }
 
-    // Fallback para versões do Chrome que ainda usam beforeinstallprompt.
+    if (supportsWebInstall) botao.hidden = false;
+
     window.addEventListener('beforeinstallprompt', (evento) => {
       evento.preventDefault();
       promptAdiado = evento;
-      botao.hidden = false;
+      if (!emStandalone()) botao.hidden = false;
     });
+
+    const mostrarMensagem = (mensagem) => {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = mensagem;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 5000);
+    };
+
+    const executarPromptAlternativo = async () => {
+      if (!promptAdiado) return false;
+      const evento = promptAdiado;
+      promptAdiado = null;
+      await evento.prompt();
+      const escolha = await evento.userChoice;
+      if (escolha && escolha.outcome === 'accepted') {
+        botao.hidden = true;
+        mostrarMensagem('Perfinorte instalado com sucesso.');
+        return true;
+      }
+      botao.hidden = !promptAdiado;
+      return false;
+    };
 
     botao.addEventListener('click', async () => {
       if (botao.getAttribute('aria-disabled') === 'true') return;
       botao.setAttribute('aria-disabled', 'true');
 
       try {
-        if (suportaWebInstall) {
-          // A chamada acontece diretamente no clique para preservar a ativação do usuário.
-          await navigator.install();
-          botao.hidden = true;
-          return;
+        if (supportsWebInstall) {
+          try {
+            // Chamada direta no clique para preservar a ativação do usuário.
+            await navigator.install();
+            botao.hidden = true;
+            mostrarMensagem('Perfinorte instalado ou já disponível como aplicativo.');
+            return;
+          } catch (erroWebInstall) {
+            console.warn('Perfinorte: Web Install API falhou.', {
+              name: erroWebInstall && erroWebInstall.name,
+              message: erroWebInstall && erroWebInstall.message,
+              error: erroWebInstall
+            });
+            if (promptAdiado) {
+              await executarPromptAlternativo();
+              return;
+            }
+            throw erroWebInstall;
+          }
         }
 
         if (promptAdiado) {
-          const evento = promptAdiado;
-          promptAdiado = null;
-          await evento.prompt();
-          const escolha = await evento.userChoice;
+          await executarPromptAlternativo();
+          return;
+        }
 
-          if (escolha && escolha.outcome === 'accepted') {
-            botao.hidden = true;
-          } else if (!promptAdiado) {
-            botao.hidden = true;
-            const toast = document.getElementById('toast');
-            if (toast) {
-              toast.textContent = 'Instalação cancelada. Você pode tentar novamente pelo navegador.';
-              toast.classList.add('show');
-              window.setTimeout(() => toast.classList.remove('show'), 3500);
-            }
-          }
-        }
+        botao.hidden = true;
+        mostrarMensagem('O Chrome ainda não liberou a instalação. Recarregue o site e tente novamente pelo menu do navegador.');
       } catch (erro) {
-        console.warn('Perfinorte: falha ao iniciar instalação.', erro);
-        const toast = document.getElementById('toast');
-        const mensagem = erro && erro.name === 'AbortError'
-          ? 'Instalação cancelada. Você pode tentar novamente.'
-          : 'O Chrome não conseguiu iniciar a instalação. Verifique se ela já está ativa ou permitida.';
-        if (toast) {
-          toast.textContent = mensagem;
-          toast.classList.add('show');
-          window.setTimeout(() => toast.classList.remove('show'), 4500);
-        }
-        if (!suportaWebInstall && !promptAdiado) botao.hidden = true;
+        console.error('Perfinorte: erro ao instalar PWA.', erro);
+        const nome = erro && erro.name ? erro.name : 'Erro desconhecido';
+        const mensagens = {
+          AbortError: 'O Chrome cancelou a instalação ou informou que o app já está instalado.',
+          DataError: 'O Chrome rejeitou os dados do aplicativo. Verifique o manifesto e os ícones.',
+          NotAllowedError: 'O Chrome bloqueou a instalação por falta de permissão ou ativação do usuário.',
+          SecurityError: 'A política de segurança do navegador bloqueou a instalação.',
+          TypeError: 'O Chrome não reconheceu os dados de instalação do aplicativo.',
+          InvalidStateError: 'A instalação não pode ser iniciada nesta página.'
+        };
+        mostrarMensagem((mensagens[nome] || 'Não foi possível iniciar a instalação.') + ' (' + nome + ')');
       } finally {
         botao.removeAttribute('aria-disabled');
       }
@@ -87,22 +110,18 @@
 
     window.addEventListener('appinstalled', () => {
       botao.hidden = true;
-      const toast = document.getElementById('toast');
-      if (toast) {
-        toast.textContent = 'Perfinorte instalado com sucesso.';
-        toast.classList.add('show');
-        window.setTimeout(() => toast.classList.remove('show'), 3500);
-      }
+      mostrarMensagem('Perfinorte instalado com sucesso.');
     });
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      registrarServiceWorker();
-      configurarInstalacao();
-    }, { once: true });
-  } else {
+  const inicializar = () => {
     registrarServiceWorker();
     configurarInstalacao();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializar, { once: true });
+  } else {
+    inicializar();
   }
 })();
