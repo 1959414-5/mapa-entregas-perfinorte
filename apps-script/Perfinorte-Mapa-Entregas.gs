@@ -1984,7 +1984,7 @@ function atualizarParadaViagem_(dados){
     estrutura.entregas.getRange(row,17).setValue(new Date());
   }
   estrutura.entregas.getRange(row,13).setValue(status);
-  estrutura.entregas.getRange(row,14).setValue(String(dados.motivo||""));
+  estrutura.entregas.getRange(row,14).setValue(String(dados.motivoAtraso||dados.motivo||""));
   estrutura.entregas.getRange(row,15).setValue(String(dados.observacoes||""));
   estrutura.entregas.getRange(row,12).setValue(String(dados.nfs||estrutura.entregas.getRange(row,12).getValue()||""));
   estrutura.entregas.getRange(row,19).setValue(new Date());
@@ -2057,7 +2057,8 @@ function atualizarStatusViagem_(dados){
   const extras=numeroLogistica_(dados.despesasExtras)!==null?numeroLogistica_(dados.despesasExtras):(numeroLogistica_(estrutura.viagens.getRange(row,18).getValue())||0);
   const hodIni=numeroLogistica_(dados.hodometroInicial)!==null?numeroLogistica_(dados.hodometroInicial):numeroLogistica_(estrutura.viagens.getRange(row,19).getValue());
   const hodFim=numeroLogistica_(dados.hodometroFinal);
-  const kmReal=hodIni!==null&&hodFim!==null&&hodFim>=hodIni?hodFim-hodIni:null;
+  if(hodIni!==null&&hodFim!==null&&hodFim<hodIni)return {ok:false,erro:"O hodômetro final não pode ser menor que o inicial."};
+  const kmReal=hodIni!==null&&hodFim!==null?hodFim-hodIni:null;
   const kmPrev=numeroLogistica_(estrutura.viagens.getRange(row,12).getValue());
   const kmAplicado=kmReal!==null?kmReal:kmPrev;
   const combustivelReal=numeroLogistica_(dados.combustivelReal)!==null?numeroLogistica_(dados.combustivelReal):numeroLogistica_(estrutura.viagens.getRange(row,21).getValue());
