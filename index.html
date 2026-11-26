@@ -3565,7 +3565,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <div>
             <div class="trips-eyebrow">PERFINORTE · LOGÍSTICA E EXPEDIÇÃO</div>
             <h1>Viagens</h1>
-            <p>Programe veículos, vincule entregas e notas fiscais, acompanhe ocorrências e apure os custos por viagem.</p>
+            <p>Consulte viagens programadas, acompanhe cada parada, registre ocorrências e confira os custos apurados.</p>
           </div>
           <div class="trips-header-actions">
             <button type="button" class="trips-action" onclick="carregarViagens_()">↻ Atualizar</button>
@@ -5461,6 +5461,7 @@ function editarVeiculoPeloDashboard_(id){
 let viagensDados_ = {viagens:[],veiculos:[],motoristas:[],entregasDisponiveis:[]};
 let filtroViagensAtual_ = 'TODAS';
 let viagensCarregando_ = false;
+let viagensDadosCarregadas_ = false;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
 
@@ -5480,7 +5481,7 @@ function statusParadaLabel_(status){
   return map[status]||status||'—';
 }
 async function carregarViagens_(){
-  if(viagensCarregando_)return;
+  if(viagensCarregando_)return false;
   viagensCarregando_=true;
   const lista=document.getElementById('viagensLista');
   if(lista&&!viagensDados_.viagens.length)lista.innerHTML='<div class="trips-empty">Carregando viagens...</div>';
@@ -5488,7 +5489,9 @@ async function carregarViagens_(){
     const res=await chamarAPI_GET_({formato:'viagens'});
     if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível carregar as viagens.');
     viagensDados_=res;
+    viagensDadosCarregadas_=true;
     renderizarViagens_();
+    if(modoAtual==='tabela')renderTabela();
     return true;
   }catch(err){
     if(lista)lista.innerHTML='<div class="trips-empty">Falha ao carregar viagens.<br><small>'+escaparViagem_(err.message||err)+'</small></div>';
@@ -6215,6 +6218,7 @@ function motivoInelegibilidadeViagemTabela_(d){
   if(!String(d.codigo||'').trim())return 'Informe o código do cliente.';
   if(!String(d.endereco||'').trim()||String(d.endereco).trim().toUpperCase()==='AVISO')return 'Informe um endereço válido.';
   if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Esta entrega já foi concluída.';
+  if(viagensDadosCarregadas_&&!(viagensDados_.entregasDisponiveis||[]).some(item=>String(item.idEntrega)===String(d.idEntrega)))return 'Já vinculada a uma viagem em aberto ou indisponível para programação.';
   return '';
 }
 function alternarSelecaoEntregaViagemTabela_(id,marcado){
