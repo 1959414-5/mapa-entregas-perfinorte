@@ -282,7 +282,7 @@ function entregaEstaAtrasadaPelaPrevisaoOriginal_(hist, linha) {
 
 function obterConfigMotivoAtraso_() {
   const salvo = PropertiesService.getScriptProperties().getProperty(CONFIG_EXIGIR_MOTIVO_ATRASO_);
-  return { ok: true, ativo: salvo === null ? true : salvo === "true" };
+  return { ok: true, ativo: salvo === null ? false : salvo === "true" };
 }
 
 function salvarConfigMotivoAtraso_(ativo) {
