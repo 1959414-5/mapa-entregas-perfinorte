@@ -806,6 +806,34 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
 .item .status.EMFILA{color:#e56b73;}
 #sidebarDireito::-webkit-scrollbar{width:5px;}
 #sidebarDireito::-webkit-scrollbar-thumb{background:#344354;border-radius:6px;}
+
+/* DESIGN V4: sidebar de ações e filtros */
+#sidebar{background:linear-gradient(180deg,#17212c 0%,#121a23 100%);}
+.controls{padding:12px 12px 15px;gap:9px;}
+.controls .secao-titulo{margin-top:4px;padding-bottom:8px;color:#d5e0eb;}
+.controls .btn-nova{min-height:38px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.controls .btn-formatar,.controls .btn-cliente-topo,.controls .btn-atencao-topo{min-height:36px;display:flex;align-items:center;justify-content:center;font-weight:600;}
+.controls .view-toggle{margin-top:2px;gap:6px;}
+.controls .view-toggle button{min-height:34px;font-weight:700;}
+.controls #rotaToolbar{display:flex;gap:7px;flex-wrap:wrap;}
+.controls #rotaToolbar button{min-height:35px;flex:1;}
+.controls .btn-confirmacoes{min-height:35px;display:flex;align-items:center;justify-content:center;}
+.controls .btn-sair{min-height:34px;display:flex;align-items:center;justify-content:center;}
+.controls .field{display:flex;flex-direction:column;gap:5px;}
+.controls .field label{margin:0;color:#aebdcd;font-size:10px;letter-spacing:.045em;}
+.controls .date-range{gap:5px;}
+.controls .date-range input{padding:7px 8px;font-size:12px;}
+.controls .date-atalhos{margin-top:0;gap:5px;}
+.controls .date-atalhos button{padding:7px 6px;font-size:11px;}
+.controls .period-toggle{gap:5px;}
+.controls .period-toggle button{padding:8px 5px;font-size:11px;font-weight:700;}
+.controls .status-filtro-sidebar{padding:9px 10px;border-radius:8px;gap:7px;}
+.controls .status-filtro-sidebar label{font-size:11.5px;}
+.controls .status-filtro-sidebar input[type=checkbox]{width:13px;height:13px;}
+.controls .field select{padding:8px 9px;border-radius:8px;font-size:12px;}
+.controls .field input[type=date]{border-radius:8px;}
+.controls .btn-nova:hover,.controls .btn-formatar:hover,.controls .btn-cliente-topo:hover,.controls .btn-atencao-topo:hover,.controls .btn-confirmacoes:hover,.controls .btn-sair:hover{filter:brightness(1.08);}
+@media(max-width:900px){.controls{padding:11px 10px 13px;gap:8px;}}
 /* Preserve operation on smaller screens: collapse into practical widths, never hide controls. */
 @media(max-width:1180px){
   #app{grid-template-columns:320px minmax(0,1fr) 310px;}
