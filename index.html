@@ -869,6 +869,49 @@ button,.btn{transition:background .16s,border-color .16s,color .16s,transform .1
 .item.active:before{width:4px;}
 .item:hover{transform:translateY(-1px);}
 @media(prefers-reduced-motion:reduce){.item:hover{transform:none;}}
+
+/* DESIGN V7: aproximação do layout de referência, mantendo mapa claro */
+.brand{padding:14px 15px 12px;background:linear-gradient(180deg,#1b2633,#141d27);}
+.brand .eyebrow{font-size:9px;letter-spacing:.13em;color:#91a4b9;}
+.brand h1{font-size:18px;margin:3px 0 11px;}
+.brand .btn-nova{width:100%;margin:0 0 7px;}
+.brand .btn-formatar,.brand .btn-cliente-topo{display:inline-flex;width:calc(50% - 4px);min-height:34px;padding:5px 6px;font-size:10px;}
+.brand .btn-formatar{margin-right:5px;}
+.brand .btn-atencao-topo{min-height:34px;margin-bottom:8px;font-size:10px;}
+.brand .view-toggle{display:flex;gap:6px;margin:0 0 7px;}
+.brand .view-toggle button{min-height:33px;flex:1;padding:6px;font-size:10.5px;}
+.brand #rotaToolbar{display:flex;gap:6px;}
+.brand #rotaToolbar button{min-height:33px;flex:1;font-size:10.5px;}
+.brand .btn-confirmacoes,.brand .btn-sair{width:100%;min-height:34px;margin-top:7px;font-size:10.5px;}
+.brand #rotaInfo{margin:5px 0 0;}
+.brand:after{width:36px;height:3px;margin-top:10px;}
+.controls{padding:11px 14px 15px;background:#121b25;}
+.controls .secao-titulo{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-ui);font-size:11px;letter-spacing:0;text-transform:none;padding-bottom:8px;color:#e7edf4;}
+.controls .field label{font-family:var(--font-ui);font-size:9.5px;letter-spacing:0;color:#9eafc2;text-transform:none;}
+.controls .date-range input,.controls .field select{background:#202c3a;border-color:#34475b;border-radius:7px;}
+.controls .date-atalhos button,.controls .period-toggle button{background:#202c3a;border-color:#34475b;border-radius:7px;color:#b7c5d5;font-family:var(--font-ui);letter-spacing:0;}
+.controls .period-toggle button.active{background:#edf2f7;color:#16202b;border-color:#edf2f7;}
+.controls .status-filtro-sidebar{background:#1b2632;border-color:#34475b;border-radius:8px;}
+.controls .status-filtro-sidebar label{font-size:10.5px;color:#d5deea;}
+.controls .field select{background-color:#202c3a;}
+#sidebarDireito{background:linear-gradient(180deg,#151e29,#101720);}
+.summary .stat{position:relative;padding:10px 9px 9px;min-height:56px;}
+.summary .stat .n{font-size:20px;}
+.summary .stat .l{font-size:9px;text-transform:none;letter-spacing:0;}
+#list{padding:5px 8px 12px;}
+.item{padding:11px 10px 10px;margin:6px 0;border-radius:9px;}
+.item .cliente{font-size:12.5px;}
+.item .meta{font-size:10px;}
+.item .status{font-size:9px;}
+.rotulo-cliente{background:#fff;color:#1d2835;border-color:#cbd3dc;box-shadow:0 2px 8px rgba(16,24,32,.18);font-size:10px;padding:4px 8px;}
+.rotulo-cliente::before{border-top-color:#fff;}
+.leaflet-popup-content-wrapper{background:#fff;color:#182330;border:1px solid #d5dde5;box-shadow:0 8px 24px rgba(20,35,50,.2);border-radius:9px;}
+.leaflet-popup-tip{background:#fff;}
+.pop .row{color:#64748b!important;}
+.pop .row b{color:#253447!important;}
+.leaflet-control-zoom a{background:#172331!important;color:#f3f6fa!important;border-color:#34475b!important;border-radius:7px!important;}
+.leaflet-control-zoom{border:0!important;box-shadow:0 3px 12px rgba(12,20,30,.2)!important;}
+@media(max-width:1180px){.brand{padding:12px 12px 10px;}.controls{padding:10px 12px 13px;}}
 /* Preserve operation on smaller screens: collapse into practical widths, never hide controls. */
 @media(max-width:1180px){
   #app{grid-template-columns:320px minmax(0,1fr) 310px;}
