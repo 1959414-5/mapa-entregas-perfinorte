@@ -2958,6 +2958,142 @@ button,input,select,textarea{font-family:var(--font-ui);}
   .fleet-kpi strong{font-size:18px;}
 }
 
+
+/* ===== MÓDULO VIAGENS · PROGRAMAÇÃO E CUSTOS ===== */
+#app.viagens-ativa{grid-template-columns:72px 0 minmax(0,1fr) 0;}
+#app.viagens-ativa #sidebar,#app.viagens-ativa #sidebarDireito{display:none!important;}
+#app.viagens-ativa #sidebarToggle,#app.viagens-ativa #sidebarDireitoToggle{display:none!important;}
+#app.viagens-ativa .map-toolbar,#app.viagens-ativa #config-banner,#app.viagens-ativa #map,
+#app.viagens-ativa #mapLegend,#app.viagens-ativa .map-actions,#app.viagens-ativa #tableView,
+#app.viagens-ativa #dashboardView,#app.viagens-ativa #veiculosView{display:none!important;}
+#viagensView{display:none;flex:1;min-height:0;overflow:auto;padding:26px 28px 40px;background:#f3f6fa;color:#172033;}
+#app.viagens-ativa #viagensView{display:block;}
+.trips-shell{width:100%;max-width:1580px;margin:0 auto;}
+.trips-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px;}
+.trips-eyebrow{display:flex;align-items:center;gap:9px;color:#718096;font:750 10px var(--font-mono);letter-spacing:.15em;}
+.trips-eyebrow:before{content:"";width:18px;height:2px;background:#278197;border-radius:2px;}
+.trips-header h1{margin:6px 0 4px;color:#172b3e;font-size:30px;font-weight:850;letter-spacing:-.045em;}
+.trips-header p{max-width:730px;margin:0;color:#68788d;font-size:13px;line-height:1.5;}
+.trips-header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.trips-action{height:40px;padding:0 14px;border:1px solid #d6e0e9;border-radius:9px;background:#fff;color:#40556c;font-size:11px;font-weight:750;cursor:pointer;box-shadow:0 2px 7px rgba(25,45,65,.035);}
+.trips-action.primary{background:#172f45;border-color:#172f45;color:#fff;box-shadow:0 5px 14px rgba(23,47,69,.14);}
+.trips-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:17px;}
+.trips-kpi{position:relative;overflow:hidden;min-height:94px;padding:15px 17px;border:1px solid #dce5ee;border-radius:13px;background:#fff;box-shadow:0 4px 15px rgba(22,43,62,.035);}
+.trips-kpi small{display:block;color:#77869a;font-size:9px;font-weight:800;letter-spacing:.085em;text-transform:uppercase;}
+.trips-kpi strong{display:block;margin-top:6px;color:#1a3045;font-size:25px;line-height:1.1;font-weight:850;letter-spacing:-.04em;}
+.trips-kpi span{display:block;margin-top:4px;color:#8b98a8;font-size:10px;}
+.trips-panel{overflow:hidden;border:1px solid #dce5ee;border-radius:15px;background:#fff;box-shadow:0 6px 20px rgba(22,43,62,.04);}
+.trips-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 17px;border-bottom:1px solid #e8edf2;}
+.trips-tabs{display:flex;gap:5px;flex-wrap:wrap;}
+.trips-tabs button{min-height:34px;padding:7px 11px;border:1px solid transparent;border-radius:8px;background:transparent;color:#718096;font-size:10px;font-weight:750;cursor:pointer;}
+.trips-tabs button.active{border-color:#d3e4eb;background:#eaf2f6;color:#1d5b6b;}
+.trips-search{height:37px;width:min(320px,100%);padding:0 11px;border:1px solid #dce4ed;border-radius:8px;background:#fbfcfe;color:#283d53;font-size:11px;outline:none;}
+.trips-list{display:flex;flex-direction:column;}
+.trip-card{padding:17px 19px;border-bottom:1px solid #edf1f5;}
+.trip-card:last-child{border-bottom:0;}
+.trip-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.trip-card-ident{display:flex;align-items:flex-start;gap:12px;min-width:0;}
+.trip-card-icon{width:39px;height:39px;flex:0 0 39px;display:grid;place-items:center;border:1px solid #deeaef;border-radius:11px;background:#eef5f7;color:#237e91;font-size:17px;}
+.trip-card-title{min-width:0;}
+.trip-card-title strong{display:block;color:#1c3045;font-size:13px;font-weight:800;}
+.trip-card-title small{display:block;margin-top:3px;color:#7d8c9e;font-size:10px;line-height:1.45;}
+.trip-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:99px;background:#f0f3f6;color:#69798c;font-size:9px;font-weight:800;white-space:nowrap;}
+.trip-status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+.trip-status.programada{background:#edf3fb;color:#557ca3;}
+.trip-status.em_andamento{background:#eaf5f2;color:#25836d;}
+.trip-status.interrompida{background:#fff4e7;color:#b2762a;}
+.trip-status.concluida,.trip-status.concluida_parcial{background:#edf6ef;color:#3b8158;}
+.trip-card-metrics{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0 12px 51px;}
+.trip-metric{display:flex;align-items:center;gap:5px;padding:6px 8px;border:1px solid #e8edf2;border-radius:7px;background:#fafcfd;color:#718197;font-size:9px;}
+.trip-metric strong{color:#334a61;font-size:10px;font-weight:800;}
+.trip-card-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:51px;}
+.trip-card-actions button{min-height:30px;padding:6px 10px;border:1px solid #dce5ed;border-radius:7px;background:#fff;color:#55687d;font-size:9.5px;font-weight:750;cursor:pointer;}
+.trip-card-actions button.primary{border-color:#276f7f;background:#276f7f;color:#fff;}
+.trip-card-actions button.warning{border-color:#f0dfc7;background:#fff8ef;color:#9a672e;}
+.trip-stops{margin:14px 0 0 51px;padding:12px 13px;border:1px solid #e5ebf1;border-radius:10px;background:#fbfcfd;}
+.trip-stops-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#8290a0;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+.trip-stop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #edf1f4;}
+.trip-stop:first-of-type{border-top:0;}
+.trip-stop-info{min-width:0;}
+.trip-stop-info strong{display:block;color:#354b61;font-size:10.5px;font-weight:750;}
+.trip-stop-info small{display:block;margin-top:3px;color:#8b98a7;font-size:9px;line-height:1.4;overflow-wrap:anywhere;}
+.trip-stop-extra{margin-top:4px;color:#8392a1;font-size:9px;}
+.trip-stop-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.trip-stop-actions button{padding:6px 8px;border:1px solid #dce5ed;border-radius:6px;background:#fff;color:#64768a;font-size:8.5px;font-weight:750;cursor:pointer;}
+.trip-stop-actions button:first-child{border-color:#d5e9dc;background:#f2faf4;color:#2b7750;}
+.trip-stop-cost{color:#207665;font-size:9px;font-weight:800;white-space:nowrap;}
+.trips-empty{padding:42px 18px;text-align:center;color:#8b98a7;font-size:11px;}
+.trips-footnote{margin-top:12px;padding:0 3px;color:#8e9aa9;font-size:9px;line-height:1.55;}
+
+/* Modal de programação */
+#modalViagemOverlay{padding:18px;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);}
+#modalViagemOverlay.show{display:flex;}
+.trips-modal{width:min(900px,calc(100vw - 32px));max-height:calc(100dvh - 36px);display:flex;flex-direction:column;overflow:hidden;border:1px solid #dbe4ed;border-radius:17px;background:#fff;box-shadow:0 24px 72px rgba(15,23,42,.25);}
+.trips-modal-head{position:relative;flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:22px 25px 17px;border-bottom:1px solid #e8edf2;background:linear-gradient(180deg,#fff,#f8fafc);}
+.trips-modal-head:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#227e91,#9ac0c8,transparent);}
+.trips-modal-kicker{color:#71869a;font:750 9px var(--font-mono);letter-spacing:.15em;}
+.trips-modal-head h2{margin:6px 0 4px;color:#1b3045;font-size:21px;letter-spacing:-.03em;}
+.trips-modal-head p{margin:0;color:#7b8999;font-size:11px;line-height:1.4;}
+.trips-modal-close{width:32px;height:32px;border:1px solid #dce5ec;border-radius:8px;background:#fff;color:#50647a;font-size:20px;cursor:pointer;}
+#formViagem{display:flex;flex:1;min-height:0;flex-direction:column;overflow:hidden;}
+.trips-modal-body{flex:1;min-height:0;overflow:auto;padding:18px 25px 23px;}
+.trips-form-section{margin-bottom:19px;}
+.trips-form-section-title{display:flex;align-items:center;gap:10px;margin-bottom:13px;padding-bottom:10px;border-bottom:1px solid #e9eef2;}
+.trips-form-section-title>span{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border:1px solid #d9e8ed;border-radius:8px;background:#eff6f8;color:#26788b;font:800 10px var(--font-mono);}
+.trips-form-section-title>div{display:flex;flex-direction:column;gap:2px;}
+.trips-form-section-title strong{color:#30465c;font-size:11.5px;font-weight:800;}
+.trips-form-section-title small{color:#8b98a6;font-size:9.5px;}
+.trips-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;}
+.trips-field{display:flex;min-width:0;flex-direction:column;gap:5px;color:#4f6278;font-size:10px;font-weight:750;}
+.trips-field.span-2{grid-column:1/-1;}
+.trips-field input,.trips-field select,.trips-field textarea{width:100%;min-width:0;min-height:38px;padding:8px 10px;border:1px solid #d7e1e9;border-radius:8px;background:#fff;color:#233a50;font:11px var(--font-ui);outline:none;}
+.trips-field textarea{resize:vertical;line-height:1.45;}
+.trips-field input:focus,.trips-field select:focus,.trips-field textarea:focus{border-color:#5aa3b2;box-shadow:0 0 0 3px rgba(48,137,154,.12);}
+.trips-third-party-value{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:13px;padding:12px 13px;border:1px solid #f0e1ca;border-radius:10px;background:#fff9ef;}
+.trips-third-party-value[hidden]{display:none!important;}
+.trips-third-party-value>div:first-child{display:flex;flex-direction:column;gap:3px;}
+.trips-third-party-value strong{color:#765326;font-size:10.5px;}
+.trips-third-party-value small{max-width:430px;color:#9a866b;font-size:9px;line-height:1.4;}
+.trips-slider-value{display:flex;align-items:center;gap:8px;min-width:260px;}
+.trips-slider-value input[type=range]{width:130px;accent-color:#ae792f;}
+.trips-slider-value input[type=number]{width:100px;height:34px;padding:0 7px;border:1px solid #e5d7c3;border-radius:7px;background:#fff;color:#684a21;font-size:11px;font-weight:800;}
+.trips-slider-value span{color:#977344;font-size:10px;font-weight:800;}
+.trips-extra-grid{margin-top:12px;}
+.trips-deliveries-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#6d7f91;font-size:9.5px;}
+.trips-deliveries-toolbar button{border:0;background:transparent;color:#2c7e8e;font-size:9px;font-weight:800;cursor:pointer;}
+.trips-deliveries-selection{display:flex;flex-direction:column;gap:7px;max-height:310px;overflow:auto;padding-right:3px;}
+.trips-delivery-option{display:grid;grid-template-columns:19px minmax(0,1fr) minmax(150px,210px);gap:10px;align-items:center;padding:10px;border:1px solid #e4ebf0;border-radius:9px;background:#fff;transition:border-color .14s,background .14s;}
+.trips-delivery-option:has(input:checked){border-color:#9ac8d0;background:#f5fafb;}
+.trips-delivery-option>input{width:15px;height:15px;accent-color:#287e8e;}
+.trips-delivery-copy{min-width:0;}
+.trips-delivery-copy strong{display:block;color:#344b61;font-size:10px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trips-delivery-copy small{display:block;margin-top:3px;color:#8996a5;font-size:8.5px;line-height:1.4;}
+.trips-delivery-copy em{display:inline-flex;margin-top:4px;padding:2px 5px;border-radius:4px;background:#eef4f7;color:#638295;font-size:7.5px;font-style:normal;font-weight:800;}
+.trips-delivery-nf{height:32px;width:100%;min-width:0;padding:0 8px;border:1px solid #e0e7ed;border-radius:7px;background:#fff;color:#334a60;font-size:9px;}
+.trips-route-note{padding:10px 12px;border:1px solid #dce8ee;border-radius:8px;background:#f5f9fb;color:#698092;font-size:9px;line-height:1.45;}
+.trips-modal-actions{flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:13px 25px;border-top:1px solid #e8edf2;background:#fbfcfd;}
+.trips-modal-actions button{min-height:37px;padding:8px 14px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;}
+.trips-cancel{border:1px solid #d8e1e9;background:#fff;color:#55677b;}
+.trips-save{border:1px solid #247d90;background:#247d90;color:#fff;box-shadow:0 4px 10px rgba(36,125,144,.15);}
+.trips-save:disabled{opacity:.55;cursor:wait;}
+@media(max-width:900px){.trips-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.trips-header{align-items:flex-start;flex-direction:column;}.trips-header-actions{justify-content:flex-start;}}
+@media(max-width:650px){
+ #viagensView{padding:16px 12px 28px;}
+ .trips-toolbar{align-items:stretch;flex-direction:column;}
+ .trips-search{width:100%;max-width:none;}
+ .trip-card-metrics,.trip-card-actions,.trip-stops{margin-left:0;}
+ .trip-stop{grid-template-columns:1fr;}
+ .trip-stop-actions{justify-content:flex-start;}
+ .trips-modal-head,.trips-modal-body,.trips-modal-actions{padding-left:16px;padding-right:16px;}
+ .trips-form-grid{grid-template-columns:1fr;}
+ .trips-field.span-2{grid-column:1;}
+ .trips-third-party-value{align-items:stretch;flex-direction:column;}
+ .trips-slider-value{min-width:0;flex-wrap:wrap;}
+ .trips-delivery-option{grid-template-columns:19px minmax(0,1fr);}
+ .trips-delivery-nf{grid-column:2;}
+}
+@media(max-width:430px){.trips-kpis{gap:8px;}.trips-kpi{padding:12px;}.trips-kpi strong{font-size:22px;}}
+
 </style>
 </head>
 <body>
@@ -3001,6 +3137,9 @@ button,input,select,textarea{font-family:var(--font-ui);}
     </button>
     <button id="railVehiclesView" class="rail-link" type="button" onclick="mostrarView('veiculos')" title="Veículos e frota" aria-label="Veículos e frota">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12v10H3zM15 10h3l3 3v4h-6z"/><circle cx="7" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></svg>
+    </button>
+    <button id="railTripsView" class="rail-link" type="button" onclick="mostrarView('viagens')" title="Viagens e custos" aria-label="Viagens e custos">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17M7 13h3M7 16.5h6"/></svg>
     </button>
     <span class="rail-spacer"></span>
     <button id="btnSair" class="rail-link rail-logout" type="button" onclick="encerrarSessao_()" title="Sair da sessão" aria-label="Sair da sessão">
@@ -3362,6 +3501,37 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </section>
       </div>
     </section>
+
+    <section id="viagensView" aria-label="Programação e controle de viagens">
+      <div class="trips-shell">
+        <header class="trips-header">
+          <div>
+            <div class="trips-eyebrow">PERFINORTE · LOGÍSTICA E EXPEDIÇÃO</div>
+            <h1>Viagens</h1>
+            <p>Programe veículos, vincule entregas e notas fiscais, acompanhe ocorrências e apure os custos por viagem.</p>
+          </div>
+          <div class="trips-header-actions">
+            <button type="button" class="trips-action" onclick="carregarViagens_()">↻ Atualizar</button>
+            <button type="button" class="trips-action primary" onclick="abrirModalViagem_()">＋ Programar viagem</button>
+          </div>
+        </header>
+        <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
+        <section class="trips-panel">
+          <div class="trips-toolbar">
+            <div class="trips-tabs" role="group" aria-label="Filtrar viagens">
+              <button class="active" type="button" data-viagem-filtro="TODAS" onclick="definirFiltroViagens_('TODAS',this)">Todas</button>
+              <button type="button" data-viagem-filtro="PROGRAMADA" onclick="definirFiltroViagens_('PROGRAMADA',this)">Programadas</button>
+              <button type="button" data-viagem-filtro="EM_ANDAMENTO" onclick="definirFiltroViagens_('EM_ANDAMENTO',this)">Em andamento</button>
+              <button type="button" data-viagem-filtro="INTERROMPIDA" onclick="definirFiltroViagens_('INTERROMPIDA',this)">Interrompidas</button>
+              <button type="button" data-viagem-filtro="ENCERRADAS" onclick="definirFiltroViagens_('ENCERRADAS',this)">Encerradas</button>
+            </div>
+            <input id="viagensBusca" class="trips-search" type="search" placeholder="Buscar por viagem, veículo, placa ou motorista..." oninput="renderizarViagens_()">
+          </div>
+          <div id="viagensLista"><div class="trips-empty">Carregando viagens...</div></div>
+        </section>
+        <footer class="trips-footnote">Cada parada mantém seu próprio resultado. Uma viagem pode terminar parcialmente; entregas não realizadas continuam pendentes e podem ser vinculadas a outra viagem. O valor negociado com terceirizados é registrado uma única vez por viagem e rateado entre as entregas concluídas.</footer>
+      </div>
+    </section>
   </main>
 
   <button id="sidebarDireitoToggle" onclick="alternarSidebarDireito_()" title="Minimizar/maximizar lista">›</button>
@@ -3409,6 +3579,55 @@ button,input,select,textarea{font-family:var(--font-ui);}
   </aside>
 </div>
 
+
+<div id="modalViagemOverlay" class="modal-overlay" aria-hidden="true">
+  <div class="trips-modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalViagem">
+    <header class="trips-modal-head">
+      <div>
+        <div class="trips-modal-kicker">PERFINORTE · PLANEJAMENTO LOGÍSTICO</div>
+        <h2 id="tituloModalViagem">Programar viagem</h2>
+        <p>Defina o veículo e selecione as entregas que seguirão no mesmo percurso.</p>
+      </div>
+      <button type="button" class="trips-modal-close" onclick="fecharModalViagem_()" aria-label="Fechar">×</button>
+    </header>
+    <form id="formViagem" onsubmit="salvarViagemUI_(event)">
+      <div class="trips-modal-body">
+        <section class="trips-form-section">
+          <div class="trips-form-section-title"><span>01</span><div><strong>Dados da viagem</strong><small>Data, período, veículo e motorista responsável</small></div></div>
+          <div class="trips-form-grid">
+            <label class="trips-field">Data da viagem<input id="viagemData" type="date" required onchange="renderizarSelecaoEntregasViagem_()"></label>
+            <label class="trips-field">Período<select id="viagemPeriodo" onchange="renderizarSelecaoEntregasViagem_()"><option value="">Todos</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
+            <label class="trips-field span-2">Veículo<select id="viagemVeiculo" required onchange="atualizarTipoVeiculoViagem_()"><option value="">Carregando veículos...</option></select></label>
+            <label class="trips-field span-2">Motorista<input id="viagemMotorista" list="viagemMotoristasLista" placeholder="Selecione ou informe o motorista" required><datalist id="viagemMotoristasLista"></datalist></label>
+          </div>
+          <div id="viagemTerceiroValor" class="trips-third-party-value" hidden>
+            <div><strong>Valor total negociado com o transportador</strong><small>O valor é informado uma vez por viagem e depois rateado entre os clientes atendidos.</small></div>
+            <div class="trips-slider-value"><input id="viagemValorSlider" type="range" min="0" max="10000" step="25" value="0" oninput="sincronizarValorViagem_('slider')"><input id="viagemValorNegociado" type="number" min="0" max="10000" step="0.01" value="0" oninput="sincronizarValorViagem_('input')" aria-label="Valor negociado em reais"><span>R$</span></div>
+          </div>
+          <div class="trips-form-grid trips-extra-grid">
+            <label class="trips-field">Pedágios estimados (R$)<input id="viagemPedagios" type="number" min="0" step="0.01" value="0"></label>
+            <label class="trips-field">Outras despesas estimadas (R$)<input id="viagemExtras" type="number" min="0" step="0.01" value="0"></label>
+            <label class="trips-field span-2">Observações<textarea id="viagemObservacoes" rows="2" placeholder="Informações de carregamento, restrições, horário combinado..."></textarea></label>
+          </div>
+        </section>
+
+        <section class="trips-form-section">
+          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas e notas fiscais</strong><small>Selecione as paradas que pertencem a esta viagem. A NF pode ser informada manualmente.</small></div></div>
+          <div class="trips-deliveries-toolbar">
+            <span id="viagemEntregaContagem">Nenhuma entrega selecionada</span>
+            <button type="button" onclick="marcarEntregasVisiveisViagem_()">Selecionar todas visíveis</button>
+          </div>
+          <div id="viagensEntregasSelecao" class="trips-deliveries-selection"><div class="trips-empty">Selecione data e veículo para carregar entregas disponíveis.</div></div>
+        </section>
+        <div id="viagemRotaResumo" class="trips-route-note">A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.</div>
+      </div>
+      <footer class="trips-modal-actions">
+        <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
+        <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+      </footer>
+    </form>
+  </div>
+</div>
 
 <div id="modalVeiculoOverlay" class="modal-overlay" aria-hidden="true">
   <div class="vehicles-modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalVeiculo">
@@ -5158,27 +5377,334 @@ function editarVeiculoPeloDashboard_(id){
   setTimeout(function(){abrirModalVeiculo_(id);},120);
 }
 
+
+/* ===== MÓDULO DE VIAGENS ===== */
+let viagensDados_ = {viagens:[],veiculos:[],motoristas:[],entregasDisponiveis:[]};
+let filtroViagensAtual_ = 'TODAS';
+let viagensCarregando_ = false;
+
+function escaparViagem_(valor){
+  return String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function dataViagemBR_(iso){
+  const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?m[3]+'/'+m[2]+'/'+m[1]:(iso||'—');
+}
+function statusViagemLabel_(status){
+  const map={PROGRAMADA:'Programada',EM_ANDAMENTO:'Em andamento',INTERROMPIDA:'Interrompida',CONCLUIDA:'Concluída',CONCLUIDA_PARCIAL:'Concluída parcialmente',CANCELADA:'Cancelada'};
+  return map[status]||status||'—';
+}
+function statusParadaLabel_(status){
+  const map={PENDENTE:'Pendente',EM_ROTA:'Em rota',ENTREGUE:'Entregue',NAO_ENTREGUE:'Não entregue',REPROGRAMAR:'Reprogramar'};
+  return map[status]||status||'—';
+}
+async function carregarViagens_(){
+  if(viagensCarregando_)return;
+  viagensCarregando_=true;
+  const lista=document.getElementById('viagensLista');
+  if(lista&&!viagensDados_.viagens.length)lista.innerHTML='<div class="trips-empty">Carregando viagens...</div>';
+  try{
+    const res=await chamarAPI_GET_({formato:'viagens'});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível carregar as viagens.');
+    viagensDados_=res;
+    renderizarViagens_();
+  }catch(err){
+    if(lista)lista.innerHTML='<div class="trips-empty">Falha ao carregar viagens.<br><small>'+escaparViagem_(err.message||err)+'</small></div>';
+    mostrarToast('Falha ao carregar módulo de viagens.',true);
+  }finally{viagensCarregando_=false;}
+}
+function definirFiltroViagens_(filtro,botao){
+  filtroViagensAtual_=filtro;
+  document.querySelectorAll('[data-viagem-filtro]').forEach(b=>b.classList.toggle('active',b===botao));
+  renderizarViagens_();
+}
+function renderizarViagens_(){
+  const area=document.getElementById('viagensLista');
+  const kpis=document.getElementById('viagensKpis');
+  if(!area||!kpis)return;
+  const viagens=Array.isArray(viagensDados_.viagens)?viagensDados_.viagens:[];
+  const programadas=viagens.filter(v=>v.status==='PROGRAMADA').length;
+  const andamento=viagens.filter(v=>v.status==='EM_ANDAMENTO').length;
+  const interrompidas=viagens.filter(v=>v.status==='INTERROMPIDA').length;
+  const encerradas=viagens.filter(v=>['CONCLUIDA','CONCLUIDA_PARCIAL'].includes(v.status)).length;
+  kpis.innerHTML=
+    '<article class="trips-kpi"><small>Viagens cadastradas</small><strong>'+viagens.length+'</strong><span>Histórico de viagens</span></article>'+
+    '<article class="trips-kpi"><small>Programadas</small><strong>'+programadas+'</strong><span>Aguardando saída</span></article>'+
+    '<article class="trips-kpi"><small>Em andamento</small><strong>'+andamento+'</strong><span>Veículos na operação</span></article>'+
+    '<article class="trips-kpi"><small>Interrompidas</small><strong>'+interrompidas+'</strong><span>Com ocorrência registrada</span></article>';
+  const busca=String((document.getElementById('viagensBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  const filtradas=viagens.filter(v=>{
+    if(filtroViagensAtual_==='ENCERRADAS'&&!['CONCLUIDA','CONCLUIDA_PARCIAL'].includes(v.status))return false;
+    if(filtroViagensAtual_!=='TODAS'&&filtroViagensAtual_!=='ENCERRADAS'&&v.status!==filtroViagensAtual_)return false;
+    if(busca&&!([v.numero,v.veiculoNome,v.placa,v.motorista,v.transportador].join(' ').toLocaleLowerCase('pt-BR').includes(busca)))return false;
+    return true;
+  });
+  if(!filtradas.length){
+    area.innerHTML='<div class="trips-empty">'+(viagens.length?'Nenhuma viagem encontrada para este filtro.':'Nenhuma viagem programada ainda. Use “Programar viagem” para vincular o primeiro veículo e suas entregas.')+'</div>';
+    return;
+  }
+  area.innerHTML='<div class="trips-list">'+filtradas.map(v=>{
+    const statusClass=String(v.status||'').toLowerCase();
+    const entregues=(v.paradas||[]).filter(p=>p.status==='ENTREGUE').length;
+    const total=(v.paradas||[]).length;
+    const encerrada=['CONCLUIDA','CONCLUIDA_PARCIAL','CANCELADA'].includes(v.status);
+    const custo=v.custoTotalFinal!==null&&v.custoTotalFinal!==undefined?moedaVeiculoUI_(v.custoTotalFinal):v.custoEstimado!==null&&v.custoEstimado!==undefined?moedaVeiculoUI_(v.custoEstimado)+' (prev.)':'Pendente de parâmetros';
+    const statusActions=encerrada?'':v.status==='PROGRAMADA'
+      ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
+      :v.status==='EM_ANDAMENTO'
+        ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
+        :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
+    const paradas=(v.paradas||[]).map(p=>{
+      const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
+      const buttons=encerrada||stopClosed?'':(
+        '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'ENTREGUE\')">Entregue</button>'+
+        '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'NAO_ENTREGUE\')">Não entregue</button>'+
+        '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'REPROGRAMAR\')">Reprogramar</button>'
+      );
+      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||'Endereço não informado')+'</small><div class="trip-stop-extra">NF: '+escaparViagem_(p.nfs||'Não informada')+' · '+statusParadaLabel_(p.status)+(p.motivo?' · '+escaparViagem_(p.motivo):'')+'</div></div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':'')+buttons+'</div></div>';
+    }).join('');
+    return '<article class="trip-card">'+
+      '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
+      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span></div>'+
+      '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
+      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+'</div>'+
+      '</article>';
+  }).join('')+'</div>';
+}
+function toggleParadasViagem_(id){
+  const el=document.getElementById('paradas-'+id);
+  if(el)el.hidden=!el.hidden;
+}
+function abrirModalViagem_(){
+  const form=document.getElementById('formViagem');
+  if(!form)return;
+  form.reset();
+  document.getElementById('viagemData').value=new Date().toISOString().slice(0,10);
+  document.getElementById('viagemPeriodo').value='';
+  document.getElementById('viagemPedagios').value='0';
+  document.getElementById('viagemExtras').value='0';
+  document.getElementById('viagemValorSlider').value='0';
+  document.getElementById('viagemValorNegociado').value='0';
+  document.getElementById('viagemMotorista').value='';
+  document.getElementById('viagemObservacoes').value='';
+  const select=document.getElementById('viagemVeiculo');
+  select.innerHTML='<option value="">Selecione o veículo</option>'+(viagensDados_.veiculos||[]).map(v=>'<option value="'+escaparViagem_(v.id)+'">'+escaparViagem_(v.nomeExibicao||v.modelo)+' · '+escaparViagem_(v.placa)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado':'Frota própria')+'</option>').join('');
+  document.getElementById('viagemMotoristasLista').innerHTML=(viagensDados_.motoristas||[]).map(n=>'<option value="'+escaparViagem_(n)+'"></option>').join('');
+  document.getElementById('viagemTerceiroValor').hidden=true;
+  document.getElementById('viagensEntregasSelecao').innerHTML='<div class="trips-empty">Selecione uma data para carregar as entregas disponíveis.</div>';
+  document.getElementById('viagemEntregaContagem').textContent='Nenhuma entrega selecionada';
+  document.getElementById('viagemRotaResumo').textContent='A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.';
+  document.getElementById('modalViagemOverlay').classList.add('show');
+  document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','false');
+  renderizarSelecaoEntregasViagem_();
+}
+function fecharModalViagem_(){
+  document.getElementById('modalViagemOverlay').classList.remove('show');
+  document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','true');
+}
+function atualizarTipoVeiculoViagem_(){
+  const id=document.getElementById('viagemVeiculo').value;
+  const v=(viagensDados_.veiculos||[]).find(x=>String(x.id)===String(id));
+  document.getElementById('viagemTerceiroValor').hidden=!(v&&v.propriedade==='TERCEIRIZADO');
+}
+function sincronizarValorViagem_(origem){
+  const slider=document.getElementById('viagemValorSlider');
+  const input=document.getElementById('viagemValorNegociado');
+  let v=Number(origem==='slider'?slider.value:input.value);
+  if(!Number.isFinite(v))v=0;
+  v=Math.max(0,Math.min(10000,v));
+  if(origem==='slider')input.value=v.toFixed(2);
+  else slider.value=String(Math.min(10000,Math.round(v/25)*25));
+}
+function renderizarSelecaoEntregasViagem_(){
+  const data=document.getElementById('viagemData').value;
+  const periodo=document.getElementById('viagemPeriodo').value;
+  const area=document.getElementById('viagensEntregasSelecao');
+  const lista=(viagensDados_.entregasDisponiveis||[]).filter(d=>
+    (!data||!d.data||d.data===data)&&(!periodo||String(d.periodo||'').toUpperCase()===periodo)
+  );
+  if(!lista.length){
+    area.innerHTML='<div class="trips-empty">Não há entregas disponíveis para esta data e período. Confira a programação ou selecione outra data.</div>';
+    document.getElementById('viagemEntregaContagem').textContent='Nenhuma entrega disponível';
+    return;
+  }
+  area.innerHTML=lista.map(d=>
+    '<label class="trips-delivery-option"><input type="checkbox" class="viagem-entrega-check" value="'+escaparViagem_(d.idEntrega)+'" onchange="atualizarContagemEntregasViagem_()"><span class="trips-delivery-copy"><strong>'+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.cidade||d.endereco||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small><em>'+(d.ok?'Pedido pronto':'Pedido ainda não marcado como pronto')+'</em></span><input class="trips-delivery-nf" type="text" data-nf-entrega="'+escaparViagem_(d.idEntrega)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'"></label>'
+  ).join('');
+  atualizarContagemEntregasViagem_();
+}
+function atualizarContagemEntregasViagem_(){
+  const n=document.querySelectorAll('.viagem-entrega-check:checked').length;
+  document.getElementById('viagemEntregaContagem').textContent=n+' entrega(s) selecionada(s)';
+}
+function marcarEntregasVisiveisViagem_(){
+  document.querySelectorAll('.viagem-entrega-check').forEach(c=>c.checked=true);
+  atualizarContagemEntregasViagem_();
+}
+async function salvarViagemUI_(event){
+  event.preventDefault();
+  const btn=document.getElementById('btnSalvarViagem');
+  const veiculoId=document.getElementById('viagemVeiculo').value;
+  const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
+  if(!veiculo){mostrarToast('Selecione um veículo ativo.',true);return;}
+  const selecionados=[...document.querySelectorAll('.viagem-entrega-check:checked')];
+  if(!selecionados.length){mostrarToast('Selecione ao menos uma entrega.',true);return;}
+  const mapaEntregas=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega),d]));
+  const escolhidas=selecionados.map((el,i)=>{
+    const d=mapaEntregas.get(String(el.value));
+    const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(el.value))+'"]');
+    return {idEntrega:el.value,nfs:nf?nf.value.trim():'',ordem:i+1,d:d};
+  });
+  if(escolhidas.some(x=>!x.d)){mostrarToast('Uma entrega selecionada não está mais disponível. Atualize a lista.',true);return;}
+  if(veiculo.propriedade==='TERCEIRIZADO'&&Number(document.getElementById('viagemValorNegociado').value)<=0){
+    mostrarToast('Informe o valor negociado por esta viagem.',true);return;
+  }
+  btn.disabled=true;btn.textContent='Calculando rota...';
+  let rota=null;
+  const comCoordenadas=escolhidas.every(x=>x.d&&x.d.lat!==null&&x.d.lat!==undefined&&x.d.lng!==null&&x.d.lng!==undefined);
+  if(comCoordenadas&&escolhidas.length<=50){
+    try{
+      const res=await chamarAPI_POST_({acao:'sugerirRota',pontos:escolhidas.map(x=>({linha:x.d.linha,lat:x.d.lat,lng:x.d.lng}))});
+      if(res&&res.ok){
+        rota=res;
+        const ordenados=(res.ordem||[]).map(linha=>escolhidas.find(x=>Number(x.d.linha)===Number(linha))).filter(Boolean);
+        ordenados.forEach((x,i)=>x.ordem=i+1);
+        document.getElementById('viagemRotaResumo').textContent='Rota calculada: '+res.distanciaKm+' km · aproximadamente '+res.duracaoMin+' min, com saída e retorno à Perfinorte.';
+      }else{
+        document.getElementById('viagemRotaResumo').textContent='Não foi possível estimar a rota: '+(res&&res.erro?res.erro:'serviço indisponível')+'. A viagem poderá ser salva sem distância prevista.';
+      }
+    }catch(err){
+      document.getElementById('viagemRotaResumo').textContent='Roteirizador indisponível. A viagem poderá ser salva sem distância prevista.';
+    }
+  }else{
+    document.getElementById('viagemRotaResumo').textContent='Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.';
+  }
+  if(!rota&&!confirm('Não foi possível calcular a rota. Deseja programar a viagem mesmo assim, sem estimativa de distância e custo por km?')){
+    btn.disabled=false;btn.textContent='Calcular rota e programar';return;
+  }
+  const dados={
+    data:document.getElementById('viagemData').value,
+    periodo:document.getElementById('viagemPeriodo').value,
+    veiculoId:veiculoId,
+    motorista:document.getElementById('viagemMotorista').value.trim(),
+    valorNegociado:veiculo.propriedade==='TERCEIRIZADO'?document.getElementById('viagemValorNegociado').value:'',
+    pedagios:document.getElementById('viagemPedagios').value,
+    despesasExtras:document.getElementById('viagemExtras').value,
+    observacoes:document.getElementById('viagemObservacoes').value.trim(),
+    distanciaPrevistaKm:rota?rota.distanciaKm:null,
+    duracaoPrevistaMin:rota?rota.duracaoMin:null,
+    entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,nfs:x.nfs,ordem:x.ordem}))
+  };
+  try{
+    const res=await chamarAPI_POST_({acao:'criarViagem',dados:dados});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível programar a viagem.');
+    fecharModalViagem_();
+    mostrarToast(res.numero+' programada com '+res.totalEntregas+' entrega(s).');
+    await carregarViagens_();
+  }catch(err){mostrarToast(err.message||String(err),true);}
+  finally{btn.disabled=false;btn.textContent='Calcular rota e programar';}
+}
+async function alterarStatusViagemUI_(id,status){
+  if(status==='EM_ANDAMENTO'&&!confirm('Registrar a saída desta viagem e iniciar o acompanhamento?'))return;
+  try{
+    const res=await chamarAPI_POST_({acao:'atualizarStatusViagem',dados:{id:id,status:status}});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível atualizar a viagem.');
+    mostrarToast(status==='EM_ANDAMENTO'?'Viagem iniciada.':'Situação atualizada.');
+    await carregarViagens_();
+  }catch(err){mostrarToast(err.message||String(err),true);}
+}
+async function registrarOcorrenciaViagemUI_(id){
+  const tipoNum=prompt('Tipo de ocorrência:\n1 - Pane mecânica\n2 - Acidente\n3 - Veículo indisponível\n4 - Bloqueio/interdição\n5 - Outra ocorrência','1');
+  if(tipoNum===null)return;
+  const tipos={'1':'PANE','2':'ACIDENTE','3':'VEICULO_INDISPONIVEL','4':'BLOQUEIO','5':'OUTRA'};
+  const tipo=tipos[String(tipoNum).trim()];
+  if(!tipo){mostrarToast('Tipo de ocorrência inválido.',true);return;}
+  const descricao=prompt('Descreva o que aconteceu:');
+  if(!descricao||!descricao.trim())return;
+  try{
+    const res=await chamarAPI_POST_({acao:'registrarOcorrenciaViagem',dados:{viagemId:id,tipo:tipo,descricao:descricao.trim()}});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível registrar a ocorrência.');
+    mostrarToast('Ocorrência registrada. A viagem foi interrompida quando aplicável.');
+    await carregarViagens_();
+  }catch(err){mostrarToast(err.message||String(err),true);}
+}
+async function atualizarParadaViagemUI_(id,status){
+  let motivo='',observacoes='';
+  if(status==='ENTREGUE'){
+    if(!confirm('Confirmar que esta entrega foi realizada? O status da entrega original também será atualizado.'))return;
+  }else{
+    motivo=prompt(status==='REPROGRAMAR'?'Motivo da reprogramação:':'Motivo da não entrega:');
+    if(motivo===null)return;
+    observacoes=prompt('Observação adicional (opcional):')||'';
+  }
+  const payload={id:id,status:status,motivo:motivo,observacoes:observacoes};
+  try{
+    let res=await chamarAPI_POST_({acao:'atualizarParadaViagem',dados:payload});
+    if(res&&!res.ok&&status==='ENTREGUE'&&/motivo/i.test(res.erro||'')){
+      const lista=['Atraso na produção','Falta de matéria-prima ou estoque','Atraso de fornecedor','Reprogramação da produção','Problema de transporte/logística','Indisponibilidade do cliente','Alteração solicitada pelo cliente','Informações pendentes do pedido','Problema operacional','Condições externas','Erro no planejamento do prazo','Outros'];
+      motivo=prompt('A entrega está atrasada. Informe o motivo:\n'+lista.map((x,i)=>(i+1)+' - '+x).join('\n'));
+      if(motivo===null)return;
+      const numero=Number(motivo);
+      const selecionado=Number.isInteger(numero)&&numero>=1&&numero<=lista.length?lista[numero-1]:motivo;
+      observacoes=selecionado==='Outros'?(prompt('Descreva o motivo:')||''):'';
+      res=await chamarAPI_POST_({acao:'atualizarParadaViagem',dados:{...payload,motivoAtraso:selecionado,observacoes:observacoes}});
+    }
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível atualizar a parada.');
+    mostrarToast(status==='ENTREGUE'?'Entrega concluída e vinculada à viagem.':'Resultado da parada registrado.');
+    await carregarViagens_();
+  }catch(err){mostrarToast(err.message||String(err),true);}
+}
+async function finalizarViagemUI_(id){
+  const viagem=(viagensDados_.viagens||[]).find(v=>String(v.id)===String(id));
+  if(!viagem)return;
+  const hodometroFinal=prompt('Hodômetro final (opcional). Informe apenas se tiver a leitura:',viagem.hodometroFinal||'');
+  if(hodometroFinal===null)return;
+  const combustivelReal=prompt('Custo real do combustível em R$ (opcional). Deixe em branco se não tiver:',viagem.combustivelReal||'');
+  if(combustivelReal===null)return;
+  const pedagios=prompt('Pedágios reais em R$:',String(viagem.pedagios||0));
+  if(pedagios===null)return;
+  const despesasExtras=prompt('Outras despesas reais em R$:',String(viagem.despesasExtras||0));
+  if(despesasExtras===null)return;
+  if(!confirm('Encerrar esta viagem? Entregas pendentes precisam ser marcadas como reprogramadas ou não entregues. O custo será rateado somente entre as entregas concluídas.'))return;
+  try{
+    const res=await chamarAPI_POST_({acao:'atualizarStatusViagem',dados:{
+      id:id,status:'CONCLUIR',
+      hodometroFinal:hodometroFinal.trim()?Number(hodometroFinal.replace(',','.')):null,
+      combustivelReal:combustivelReal.trim()?Number(combustivelReal.replace(',','.')):null,
+      pedagios:Number(String(pedagios).replace(',','.'))||0,
+      despesasExtras:Number(String(despesasExtras).replace(',','.'))||0
+    }});
+    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível finalizar a viagem.');
+    mostrarToast('Viagem encerrada. '+res.entregasConcluidas+' entrega(s) receberam rateio.');
+    await carregarViagens_();
+  }catch(err){mostrarToast(err.message||String(err),true);}
+}
+
 function mostrarView(modo){
   modoAtual = modo;
   const mapa = modo === 'mapa';
   const tabela = modo === 'tabela';
   const dashboard = modo === 'dashboard';
   const veiculos = modo === 'veiculos';
+  const viagens = modo === 'viagens';
 
   document.getElementById('railMapView').classList.toggle('active', mapa);
   document.getElementById('railTableView').classList.toggle('active', tabela);
   document.getElementById('railDashboardView').classList.toggle('active', dashboard);
   document.getElementById('railVehiclesView').classList.toggle('active', veiculos);
+  document.getElementById('railTripsView').classList.toggle('active', viagens);
 
   document.getElementById('map').style.display = mapa ? 'block' : 'none';
   document.getElementById('tableView').style.display = tabela ? 'block' : 'none';
   document.getElementById('dashboardView').style.display = dashboard ? 'block' : 'none';
   document.getElementById('veiculosView').style.display = veiculos ? 'block' : 'none';
+  document.getElementById('viagensView').style.display = viagens ? 'block' : 'none';
 
   const app = document.getElementById('app');
   app.classList.toggle('tabela-ativa', tabela);
   app.classList.toggle('dashboard-ativa', dashboard);
   app.classList.toggle('veiculos-ativa', veiculos);
+  app.classList.toggle('viagens-ativa', viagens);
   document.getElementById('sidebarDireitoToggle').style.display = mapa ? 'flex' : 'none';
 
   if (mapa){
@@ -5191,6 +5717,8 @@ function mostrarView(modo){
     if(painelDashboardAtual_==='entregas')setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
   } else if (veiculos){
     carregarVeiculos_();
+  } else if (viagens){
+    carregarViagens_();
   }
 }
 function escapeAttr_(s){
