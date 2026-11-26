@@ -28,9 +28,14 @@ if (col === MAPA_CFG.COL_STATUS &&
 ```
 
 5. Cole o conteúdo de `patch-auditoria-reprogramacoes.gs` no final do projeto Apps Script.
-6. Execute `inicializarAuditoriaEntregas()` uma vez no editor, autorize os acessos e verifique se a aba `Historico_Reprogramacoes` foi criada.
-7. Em **Implantar > Gerenciar implantações > Editar > Nova versão > Implantar**, publique a nova versão do Web App.
-8. Atualize o site com Ctrl+F5 depois que a nova implantação estiver ativa.
+6. Em `aplicarConfirmacao_(hist, registro)`, dentro do bloco `if (status === "ENTREGUE")`, adicione a chamada abaixo logo depois de gravar o status:
+   ```js
+   registrarConclusaoManual_(hist, linhaNum);
+   ```
+   Isso também registra o horário real quando uma confirmação do motorista é aprovada no mapa.
+7. Execute `inicializarAuditoriaEntregas()` uma vez no editor, autorize os acessos e verifique se a aba `Historico_Reprogramacoes` foi criada.
+8. Em **Implantar > Gerenciar implantações > Editar > Nova versão > Implantar**, publique a nova versão do Web App.
+9. Atualize o site com Ctrl+F5 depois que a nova implantação estiver ativa.
 
 ## Colunas reservadas
 
