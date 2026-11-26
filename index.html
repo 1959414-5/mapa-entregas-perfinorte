@@ -1570,6 +1570,22 @@ button,input,select,textarea{font-family:var(--font-ui);}
   background:rgba(54,179,126,.2)!important;
   border-color:rgba(76,211,151,.8)!important;
 }
+
+/* Horário de sincronização ao lado do status de conexão. */
+#sidebar .brand-status-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;width:100%;min-width:0;
+}
+#sidebar .brand-status-row .brand-live{flex:0 0 auto;}
+#sidebar .brand-status-row .brand-updated{
+  min-width:0;margin:0;text-align:right;white-space:nowrap;
+  font-family:var(--font-mono);font-size:8.8px;line-height:1.35;
+  letter-spacing:0;color:#a8b8ca;
+}
+@media(max-width:1050px){
+  #sidebar .brand-status-row{gap:6px;}
+  #sidebar .brand-status-row .brand-updated{font-size:8.2px;}
+}
 </style>
 </head>
 <body>
@@ -1619,8 +1635,10 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <div class="brand-heading">
         <div class="eyebrow">PERFINORTE · EXPEDIÇÃO</div>
         <h1>Mapa de Entregas</h1>
-        <div class="brand-live"><span class="live-dot"></span>Sistema conectado</div>
-        <div class="brand-updated"><span id="ultimaAtualizacao">Sincronizando...</span></div>
+        <div class="brand-status-row">
+          <div class="brand-live"><span class="live-dot"></span>Sistema conectado</div>
+          <div class="brand-updated"><span id="ultimaAtualizacao">Sincronizando...</span></div>
+        </div>
       </div>
 
       <div class="secao-titulo operation-title">Operação</div>
