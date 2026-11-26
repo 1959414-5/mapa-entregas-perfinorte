@@ -1802,6 +1802,17 @@ function listarDadosViagens_(){
     return Object.assign({},d,{idEntrega:String(audit.id||"")});
   }).filter(d=>d.idEntrega);
 
+  const ocorrenciaRows=listarLinhasViagens_(estrutura.ocorrencias);
+  const ocorrenciasPorViagem={};
+  ocorrenciaRows.forEach(function(r){
+    const tripId=String(r[1]||"");
+    if(!tripId)return;
+    if(!ocorrenciasPorViagem[tripId])ocorrenciasPorViagem[tripId]=[];
+    ocorrenciasPorViagem[tripId].push({
+      tipo:String(r[3]||""),descricao:String(r[4]||""),
+      dataHora:r[5] instanceof Date?Utilities.formatDate(r[5],Session.getScriptTimeZone(),"dd/MM/yyyy HH:mm"):String(r[5]||"")
+    });
+  });
   const viagens=tripRows.map(function(r,i){
     const id=String(r[0]||"");
     const stops=stopData.rows.filter(s=>String(s[1]||"")===id).map(function(s,j){
@@ -1826,7 +1837,7 @@ function listarDadosViagens_(){
       despesasExtras:numeroLogistica_(r[17])||0,hodometroInicial:numeroLogistica_(r[18]),
       hodometroFinal:numeroLogistica_(r[19]),combustivelReal:numeroLogistica_(r[20]),
       custoTotalFinal:numeroLogistica_(r[21]),distanciaRealKm:numeroLogistica_(r[22]),
-      observacoes:String(r[23]||""),paradas:stops,
+      observacoes:String(r[23]||""),paradas:stops,ocorrencias:ocorrenciasPorViagem[id]||[],
       criadoEm:r[24] instanceof Date?r[24].toISOString():String(r[24]||""),
       atualizadoEm:r[25] instanceof Date?r[25].toISOString():String(r[25]||""),
       encerradoEm:r[26] instanceof Date?r[26].toISOString():String(r[26]||"")
