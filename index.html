@@ -3632,7 +3632,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </div>
           <div id="viagemTerceiroValor" class="trips-third-party-value" hidden>
             <div><strong>Valor total negociado com o transportador</strong><small>O valor é informado uma vez por viagem e depois rateado entre os clientes atendidos.</small></div>
-            <div class="trips-slider-value"><input id="viagemValorSlider" type="range" min="0" max="10000" step="25" value="0" oninput="sincronizarValorViagem_('slider')"><input id="viagemValorNegociado" type="number" min="0" max="10000" step="0.01" value="0" oninput="sincronizarValorViagem_('input')" aria-label="Valor negociado em reais"><span>R$</span></div>
+            <div class="trips-slider-value"><input id="viagemValorSlider" type="range" min="0" max="10000" step="25" value="0" oninput="sincronizarValorViagem_('slider')"><input id="viagemValorNegociado" type="number" min="0" step="0.01" value="0" oninput="sincronizarValorViagem_('input')" aria-label="Valor negociado em reais"><span>R$</span></div>
           </div>
           <div class="trips-form-grid trips-extra-grid">
             <label class="trips-field">Hodômetro inicial<input id="viagemHodometroInicial" type="number" min="0" step="0.1" placeholder="Opcional, em km"></label>
@@ -5565,9 +5565,9 @@ function sincronizarValorViagem_(origem){
   const input=document.getElementById('viagemValorNegociado');
   let v=Number(origem==='slider'?slider.value:input.value);
   if(!Number.isFinite(v))v=0;
-  v=Math.max(0,Math.min(10000,v));
+  v=Math.max(0,v);
   if(origem==='slider')input.value=v.toFixed(2);
-  else slider.value=String(Math.min(10000,Math.round(v/25)*25));
+  else slider.value=String(Math.min(Number(slider.max)||10000,Math.round(v/25)*25));
 }
 function renderizarSelecaoEntregasViagem_(){
   const data=document.getElementById('viagemData').value;
