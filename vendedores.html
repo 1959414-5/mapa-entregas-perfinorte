@@ -422,7 +422,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
   scrollbar-width:thin;scrollbar-color:#34475b transparent;
 }
 #sidebarDireito .item{
-  display:block;margin:7px 0;padding:12px 11px 10px;border:1px solid #3a4b5f;
+  position:relative;overflow:hidden;display:block;margin:7px 0;padding:12px 11px 10px;border:1px solid #3a4b5f;
   border-radius:10px;background:linear-gradient(145deg,#202d3b,#1a2531);box-shadow:0 3px 10px rgba(0,0,0,.12);
 }
 #sidebarDireito .item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#64748b;}
@@ -521,7 +521,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
         <h1>Mapa de Entregas</h1>
         <div class="brand-status-row">
           <span class="tag-somente-ver"><span class="read-only-dot"></span>Somente visualização</span>
-          <span class="brand-updated">Atualizado <span id="ultimaAtualizacao"></span></span>
+          <span class="brand-updated"><span id="ultimaAtualizacao"></span></span>
         </div>
       </div>
     </div>
