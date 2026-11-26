@@ -436,11 +436,14 @@ function registrarEdicaoPrevisaoManual_(e) {
   const anteriorIso = normalizarDataAuditoria_(valorAnterior);
   const novoIso = normalizarDataAuditoria_(novoValor);
 
-  const meta = garantirAuditoriaLinha_(hist, linha);
-  if (!meta.previsaoOriginal) {
+  // Para a primeira edição manual antes da migração, use a data anterior
+  // do evento como previsão original, não a data nova já escrita na célula.
+  const celulaOriginal = hist.getRange(linha, AUDITORIA_ENTREGAS_CFG_.COL_PREVISAO_ORIGINAL);
+  if (!celulaOriginal.getValue()) {
     const base = anteriorIso || novoIso;
-    if (base) hist.getRange(linha, AUDITORIA_ENTREGAS_CFG_.COL_PREVISAO_ORIGINAL).setValue(dataAuditoriaParaDate_(base));
+    if (base) celulaOriginal.setValue(dataAuditoriaParaDate_(base));
   }
+  garantirAuditoriaLinha_(hist, linha);
 
   if (anteriorIso && novoIso && anteriorIso !== novoIso) {
     registrarReprogramacao_(hist, linha, valorAnterior, novoValor, "Alteração manual na planilha", "");
