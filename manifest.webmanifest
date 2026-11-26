@@ -1,11 +1,11 @@
 {
-  "id": "./",
+  "id": "/mapa-entregas-perfinorte/",
   "name": "Perfinorte | Mapa de Entregas",
   "short_name": "Perfinorte",
   "description": "Acompanhamento de entregas da Perfinorte.",
   "lang": "pt-BR",
-  "start_url": "./index.html?source=pwa",
-  "scope": "./",
+  "start_url": "/mapa-entregas-perfinorte/index.html?source=pwa",
+  "scope": "/mapa-entregas-perfinorte/",
   "display": "standalone",
   "display_override": [
     "standalone",
