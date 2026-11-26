@@ -5505,7 +5505,7 @@ function renderizarViagens_(){
       ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
       :v.status==='EM_ANDAMENTO'
         ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
-        :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
+        :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
     const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||'')+'</small></div>').join('');
     const paradas=(v.paradas||[]).map(p=>{
       const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
