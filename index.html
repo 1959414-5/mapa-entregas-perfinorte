@@ -651,6 +651,28 @@
     font-size:14px; padding:4px; border-radius:4px; line-height:1;
   }
   .btn-remover:hover{color:var(--fila); background:#fdecea;}
+  .td-data-entrada{
+    text-align:center; white-space:nowrap; font-variant-numeric:tabular-nums;
+    color:#263443; font-weight:650; letter-spacing:.01em;
+  }
+  .btn-remover{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:28px; height:28px; min-width:28px; padding:0 !important;
+    color:#c62828; background:rgba(198,40,40,.10);
+    border:1px solid rgba(198,40,40,.28); border-radius:7px;
+    opacity:1; vertical-align:middle; transition:background .15s,color .15s,border-color .15s,transform .15s;
+  }
+  .btn-remover svg{
+    display:block; width:16px; height:16px; fill:none; stroke:currentColor;
+    stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;
+  }
+  .btn-remover:hover{
+    color:#a31616; background:#fee2e2; border-color:#e9a2a2; transform:translateY(-1px);
+  }
+  .btn-remover:focus-visible{
+    outline:2px solid #c62828; outline-offset:2px;
+  }
+  .btn-remover:disabled{opacity:.45; cursor:wait; transform:none;}
   .btn-sair{width:100%;margin-top:8px;padding:9px 10px;background:#2a2024;color:#f0a2a2;border:1px solid #624047;border-radius:5px;font-size:12px;cursor:pointer;}
   .btn-sair:hover{background:#3a282e;color:#ffd0d0;}
   #tableView .empty{color:#8b93a1;}
@@ -3071,6 +3093,21 @@ function formatarDataBR_(iso){
   return partes[2] + '/' + partes[1] + '/' + partes[0];
 }
 
+/* Mostra somente a data de entrada, mesmo que a origem envie data e hora. */
+function formatarDataEntradaTabela_(valor){
+  if (valor === null || valor === undefined || valor === '') return '—';
+  const texto = String(valor).trim();
+  if (!texto) return '—';
+
+  const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[3] + '/' + iso[2] + '/' + iso[1];
+
+  const br = texto.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})/);
+  if (br) return br[1] + '/' + br[2] + '/' + br[3];
+
+  return '—';
+}
+
 /* ===== COMUNICAÇÃO COM A API (esta página é externa ao Apps Script agora —
    GitHub Pages — então TUDO passa por fetch(), nunca google.script.run). ===== */
 async function chamarAPI_GET_(params){
@@ -3875,7 +3912,8 @@ function renderTabela(ehAtualizacaoAutomatica){
     '</th>' +
     '<th' + estiloLarguraCol_('ok', 46) + '>OK</th>' +
     '<th' + estiloLarguraCol_('obs', 170) + '>Observações' + handleResize_('obs') + '</th>' +
-    '<th style="width:32px;"></th>' +
+    '<th' + estiloLarguraCol_('entrada', 112) + '>Data de entrada' + handleResize_('entrada') + '</th>' +
+    '<th style="width:36px;"></th>' +
     '</tr></thead><tbody>';
 
   lista.forEach(d => {
@@ -3900,7 +3938,10 @@ function renderTabela(ehAtualizacaoAutomatica){
       '<td><select class="td-input td-status-select"' + corCelulaStatus_(d) + ' data-campo="status"><option value="ENTREGUE">ENTREGUE</option><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="EM FILA">EM FILA</option><option value="">— (vazio)</option></select></td>' +
       '<td class="td-check"><input type="checkbox" class="td-checkbox" data-campo="ok"' + (d.ok ? ' checked' : '') + '></td>' +
       '<td><input type="text" class="td-input" data-campo="observacoes" value="' + escapeAttr_(d.observacoes) + '"></td>' +
-      '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" onclick="removerLinha_(this)">🗑</button></td>' +
+      '<td class="td-data-entrada">' + formatarDataEntradaTabela_(d.dataEntrada || d.entrada) + '</td>' +
+      '<td class="td-remover"><button type="button" class="btn-remover" title="Remover entrega" aria-label="Remover entrega" onclick="removerLinha_(this)">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>' +
+      '</button></td>' +
       '</tr>';
   });
   html += '</tbody></table>';
