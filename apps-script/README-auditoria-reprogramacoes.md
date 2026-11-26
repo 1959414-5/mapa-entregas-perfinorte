@@ -62,7 +62,7 @@ O log completo fica na aba `Historico_Reprogramacoes`, com previsão anterior, n
 
 ## Controle liga/desliga da justificativa de atraso
 
-O Dashboard inclui um toggle **Motivos de atraso**. Ligado, exige a seleção de um dos 12 motivos ao concluir uma entrega fora da previsão original. Desligado, permite concluir sem abrir o modal e sem gravar motivo. A configuração fica em `ScriptProperties` e vale para o sistema inteiro; não depende do navegador. O padrão inicial é ligado.
+O Dashboard inclui um toggle **Motivos de atraso**. Ligado, exige a seleção de um dos 12 motivos ao concluir uma entrega fora da previsão original. Desligado, permite concluir sem abrir o modal e sem gravar motivo. A configuração fica em `ScriptProperties` e vale para o sistema inteiro; não depende do navegador. O padrão inicial é desligado. A exigência só passa a valer depois que alguém ativar o toggle.
 
 Para ativar a integração do toggle:
 
