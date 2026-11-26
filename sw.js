@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'perfinorte-entregas-';
-const CACHE_NAME = CACHE_PREFIX + 'v7';
+const CACHE_NAME = CACHE_PREFIX + 'v8';
 const APP_BASE = new URL('./', self.registration.scope);
 
 const APP_FILES = [
