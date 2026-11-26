@@ -4702,6 +4702,7 @@ async function carregarEntregas(){
   try{
     const dados = await chamarAPI_GET_({ formato: 'dados' });
     todasEntregas = protegerEdicoesRecentes_(Array.isArray(dados) ? dados : []);
+    aplicarIdsEstaveisNasEntregas_();
     const idsAtuais=new Set(todasEntregas.map(d=>String(d.idEntrega||'')).filter(Boolean));
     [...entregasSelecionadasViagem_].forEach(id=>{if(!idsAtuais.has(String(id)))entregasSelecionadasViagem_.delete(String(id));});
     document.getElementById('ultimaAtualizacao').textContent =
@@ -5480,6 +5481,13 @@ function statusParadaLabel_(status){
   const map={PENDENTE:'Pendente',EM_ROTA:'Em rota',ENTREGUE:'Entregue',NAO_ENTREGUE:'Não entregue',REPROGRAMAR:'Reprogramar'};
   return map[status]||status||'—';
 }
+function aplicarIdsEstaveisNasEntregas_(){
+  if(!viagensDadosCarregadas_)return;
+  const porLinha=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.linha),String(d.idEntrega||'')]));
+  (todasEntregas||[]).forEach(d=>{
+    if(!d.idEntrega)d.idEntrega=porLinha.get(String(d.linha))||'';
+  });
+}
 async function carregarViagens_(){
   if(viagensCarregando_)return false;
   viagensCarregando_=true;
@@ -5490,6 +5498,7 @@ async function carregarViagens_(){
     if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível carregar as viagens.');
     viagensDados_=res;
     viagensDadosCarregadas_=true;
+    aplicarIdsEstaveisNasEntregas_();
     renderizarViagens_();
     if(modoAtual==='tabela')renderTabela();
     return true;
@@ -5899,6 +5908,7 @@ function mostrarView(modo){
     render();
   } else if (tabela){
     renderTabela();
+    if(!viagensDadosCarregadas_&&!viagensCarregando_)carregarViagens_();
   } else if (dashboard){
     alternarPainelDashboard_(painelDashboardAtual_);
     if(painelDashboardAtual_==='entregas')setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
@@ -6214,7 +6224,7 @@ function alternarOrdenacaoData_(){
 }
 
 function motivoInelegibilidadeViagemTabela_(d){
-  if(!d||!d.idEntrega)return 'Identificador da entrega ainda não foi sincronizado.';
+  if(!d||!d.idEntrega)return viagensDadosCarregadas_?'Esta linha não possui UUID disponível para vincular a uma viagem.':'Carregando identificadores de viagem...';
   if(!String(d.codigo||'').trim())return 'Informe o código do cliente.';
   if(!String(d.endereco||'').trim()||String(d.endereco).trim().toUpperCase()==='AVISO')return 'Informe um endereço válido.';
   if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Esta entrega já foi concluída.';
@@ -6245,7 +6255,10 @@ function atualizarControlesSelecaoViagemTabela_(lista){
   const btn=document.getElementById('btnCriarViagemSelecaoTabela');
   const header=document.querySelector('#tabelaContainer [data-selecao-todas-viagem]');
   if(label)label.textContent=total+' selecionada(s)';
-  if(btn)btn.disabled=!total;
+  if(btn){
+    btn.disabled=!total;
+    btn.title=total?'Abrir programação para as entregas marcadas':'Marque ao menos uma entrega válida para habilitar';
+  }
   const elegiveis=(lista||[]).filter(d=>!motivoInelegibilidadeViagemTabela_(d));
   const selecionadasVisiveis=elegiveis.filter(d=>entregasSelecionadasViagem_.has(String(d.idEntrega))).length;
   if(header){
