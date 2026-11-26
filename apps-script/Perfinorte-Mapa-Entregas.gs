@@ -4080,6 +4080,7 @@ function obterEntregasValidas_(filtroMotorista, filtroData) {
       previsaoOriginal: _toIsoDateString(dadosLinha[OFF_ORIGINAL]) || "",
       qtdReprogramacoes: idEntrega ? (contagemReprogramacoes[idEntrega] || 0) : 0,
       linha: i + 2,
+      idEntrega: idEntrega,
       codigo: codigo || "",
       cliente: fantasia,
       representante: representante || "",
