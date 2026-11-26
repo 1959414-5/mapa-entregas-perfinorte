@@ -767,6 +767,24 @@
   }
   .btn-editar-endereco:hover{opacity:1; background:#f0f0f0;}
   .td-checkbox{width:16px; height:16px; accent-color:var(--manha); cursor:pointer;}
+  .td-selecao-viagem{text-align:center;width:38px;min-width:38px;}
+  .td-selecao-viagem input,.th-selecao-viagem input{width:16px;height:16px;accent-color:#237f8f;cursor:pointer;}
+  .td-selecao-viagem input:disabled{opacity:.25;cursor:not-allowed;}
+  .tabela-viagem-actions{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    margin:0 0 10px;padding:10px 12px;border:1px solid #dbe7ec;border-radius:9px;
+    background:linear-gradient(110deg,#f8fbfc,#eef5f7);color:#526a7c;
+  }
+  .tabela-viagem-actions-info{display:flex;align-items:baseline;gap:7px;font-size:10px;}
+  .tabela-viagem-actions-info strong{color:#176f7f;font:800 16px var(--font-mono);}
+  .tabela-viagem-actions-buttons{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .tabela-viagem-actions button{
+    min-height:30px;padding:6px 10px;border:1px solid #d5e1e8;border-radius:7px;
+    background:#fff;color:#52677b;font-size:9.5px;font-weight:750;cursor:pointer;
+  }
+  .tabela-viagem-actions button.primary{border-color:#237f8f;background:#237f8f;color:#fff;}
+  .tabela-viagem-actions button:disabled{opacity:.42;cursor:not-allowed;}
+  .tabela-viagem-actions button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(24,70,84,.1);}
   .btn-remover{
     background:none; border:none; color:#c2c7cf; cursor:pointer;
     font-size:14px; padding:4px; border-radius:4px; line-height:1;
@@ -3062,6 +3080,15 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-deliveries-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#6d7f91;font-size:9.5px;}
 .trips-deliveries-toolbar button{border:0;background:transparent;color:#2c7e8e;font-size:9px;font-weight:800;cursor:pointer;}
 .trips-deliveries-selection{display:flex;flex-direction:column;gap:7px;max-height:310px;overflow:auto;padding-right:3px;}
+.trips-selected-stops{display:flex;flex-direction:column;gap:7px;max-height:250px;overflow:auto;padding-right:3px;}
+.trips-selected-stop{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,190px);gap:12px;align-items:center;
+  padding:10px 12px;border:1px solid #e0e9ef;border-radius:9px;background:#fbfdfe;
+}
+.trips-selected-stop>span{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.trips-selected-stop strong{color:#30485e;font-size:10px;font-weight:800;}
+.trips-selected-stop small{color:#8492a1;font-size:8.5px;line-height:1.4;overflow-wrap:anywhere;}
+.trips-selected-stop input{width:100%;height:34px;padding:0 9px;border:1px solid #d9e3eb;border-radius:7px;background:#fff;color:#30465b;font:10px var(--font-ui);}
 .trips-delivery-option{display:grid;grid-template-columns:19px minmax(0,1fr) minmax(150px,210px);gap:10px;align-items:center;padding:10px;border:1px solid #e4ebf0;border-radius:9px;background:#fff;transition:border-color .14s,background .14s;}
 .trips-delivery-option:has(input:checked){border-color:#9ac8d0;background:#f5fafb;}
 .trips-delivery-option>input{width:15px;height:15px;accent-color:#287e8e;}
@@ -3542,7 +3569,6 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </div>
           <div class="trips-header-actions">
             <button type="button" class="trips-action" onclick="carregarViagens_()">↻ Atualizar</button>
-            <button type="button" class="trips-action primary" onclick="abrirModalViagem_()">＋ Programar viagem</button>
           </div>
         </header>
         <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
@@ -3616,7 +3642,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <div>
         <div class="trips-modal-kicker">PERFINORTE · PLANEJAMENTO LOGÍSTICO</div>
         <h2 id="tituloModalViagem">Programar viagem</h2>
-        <p>Defina o veículo e selecione as entregas que seguirão no mesmo percurso.</p>
+        <p>As entregas abaixo foram selecionadas na tabela. Informe os dados do veículo e da saída.</p>
       </div>
       <button type="button" class="trips-modal-close" onclick="fecharModalViagem_()" aria-label="Fechar">×</button>
     </header>
@@ -3625,8 +3651,8 @@ button,input,select,textarea{font-family:var(--font-ui);}
         <section class="trips-form-section">
           <div class="trips-form-section-title"><span>01</span><div><strong>Dados da viagem</strong><small>Data, período, veículo e motorista responsável</small></div></div>
           <div class="trips-form-grid">
-            <label class="trips-field">Data da viagem<input id="viagemData" type="date" required onchange="renderizarSelecaoEntregasViagem_()"></label>
-            <label class="trips-field">Período<select id="viagemPeriodo" required onchange="renderizarSelecaoEntregasViagem_()"><option value="">Selecione o período</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
+            <label class="trips-field">Data da viagem<input id="viagemData" type="date" required></label>
+            <label class="trips-field">Período<select id="viagemPeriodo" required><option value="">Selecione o período</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
             <label class="trips-field span-2">Veículo<select id="viagemVeiculo" required onchange="atualizarTipoVeiculoViagem_()"><option value="">Carregando veículos...</option></select></label>
             <label class="trips-field span-2">Motorista<input id="viagemMotorista" list="viagemMotoristasLista" placeholder="Selecione ou informe o motorista" required><datalist id="viagemMotoristasLista"></datalist></label>
           </div>
@@ -3643,12 +3669,11 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </section>
 
         <section class="trips-form-section">
-          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas e notas fiscais</strong><small>Selecione as paradas que pertencem a esta viagem. A NF pode ser informada manualmente.</small></div></div>
+          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas selecionadas</strong><small>Origem: tabela de entregas. Confira as paradas e informe as notas fiscais, quando disponíveis.</small></div></div>
           <div class="trips-deliveries-toolbar">
-            <span id="viagemEntregaContagem">Nenhuma entrega selecionada</span>
-            <button type="button" onclick="marcarEntregasVisiveisViagem_()">Selecionar todas visíveis</button>
+            <span id="viagemEntregaContagem">0 entrega(s) recebida(s) da tabela</span>
           </div>
-          <div id="viagensEntregasSelecao" class="trips-deliveries-selection"><div class="trips-empty">Selecione data e veículo para carregar entregas disponíveis.</div></div>
+          <div id="viagensEntregasResumo" class="trips-selected-stops"></div>
         </section>
         <div id="viagemRotaResumo" class="trips-route-note">A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.</div>
       </div>
@@ -4677,6 +4702,8 @@ async function carregarEntregas(){
   try{
     const dados = await chamarAPI_GET_({ formato: 'dados' });
     todasEntregas = protegerEdicoesRecentes_(Array.isArray(dados) ? dados : []);
+    const idsAtuais=new Set(todasEntregas.map(d=>String(d.idEntrega||'')).filter(Boolean));
+    [...entregasSelecionadasViagem_].forEach(id=>{if(!idsAtuais.has(String(id)))entregasSelecionadasViagem_.delete(String(id));});
     document.getElementById('ultimaAtualizacao').textContent =
       'atualizado ' + new Date().toLocaleTimeString('pt-BR');
     populaMotoristas();
@@ -5434,6 +5461,8 @@ function editarVeiculoPeloDashboard_(id){
 let viagensDados_ = {viagens:[],veiculos:[],motoristas:[],entregasDisponiveis:[]};
 let filtroViagensAtual_ = 'TODAS';
 let viagensCarregando_ = false;
+let entregasSelecionadasViagem_ = new Set();
+let entregasParaNovaViagem_ = [];
 
 function escaparViagem_(valor){
   return String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -5460,9 +5489,11 @@ async function carregarViagens_(){
     if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível carregar as viagens.');
     viagensDados_=res;
     renderizarViagens_();
+    return true;
   }catch(err){
     if(lista)lista.innerHTML='<div class="trips-empty">Falha ao carregar viagens.<br><small>'+escaparViagem_(err.message||err)+'</small></div>';
     mostrarToast('Falha ao carregar módulo de viagens.',true);
+    return false;
   }finally{viagensCarregando_=false;}
 }
 function definirFiltroViagens_(filtro,botao){
@@ -5528,32 +5559,55 @@ function toggleParadasViagem_(id){
   const el=document.getElementById('paradas-'+id);
   if(el)el.hidden=!el.hidden;
 }
-function abrirModalViagem_(){
+async function abrirModalViagem_(){
+  if(!entregasSelecionadasViagem_.size){
+    mostrarToast('Marque ao menos uma entrega na tabela antes de programar a viagem.',true);
+    return;
+  }
+  const carregou=await carregarViagens_();
+  if(!carregou)return;
+
+  const disponiveis=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega),d]));
+  const ids=[...entregasSelecionadasViagem_];
+  const indisponiveis=ids.filter(id=>!disponiveis.has(String(id)));
+  if(indisponiveis.length){
+    indisponiveis.forEach(id=>entregasSelecionadasViagem_.delete(String(id)));
+    renderTabela();
+    mostrarToast(indisponiveis.length+' entrega(s) não puderam ser vinculadas. Verifique se já foram entregues, não possuem código/endereço ou estão em outra viagem aberta.',true);
+  }
+  entregasParaNovaViagem_=ids.filter(id=>disponiveis.has(String(id))).map(id=>disponiveis.get(String(id)));
+  if(!entregasParaNovaViagem_.length)return;
+
   const form=document.getElementById('formViagem');
   if(!form)return;
   form.reset();
-  const hoje=new Date();document.getElementById('viagemData').value=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
-  document.getElementById('viagemPeriodo').value='';
+  const hoje=new Date();
+  const hojeIso=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
+  const datas=[...new Set(entregasParaNovaViagem_.map(d=>String(d.data||'')).filter(Boolean))];
+  const periodos=[...new Set(entregasParaNovaViagem_.map(d=>String(d.periodo||'').toUpperCase()).filter(Boolean))];
+  const motoristas=[...new Set(entregasParaNovaViagem_.map(d=>String(d.motorista||'').trim()).filter(Boolean))];
+  document.getElementById('viagemData').value=datas.length===1?datas[0]:(datas.length>1?'':hojeIso);
+  document.getElementById('viagemPeriodo').value=periodos.length===1?periodos[0]:'';
   document.getElementById('viagemPedagios').value='0';
   document.getElementById('viagemExtras').value='0';
   document.getElementById('viagemValorSlider').value='0';
   document.getElementById('viagemValorNegociado').value='0';
-  document.getElementById('viagemMotorista').value='';
+  document.getElementById('viagemMotorista').value=motoristas.length===1?motoristas[0]:'';
   document.getElementById('viagemObservacoes').value='';
   const select=document.getElementById('viagemVeiculo');
   select.innerHTML='<option value="">Selecione o veículo</option>'+(viagensDados_.veiculos||[]).map(v=>'<option value="'+escaparViagem_(v.id)+'">'+escaparViagem_(v.nomeExibicao||v.modelo)+' · '+escaparViagem_(v.placa)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado':'Frota própria')+'</option>').join('');
   document.getElementById('viagemMotoristasLista').innerHTML=(viagensDados_.motoristas||[]).map(n=>'<option value="'+escaparViagem_(n)+'"></option>').join('');
   document.getElementById('viagemTerceiroValor').hidden=true;
-  document.getElementById('viagensEntregasSelecao').innerHTML='<div class="trips-empty">Selecione uma data para carregar as entregas disponíveis.</div>';
-  document.getElementById('viagemEntregaContagem').textContent='Nenhuma entrega selecionada';
+  document.getElementById('viagemEntregaContagem').textContent=entregasParaNovaViagem_.length+' entrega(s) recebida(s) da tabela';
   document.getElementById('viagemRotaResumo').textContent='A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.';
+  renderizarResumoEntregasViagem_();
   document.getElementById('modalViagemOverlay').classList.add('show');
   document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','false');
-  renderizarSelecaoEntregasViagem_();
 }
 function fecharModalViagem_(){
   document.getElementById('modalViagemOverlay').classList.remove('show');
   document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','true');
+  entregasParaNovaViagem_=[];
 }
 function atualizarTipoVeiculoViagem_(){
   const id=document.getElementById('viagemVeiculo').value;
@@ -5569,30 +5623,12 @@ function sincronizarValorViagem_(origem){
   if(origem==='slider')input.value=v.toFixed(2);
   else slider.value=String(Math.min(Number(slider.max)||10000,Math.round(v/25)*25));
 }
-function renderizarSelecaoEntregasViagem_(){
-  const data=document.getElementById('viagemData').value;
-  const periodo=document.getElementById('viagemPeriodo').value;
-  const area=document.getElementById('viagensEntregasSelecao');
-  const lista=(viagensDados_.entregasDisponiveis||[]).filter(d=>
-    (!data||!d.data||d.data===data)&&(!periodo||String(d.periodo||'').toUpperCase()===periodo)
-  );
-  if(!lista.length){
-    area.innerHTML='<div class="trips-empty">Não há entregas disponíveis para esta data e período. Confira a programação ou selecione outra data.</div>';
-    document.getElementById('viagemEntregaContagem').textContent='Nenhuma entrega disponível';
-    return;
-  }
-  area.innerHTML=lista.map(d=>
-    '<label class="trips-delivery-option"><input type="checkbox" class="viagem-entrega-check" value="'+escaparViagem_(d.idEntrega)+'" onchange="atualizarContagemEntregasViagem_()"><span class="trips-delivery-copy"><strong>'+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.cidade||d.endereco||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small><em>'+(d.ok?'Pedido pronto':'Pedido ainda não marcado como pronto')+'</em></span><input class="trips-delivery-nf" type="text" data-nf-entrega="'+escaparViagem_(d.idEntrega)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'"></label>'
+function renderizarResumoEntregasViagem_(){
+  const area=document.getElementById('viagensEntregasResumo');
+  if(!area)return;
+  area.innerHTML=entregasParaNovaViagem_.map((d,i)=>
+    '<label class="trips-selected-stop"><span><strong>'+String(i+1).padStart(2,'0')+' · '+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.endereco||d.cidade||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small></span><input type="text" class="trips-delivery-nf" data-nf-entrega="'+escaparViagem_(d.idEntrega)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'"></label>'
   ).join('');
-  atualizarContagemEntregasViagem_();
-}
-function atualizarContagemEntregasViagem_(){
-  const n=document.querySelectorAll('.viagem-entrega-check:checked').length;
-  document.getElementById('viagemEntregaContagem').textContent=n+' entrega(s) selecionada(s)';
-}
-function marcarEntregasVisiveisViagem_(){
-  document.querySelectorAll('.viagem-entrega-check').forEach(c=>c.checked=true);
-  atualizarContagemEntregasViagem_();
 }
 async function salvarViagemUI_(event){
   event.preventDefault();
@@ -5600,15 +5636,11 @@ async function salvarViagemUI_(event){
   const veiculoId=document.getElementById('viagemVeiculo').value;
   const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
   if(!veiculo){mostrarToast('Selecione um veículo ativo.',true);return;}
-  const selecionados=[...document.querySelectorAll('.viagem-entrega-check:checked')];
-  if(!selecionados.length){mostrarToast('Selecione ao menos uma entrega.',true);return;}
-  const mapaEntregas=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega),d]));
-  const escolhidas=selecionados.map((el,i)=>{
-    const d=mapaEntregas.get(String(el.value));
-    const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(el.value))+'"]');
-    return {idEntrega:el.value,nfs:nf?nf.value.trim():'',ordem:i+1,d:d};
+  if(!entregasParaNovaViagem_.length){mostrarToast('Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.',true);return;}
+  const escolhidas=entregasParaNovaViagem_.map((d,i)=>{
+    const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(d.idEntrega))+'"]');
+    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():'',ordem:i+1,d:d};
   });
-  if(escolhidas.some(x=>!x.d)){mostrarToast('Uma entrega selecionada não está mais disponível. Atualize a lista.',true);return;}
   if(veiculo.propriedade==='TERCEIRIZADO'&&Number(document.getElementById('viagemValorNegociado').value)<=0){
     mostrarToast('Informe o valor negociado por esta viagem.',true);return;
   }
@@ -5652,9 +5684,12 @@ async function salvarViagemUI_(event){
   try{
     const res=await chamarAPI_POST_({acao:'criarViagem',dados:dados});
     if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível programar a viagem.');
+    entregasSelecionadasViagem_.clear();
+    entregasParaNovaViagem_=[];
     fecharModalViagem_();
+    renderTabela();
     mostrarToast(res.numero+' programada com '+res.totalEntregas+' entrega(s).');
-    await carregarViagens_();
+    mostrarView('viagens');
   }catch(err){mostrarToast(err.message||String(err),true);}
   finally{btn.disabled=false;btn.textContent='Calcular rota e programar';}
 }
@@ -6175,6 +6210,45 @@ function alternarOrdenacaoData_(){
   renderTabela();
 }
 
+function motivoInelegibilidadeViagemTabela_(d){
+  if(!d||!d.idEntrega)return 'Identificador da entrega ainda não foi sincronizado.';
+  if(!String(d.codigo||'').trim())return 'Informe o código do cliente.';
+  if(!String(d.endereco||'').trim()||String(d.endereco).trim().toUpperCase()==='AVISO')return 'Informe um endereço válido.';
+  if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Esta entrega já foi concluída.';
+  return '';
+}
+function alternarSelecaoEntregaViagemTabela_(id,marcado){
+  const chave=String(id||'');
+  if(!chave)return;
+  if(marcado)entregasSelecionadasViagem_.add(chave);
+  else entregasSelecionadasViagem_.delete(chave);
+  renderTabela();
+}
+function selecionarTodasVisiveisViagemTabela_(marcado){
+  document.querySelectorAll('#tabelaContainer .td-selecionar-viagem:not(:disabled)').forEach(el=>{
+    const id=String(el.getAttribute('data-id-entrega')||'');
+    if(!id)return;
+    if(marcado)entregasSelecionadasViagem_.add(id);
+    else entregasSelecionadasViagem_.delete(id);
+  });
+  renderTabela();
+}
+function selecionarVisiveisViagemTabela_(){selecionarTodasVisiveisViagemTabela_(true);}
+function limparSelecaoViagemTabela_(){entregasSelecionadasViagem_.clear();renderTabela();}
+function atualizarControlesSelecaoViagemTabela_(lista){
+  const total=entregasSelecionadasViagem_.size;
+  const label=document.getElementById('tabelaViagemSelecaoTotal');
+  const btn=document.getElementById('btnCriarViagemSelecaoTabela');
+  const header=document.querySelector('#tabelaContainer [data-selecao-todas-viagem]');
+  if(label)label.textContent=total+' selecionada(s)';
+  if(btn)btn.disabled=!total;
+  const elegiveis=(lista||[]).filter(d=>!motivoInelegibilidadeViagemTabela_(d));
+  const selecionadasVisiveis=elegiveis.filter(d=>entregasSelecionadasViagem_.has(String(d.idEntrega))).length;
+  if(header){
+    header.checked=elegiveis.length>0&&selecionadasVisiveis===elegiveis.length;
+    header.indeterminate=selecionadasVisiveis>0&&selecionadasVisiveis<elegiveis.length;
+  }
+}
 function renderTabela(ehAtualizacaoAutomatica){
   const container = document.getElementById('tabelaContainer');
 
@@ -6265,7 +6339,16 @@ function renderTabela(ehAtualizacaoAutomatica){
         '<span><i style="background:' + (coresStatus['ATENCAO']||'#ea9999') + '"></i>Atenção</span>' +
       '</div>' +
     '</div>' +
+    '<div class="tabela-viagem-actions">' +
+      '<div class="tabela-viagem-actions-info"><strong id="tabelaViagemSelecaoTotal">'+entregasSelecionadasViagem_.size+'</strong><span>entrega(s) marcada(s) para formar uma viagem</span></div>' +
+      '<div class="tabela-viagem-actions-buttons">' +
+        '<button type="button" onclick="selecionarVisiveisViagemTabela_()">Marcar visíveis</button>' +
+        '<button type="button" onclick="limparSelecaoViagemTabela_()">Limpar seleção</button>' +
+        '<button type="button" class="primary" id="btnCriarViagemSelecaoTabela" '+(entregasSelecionadasViagem_.size?'':'disabled')+' onclick="abrirModalViagem_()">Programar viagem com seleção</button>' +
+      '</div>' +
+    '</div>' +
     '<table class="tabela-entregas' + (tabelaCondensada ? ' condensada' : '') + (larguraEmPorcentagem ? ' largura-percentual' : '') + '"><thead><tr>' +
+    '<th class="th-selecao-viagem" style="width:38px;"><input type="checkbox" data-selecao-todas-viagem title="Marcar/desmarcar todas as entregas válidas visíveis"></th>' +
     (rotaSugerida ? '<th' + estiloLarguraCol_('numero', 40) + '>#' + handleResize_('numero') + '</th>' : '') +
     '<th' + estiloLarguraCol_('codigo', 70) + '>Código' + handleResize_('codigo') + '</th>' +
     '<th' + estiloLarguraCol_('cliente', 150) + '>Cliente' + handleResize_('cliente') + '</th>' +
@@ -6295,7 +6378,7 @@ function renderTabela(ehAtualizacaoAutomatica){
     '</tr></thead><tbody>';
 
   if (!lista.length){
-    const totalColunas = rotaSugerida ? 15 : 14;
+    const totalColunas = rotaSugerida ? 16 : 15;
     html += '<tr class="tabela-sem-resultados"><td colspan="' + totalColunas + '" style="padding:36px 16px;text-align:center;color:#6b7280;">Nenhuma entrega encontrada para esses filtros.</td></tr>';
   }
 
@@ -6306,7 +6389,11 @@ function renderTabela(ehAtualizacaoAutomatica){
       ? ' style="' + (corLinha ? 'background:' + corLinha + ';' : '') + (corTexto ? 'color:' + corTexto + ';' : '') + '"'
       : '';
     const numeroRota = rotaSugerida ? rotaSugerida.indexOf(d.linha) + 1 : 0;
-    html += '<tr data-linha="' + d.linha + '"' + estiloLinha + '>' +
+    const idEntrega = String(d.idEntrega||'');
+    const motivoSelecao = motivoInelegibilidadeViagemTabela_(d);
+    const marcadaParaViagem = idEntrega&&entregasSelecionadasViagem_.has(idEntrega);
+    html += '<tr data-linha="' + d.linha + '" data-entrega-id="' + escapeAttr_(idEntrega) + '"' + estiloLinha + '>' +
+      '<td class="td-selecao-viagem"><input type="checkbox" class="td-selecionar-viagem" data-id-entrega="' + escapeAttr_(idEntrega) + '" title="' + escapeAttr_(motivoSelecao||'Selecionar para uma viagem') + '"' + (marcadaParaViagem?' checked':'') + (motivoSelecao?' disabled':'') + '></td>' +
       (rotaSugerida ? '<td style="text-align:center;font-weight:700;">' + (numeroRota > 0 ? numeroRota : '—') + '</td>' : '') +
       '<td><input type="text" class="td-input" data-campo="codigo" value="' + escapeAttr_(d.codigo) + '" style="width:70px;"></td>' +
       '<td class="td-cliente">' + d.cliente + '</td>' +
@@ -6333,11 +6420,16 @@ function renderTabela(ehAtualizacaoAutomatica){
 
   // seleciona o valor atual nos <select> (não dá pra fazer isso via string HTML)
   const linhasDom = container.querySelectorAll('tbody tr');
-  linhasDom.forEach((tr, i) => {
-    const d = lista[i];
-    tr.querySelector('[data-campo="motorista"]').value = d.motorista || '';
-    tr.querySelector('[data-campo="periodo"]').value = d.periodo || '';
-    tr.querySelector('[data-campo="status"]').value = d.status || '';
+  linhasDom.forEach(tr => {
+    const linha = tr.getAttribute('data-linha');
+    const d = lista.find(item=>String(item.linha)===String(linha));
+    if(!d)return;
+    const motoristaEl=tr.querySelector('[data-campo="motorista"]');
+    const periodoEl=tr.querySelector('[data-campo="periodo"]');
+    const statusEl=tr.querySelector('[data-campo="status"]');
+    if(motoristaEl)motoristaEl.value=d.motorista||'';
+    if(periodoEl)periodoEl.value=d.periodo||'';
+    if(statusEl)statusEl.value=d.status||'';
   });
 
   container.querySelectorAll('[data-campo="codigo"]').forEach(el => {
@@ -6349,6 +6441,12 @@ function renderTabela(ehAtualizacaoAutomatica){
   container.querySelectorAll('.td-checkbox').forEach(el => {
     el.addEventListener('change', onEditarCelula_);
   });
+  container.querySelectorAll('.td-selecionar-viagem').forEach(el=>{
+    el.addEventListener('change',()=>alternarSelecaoEntregaViagemTabela_(el.getAttribute('data-id-entrega'),el.checked));
+  });
+  const selecionarTodas=container.querySelector('[data-selecao-todas-viagem]');
+  if(selecionarTodas)selecionarTodas.addEventListener('change',()=>selecionarTodasVisiveisViagemTabela_(selecionarTodas.checked));
+  atualizarControlesSelecaoViagemTabela_(lista);
 }
 
 async function onEditarCelula_(e){
