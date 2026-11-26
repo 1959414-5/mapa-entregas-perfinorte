@@ -236,9 +236,8 @@
   #map{height:100vh;background:#f2efe9;}
   /* Mapa sem grade/linhas de tiles: sobreposição mínima evita emendas de renderização */
   .leaflet-tile-container{transform:scale(1.0005);}
-  /* Cobertura extra dos tiles para eliminar linhas brancas de subpixel */
-  .leaflet-tile{border:0!important;outline:0!important;width:257px!important;height:257px!important;margin-right:-1px!important;margin-bottom:-1px!important;}
-  .leaflet-tile-pane{overflow:hidden;}
+  /* Evita linhas de emenda por arredondamento de subpixel */
+  .leaflet-tile{border:0!important;outline:0!important;}
   .leaflet-container{background:#f2efe9!important;overflow:hidden;}
   .leaflet-popup-content-wrapper{
     background:var(--panel);color:var(--paper);border-radius:6px;
