@@ -636,6 +636,8 @@
     font-size:14px; padding:4px; border-radius:4px; line-height:1;
   }
   .btn-remover:hover{color:var(--fila); background:#fdecea;}
+  .btn-sair{width:100%;margin-top:8px;padding:9px 10px;background:#2a2024;color:#f0a2a2;border:1px solid #624047;border-radius:5px;font-size:12px;cursor:pointer;}
+  .btn-sair:hover{background:#3a282e;color:#ffd0d0;}
   #tableView .empty{color:#8b93a1;}
 #app[hidden]{display:none!important;}
 #loginScreen[hidden]{display:none!important;}
@@ -685,6 +687,7 @@
       </div>
       <div id="rotaInfo" class="rota-info" style="display:none;"></div>
       <button class="btn-confirmacoes" id="btnConfirmacoes" onclick="abrirModalConfirmacoes()">🚚 Confirmações do motorista</button>
+      <button class="btn-sair" id="btnSair" onclick="encerrarSessao_()">↪ Sair da sessão</button>
     </div>
 
     <div class="controls">
@@ -971,7 +974,7 @@
  * ===================================================================== */
 const API_BASE = "https://mapa-entregas-api.babzinhaa14.workers.dev";
 const API_URL = API_BASE + "/api";
-let TOKEN_SESSAO = sessionStorage.getItem("mapa_entregas_token") || "";
+let TOKEN_SESSAO = localStorage.getItem("mapa_entregas_token") || "";
 
 /* Dados de exemplo usados só se a API_URL acima ficar vazia. */
 const DADOS_EXEMPLO = [
@@ -2499,7 +2502,7 @@ setInterval(carregarLocalizacoesMotoristas, 15000); // localização atualiza a 
 }
 function encerrarSessao_(){
   TOKEN_SESSAO = '';
-  sessionStorage.removeItem('mapa_entregas_token');
+  localStorage.removeItem('mapa_entregas_token');
   document.getElementById('app').hidden = true;
   document.getElementById('loginScreen').hidden = false;
 }
@@ -2514,8 +2517,17 @@ async function validarSessao_(){
     return j.valid === true;
   } catch(e) { return false; }
 }
+let loginEmAndamento_ = false;
+let mapaJaInicializado_ = false;
+function iniciarMapaUmaVez_(){
+  if (mapaJaInicializado_) return;
+  mapaJaInicializado_ = true;
+  iniciarMapaAutenticado_();
+}
 async function enviarLogin_(e){
   e.preventDefault();
+  if (loginEmAndamento_) return;
+  loginEmAndamento_ = true;
   const btn = document.getElementById('loginButton');
   const msg = document.getElementById('loginError');
   btn.disabled = true;
@@ -2533,25 +2545,26 @@ async function enviarLogin_(e){
     const j = await r.json();
     if (!r.ok || !j.token) throw new Error(j.error || 'Falha no login');
     TOKEN_SESSAO = j.token;
-    sessionStorage.setItem('mapa_entregas_token', TOKEN_SESSAO);
+    localStorage.setItem('mapa_entregas_token', TOKEN_SESSAO);
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
-    iniciarMapaAutenticado_();
+    iniciarMapaUmaVez_();
   } catch(err) {
     msg.textContent = err.message || 'Não foi possível entrar.';
   } finally {
     btn.disabled = false;
     btn.textContent = 'Entrar';
+    loginEmAndamento_ = false;
   }
 }
 async function iniciarAutenticacao_(){
   if (await validarSessao_()) {
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
-    iniciarMapaAutenticado_();
+    iniciarMapaUmaVez_();
   } else {
     TOKEN_SESSAO = '';
-    sessionStorage.removeItem('mapa_entregas_token');
+    localStorage.removeItem('mapa_entregas_token');
     document.getElementById('loginScreen').hidden = false;
     document.getElementById('app').hidden = true;
   }
