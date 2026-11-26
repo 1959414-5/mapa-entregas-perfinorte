@@ -3078,6 +3078,8 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-save:disabled{opacity:.55;cursor:wait;}
 @media(max-width:900px){.trips-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.trips-header{align-items:flex-start;flex-direction:column;}.trips-header-actions{justify-content:flex-start;}}
 @media(max-width:650px){
+ #app.viagens-ativa{grid-template-columns:54px minmax(0,1fr)!important;}
+ #app.viagens-ativa #mainContent{grid-column:2;grid-row:1;}
  #viagensView{padding:16px 12px 28px;}
  .trips-toolbar{align-items:stretch;flex-direction:column;}
  .trips-search{width:100%;max-width:none;}
@@ -3603,7 +3605,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <div class="trips-form-section-title"><span>01</span><div><strong>Dados da viagem</strong><small>Data, período, veículo e motorista responsável</small></div></div>
           <div class="trips-form-grid">
             <label class="trips-field">Data da viagem<input id="viagemData" type="date" required onchange="renderizarSelecaoEntregasViagem_()"></label>
-            <label class="trips-field">Período<select id="viagemPeriodo" onchange="renderizarSelecaoEntregasViagem_()"><option value="">Todos</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
+            <label class="trips-field">Período<select id="viagemPeriodo" required onchange="renderizarSelecaoEntregasViagem_()"><option value="">Selecione o período</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
             <label class="trips-field span-2">Veículo<select id="viagemVeiculo" required onchange="atualizarTipoVeiculoViagem_()"><option value="">Carregando veículos...</option></select></label>
             <label class="trips-field span-2">Motorista<input id="viagemMotorista" list="viagemMotoristasLista" placeholder="Selecione ou informe o motorista" required><datalist id="viagemMotoristasLista"></datalist></label>
           </div>
