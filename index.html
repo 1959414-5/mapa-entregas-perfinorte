@@ -2431,7 +2431,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
             <span id="dashboardGeradoEm"></span>
             <label class="dashboard-reason-toggle" title="Ativa ou desativa a exigência de justificativa ao concluir uma entrega atrasada">
               <span class="dashboard-reason-copy"><strong>Motivos de atraso</strong><small id="statusMotivoAtraso">Ativado</small></span>
-              <input id="toggleMotivoAtraso" type="checkbox" checked onchange="alternarExigenciaMotivoAtraso_(this)" aria-label="Exigir justificativa para entregas atrasadas">
+              <input id="toggleMotivoAtraso" type="checkbox" onchange="alternarExigenciaMotivoAtraso_(this)" aria-label="Exigir justificativa para entregas atrasadas">
               <span class="dashboard-reason-switch" aria-hidden="true"></span>
             </label>
             <button type="button" class="dashboard-export" onclick="exportarDashboardPDF_()">Exportar PDF</button>
@@ -5854,7 +5854,7 @@ function exportarDashboardPDF_(){
 }
 
 /* ===== CONCLUSÃO FORA DO PRAZO ===== */
-let exigirMotivoAtrasoAtivo_ = true;
+let exigirMotivoAtrasoAtivo_ = false;
 
 const MOTIVOS_ATRASO_UI_=[
   ['Atraso na produção','Pedido não ficou pronto dentro do prazo.'],
