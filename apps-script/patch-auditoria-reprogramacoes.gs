@@ -34,6 +34,8 @@
  * anteriores nao podem ser reconstruidas porque nao existe historico delas.
  */
 
+const CONFIG_EXIGIR_MOTIVO_ATRASO_ = "MAPA_EXIGIR_MOTIVO_ATRASO";
+
 const AUDITORIA_ENTREGAS_CFG_ = {
   COL_CONCLUSAO: 169,
   COL_MOTIVO: 170,
@@ -278,6 +280,17 @@ function entregaEstaAtrasadaPelaPrevisaoOriginal_(hist, linha) {
   };
 }
 
+function obterConfigMotivoAtraso_() {
+  const salvo = PropertiesService.getScriptProperties().getProperty(CONFIG_EXIGIR_MOTIVO_ATRASO_);
+  return { ok: true, ativo: salvo === null ? true : salvo === "true" };
+}
+
+function salvarConfigMotivoAtraso_(ativo) {
+  const valor = ativo === true || String(ativo).trim().toLowerCase() === "true";
+  PropertiesService.getScriptProperties().setProperty(CONFIG_EXIGIR_MOTIVO_ATRASO_, String(valor));
+  return { ok: true, ativo: valor };
+}
+
 function concluirEntrega(linha, motivo, observacao) {
   const linhaNum = parseInt(linha, 10);
   const ss = SpreadsheetApp.getActive();
@@ -296,8 +309,9 @@ function concluirEntrega(linha, motivo, observacao) {
     const verificacao = entregaEstaAtrasadaPelaPrevisaoOriginal_(hist, linhaNum);
     const motivoTexto = String(motivo || "").trim();
     const observacaoTexto = String(observacao || "").trim();
+    const exigirMotivo = obterConfigMotivoAtraso_().ativo;
 
-    if (verificacao.atrasada) {
+    if (verificacao.atrasada && exigirMotivo) {
       if (MOTIVOS_ATRASO_ENTREGA_.indexOf(motivoTexto) === -1) {
         return { ok: false, erro: "Selecione um dos motivos disponíveis." };
       }
@@ -310,10 +324,10 @@ function concluirEntrega(linha, motivo, observacao) {
     hist.getRange(linhaNum, MAPA_CFG.COL_STATUS).setValue("ENTREGUE");
     hist.getRange(linhaNum, AUDITORIA_ENTREGAS_CFG_.COL_CONCLUSAO).setValue(agora);
     hist.getRange(linhaNum, AUDITORIA_ENTREGAS_CFG_.COL_MOTIVO).setValue(
-      verificacao.atrasada ? motivoTexto : ""
+      verificacao.atrasada && exigirMotivo ? motivoTexto : ""
     );
     hist.getRange(linhaNum, AUDITORIA_ENTREGAS_CFG_.COL_OBSERVACAO).setValue(
-      verificacao.atrasada ? observacaoTexto : ""
+      verificacao.atrasada && exigirMotivo ? observacaoTexto : ""
     );
     SpreadsheetApp.flush();
 
@@ -321,7 +335,7 @@ function concluirEntrega(linha, motivo, observacao) {
       ok: true,
       dataHoraConclusao: dataHoraAuditoriaIso_(agora),
       atrasada: verificacao.atrasada,
-      motivoAtraso: verificacao.atrasada ? motivoTexto : ""
+      motivoAtraso: verificacao.atrasada && exigirMotivo ? motivoTexto : ""
     };
   } finally {
     lock.releaseLock();
@@ -359,7 +373,8 @@ function atualizarCampoEntrega(linha, campo, valor) {
   try {
     if (campo === "status" && String(valor || "").trim().toUpperCase() === "ENTREGUE") {
       const verificacao = entregaEstaAtrasadaPelaPrevisaoOriginal_(hist, linhaNum);
-      if (verificacao.atrasada) {
+      const exigirMotivo = obterConfigMotivoAtraso_().ativo;
+      if (verificacao.atrasada && exigirMotivo) {
         return {
           ok: true,
           requerJustificativa: true,
@@ -375,7 +390,7 @@ function atualizarCampoEntrega(linha, campo, valor) {
       hist.getRange(linhaNum, AUDITORIA_ENTREGAS_CFG_.COL_CONCLUSAO).setValue(agora);
       hist.getRange(linhaNum, AUDITORIA_ENTREGAS_CFG_.COL_MOTIVO, 1, 2).clearContent();
       SpreadsheetApp.flush();
-      return { ok: true, dataHoraConclusao: dataHoraAuditoriaIso_(agora), atrasada: false };
+      return { ok: true, dataHoraConclusao: dataHoraAuditoriaIso_(agora), atrasada: verificacao.atrasada, motivoAtraso: "" };
     }
 
     let valorFinal = valor;
