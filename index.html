@@ -1794,6 +1794,11 @@ button,input,select,textarea{font-family:var(--font-ui);}
   display:none;height:185px;margin:0;border:1px solid #3a4d61;
   border-radius:9px;overflow:hidden;background:#e9edf0;cursor:grab;
 }
+#modalOverlay #miniMap .leaflet-control-attribution{
+  font-family:var(--font-ui);font-size:7px!important;
+  line-height:1.2;background:rgba(255,255,255,.82)!important;color:#506174!important;
+}
+#modalOverlay #miniMap .leaflet-control-attribution a{color:#356f8a!important;}
 #modalOverlay .mini-map-aviso{
   margin-top:7px;color:#91a5b9;font-family:var(--font-ui);
   font-size:9.5px;line-height:1.4;text-align:left;
@@ -2127,11 +2132,11 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <button class="modal-close" onclick="fecharModal()" aria-label="Fechar modal">&times;</button>
     </div>
 
-    <div class="modo-toggle modo-toggle-delivery" id="modoNovaEntregaToggle" role="tablist" aria-label="Modalidade de cadastro">
-      <button type="button" role="tab" aria-selected="true" data-modo="individual" class="active" onclick="alternarModoNovaEntrega_('individual')">
+    <div class="modo-toggle modo-toggle-delivery" id="modoNovaEntregaToggle" aria-label="Modalidade de cadastro">
+      <button type="button" data-modo="individual" class="active" onclick="alternarModoNovaEntrega_('individual')">
         <span class="modo-tab-icon">01</span>Individual
       </button>
-      <button type="button" role="tab" aria-selected="false" data-modo="lote" onclick="alternarModoNovaEntrega_('lote')">
+      <button type="button" data-modo="lote" onclick="alternarModoNovaEntrega_('lote')">
         <span class="modo-tab-icon">02</span>Em lote
       </button>
     </div>
@@ -4688,12 +4693,12 @@ function mostrarMiniMap_(lat, lng){
   coordsAjustadasManualmente = null; // reseta — novo endereço aplicado, ajuste antigo não vale mais
 
   if (!miniMap){
-    miniMap = L.map('miniMap', { zoomControl:false, attributionControl:false }).setView([lat, lng], 16);
+    miniMap = L.map('miniMap', { zoomControl:false, attributionControl:true }).setView([lat, lng], 16);
     L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       attribution: '&copy; <a href="https://www.esri.com/">Esri</a> and the GIS User Community',
       maxZoom: 20,
       maxNativeZoom: 16
-    }).addTo(miniMap);;
+    }).addTo(miniMap);
     miniMapMarker = L.marker([lat, lng], { draggable: true }).addTo(miniMap);
     miniMapMarker.on('dragend', function(){
       const pos = miniMapMarker.getLatLng();
