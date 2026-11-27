@@ -1961,6 +1961,10 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trip-card-metrics{flex-wrap:wrap}
 .trip-status.rascunho{background:#fff4dc;color:#946c28;border:1px solid #ead5a9}
 
+
+.trip-nfe-add{display:flex;flex-direction:column;gap:4px;margin-top:7px;color:#638095;font-size:8px;font-weight:800}
+.trip-nfe-add input{max-width:280px;width:100%;padding:5px;border:1px dashed #cbd9e3;border-radius:6px;background:#fff;color:#60798c;font:8px var(--font-ui)}
+
 </style>
 <style>
 
@@ -5768,7 +5772,10 @@ function renderizarViagens_(){
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'NAO_ENTREGUE\')">Não entregue</button>'+
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'REPROGRAMAR\')">Reprogramar</button>'
       );
-      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||'Endereço não informado')+'</small><div class="trip-stop-extra">NF: '+escaparViagem_(p.nfs||'Não informada')+' · '+statusParadaLabel_(p.status)+(p.motivo?' · '+escaparViagem_(p.motivo):'')+'</div></div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':'')+buttons+'</div></div>';
+      const controleXml=v.status==='RASCUNHO'&&['ADMIN','FATURAMENTO'].includes(role)
+        ?'<label class="trip-nfe-add">Adicionar XML<input type="file" accept=".xml,text/xml,application/xml" multiple data-viagem-id="'+escaparViagem_(v.id)+'" data-entrega-id="'+escaparViagem_(p.idEntrega)+'" onchange="adicionarNFeEmRascunhoUI_(this,this.dataset.viagemId,this.dataset.entregaId)"></label>'
+        :'';
+      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||'Endereço não informado')+'</small><div class="trip-stop-extra">NF: '+escaparViagem_(p.nfs||'Não informada')+' · '+statusParadaLabel_(p.status)+(p.motivo?' · '+escaparViagem_(p.motivo):'')+'</div>'+controleXml+'</div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':'')+buttons+'</div></div>';
     }).join('');
     return '<article class="trip-card">'+
       '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
@@ -5926,6 +5933,31 @@ async function liberarViagemFaturamentoUI_(viagemId){
     mostrarToast((resposta.numero||"Viagem")+" liberada para a operação com "+resposta.totalEntregas+" entrega(s) e "+resposta.totalNFs+" NF(s).");
     await carregarViagens_();
   }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
+}
+
+
+async function adicionarNFeEmRascunhoUI_(input,viagemId,idEntrega){
+  if(!input||!viagemId||!idEntrega)return;
+  const arquivos=Array.from(input.files||[]);
+  if(!arquivos.length)return;
+  input.disabled=true;
+  let importadas=0,erros=[];
+  try{
+    for(const arquivo of arquivos){
+      if(!/\.xml$/i.test(arquivo.name)&&arquivo.type!=="text/xml"&&arquivo.type!=="application/xml")throw new Error("Selecione um arquivo XML válido: "+arquivo.name);
+      if(arquivo.size>5*1024*1024)throw new Error("O XML "+arquivo.name+" excede o limite de 5 MB.");
+      const xmlBase64=await arquivoComoBase64Viagem_(arquivo);
+      const analise=await chamarAPI_POST_({acao:"analisarXmlNFe",dados:{xmlBase64:xmlBase64,nomeArquivo:arquivo.name}});
+      if(!analise||analise.ok!==true)throw new Error(analise&&(analise.erro||analise.error)?(analise.erro||analise.error):"Não foi possível ler "+arquivo.name+".");
+      const salvo=await chamarAPI_POST_({acao:"salvarNFeViagem",dados:{viagemId:viagemId,idEntrega:idEntrega,xmlBase64:xmlBase64,nomeArquivo:arquivo.name}});
+      if(!salvo||salvo.ok!==true){erros.push((salvo&&(salvo.erro||salvo.error))||("Falha ao importar "+arquivo.name));continue;}
+      importadas++;
+    }
+    if(importadas)mostrarToast(importadas+" NF-e(s) vinculada(s) ao rascunho.");
+    if(erros.length)mostrarToast(erros.join(" · "),true);
+    await carregarViagens_();
+  }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
+  finally{input.disabled=false;input.value="";}
 }
 
 function renderizarResumoEntregasViagem_(){
