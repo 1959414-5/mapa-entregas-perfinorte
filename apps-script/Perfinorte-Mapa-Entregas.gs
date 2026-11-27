@@ -2436,10 +2436,13 @@ function doPost(e) {
       case "salvarConfigModulosFrota":
         return jsonOutput_(salvarConfigModulosFrota_(body.modulos));
       case "analisarXmlNFe":
+        if(!moduloFrotaAtivo_("viagens",ambiente))return jsonOutput_({ok:false,erro:"O módulo Viagens está desativado neste ambiente."});
         return jsonOutput_(analisarXmlNFeViagem_(body.dados,ambiente,papel));
       case "salvarNFeViagem":
+        if(!moduloFrotaAtivo_("viagens",ambiente))return jsonOutput_({ok:false,erro:"O módulo Viagens está desativado neste ambiente."});
         return jsonOutput_(salvarNFeViagem_(body.dados,ambiente,papel,body._authUser));
       case "liberarViagem":
+        if(!moduloFrotaAtivo_("viagens",ambiente))return jsonOutput_({ok:false,erro:"O módulo Viagens está desativado neste ambiente."});
         return jsonOutput_(liberarViagemFaturamento_(body.dados,ambiente,papel));
       case "concluirEntrega":
         if(ambiente==="TESTE")return jsonOutput_({ok:false,erro:"A conclusão de entregas reais fica bloqueada no ambiente de teste."});
