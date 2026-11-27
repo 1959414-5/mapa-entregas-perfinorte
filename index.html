@@ -2866,6 +2866,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .fleet-module-manager-footer{display:flex;justify-content:space-between;gap:10px;margin-top:10px;color:#8a98a6;font-size:8px;line-height:1.4;}
 #railVehiclesView[hidden],#railTripsView[hidden]{display:none!important;}
 #app.modulo-viagens-desativado .tabela-viagem-actions,#app.modulo-viagens-desativado .th-selecao-viagem,#app.modulo-viagens-desativado .td-selecao-viagem{display:none!important;}
+#app.modulo-veiculos-desativado .fleet-pending-item button,#app.modulo-veiculos-desativado .fleet-empty-state button{display:none!important;}
 @media(max-width:650px){.fleet-module-grid{grid-template-columns:1fr;}.fleet-module-manager-head{flex-direction:column;}.fleet-module-manager-note{text-align:left;}.fleet-module-manager-footer{flex-direction:column;}}
 .fleet-dashboard-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;}
 .fleet-refresh-button{
@@ -5226,6 +5227,7 @@ function definirCampoVeiculoUI_(id,valor){
   if(el)el.value=valor==null?'':String(valor);
 }
 function abrirModalVeiculo_(id){
+  if(!modulosFrota_.veiculos){mostrarToast('O módulo Veículos está desativado globalmente.',true);return;}
   const v=id?veiculosCache_.find(function(x){return String(x.id)===String(id);}):null;
   document.getElementById('formVeiculo').reset();
   definirCampoVeiculoUI_('veiculoId',v?v.id:'');
@@ -5334,6 +5336,7 @@ async function salvarVeiculoUI_(event){
   }
 }
 async function alternarSituacaoVeiculo_(id,ativo){
+  if(!modulosFrota_.veiculos){mostrarToast('O módulo Veículos está desativado globalmente.',true);return;}
   const v=veiculosCache_.find(function(x){return String(x.id)===String(id);});
   if(!v)return;
   const acao=ativo?'reativar':'inativar';
@@ -5379,7 +5382,10 @@ function aplicarVisibilidadeModulosFrota_(){
   const app=document.getElementById('app');
   if(btnV)btnV.hidden=!modulosFrota_.veiculos;
   if(btnT)btnT.hidden=!modulosFrota_.viagens;
-  if(app)app.classList.toggle('modulo-viagens-desativado',!modulosFrota_.viagens);
+  if(app){
+    app.classList.toggle('modulo-viagens-desativado',!modulosFrota_.viagens);
+    app.classList.toggle('modulo-veiculos-desativado',!modulosFrota_.veiculos);
+  }
 }
 
 async function carregarConfigModulosFrota_(silencioso){
@@ -5604,6 +5610,7 @@ function renderizarDashboardFrota_(){
 }
 
 function editarVeiculoPeloDashboard_(id){
+  if(!modulosFrota_.veiculos){mostrarToast('Ative o módulo Veículos para editar cadastros.',true);return;}
   mostrarView('veiculos');
   setTimeout(function(){abrirModalVeiculo_(id);},120);
 }
