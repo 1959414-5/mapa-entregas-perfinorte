@@ -1845,15 +1845,9 @@ function recalcularTotaisNFeViagem_(estrutura,viagemId){
   const idx=tripIds.findIndex(x=>String(x)===String(viagemId));
   if(idx<0)throw new Error("Viagem não encontrada ao recalcular os totais das NFs.");
   estrutura.viagens.getRange(idx+2,28,1,2).setValues([[Number(valor.toFixed(2)),Number(peso.toFixed(3))]]);
-  const paradas=listarLinhasViagens_(estrutura.entregas);
-  paradas.forEach((r,i)=>{
-    if(String(r[1])!==String(viagemId))return;
-    const nums=linhas.filter(n=>String(n[2])===String(r[0])).map(n=>String(n[5])).filter(Boolean);
-    const unicos=[...new Set(nums)];
-    estrutura.entregas.getRange(i+2,12).setValue(unicos.join(", "));
-  });
   return {valorTotal:Number(valor.toFixed(2)),pesoLiquidoKg:Number(peso.toFixed(3)),quantidadeNFs:linhas.length};
 }
+
 function analisarXmlNFeViagem_(dados,ambiente,papel){
   const role=normalizarPapelMapa_(papel);
   if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode analisar XML de NF-e."};
@@ -1864,14 +1858,14 @@ function analisarXmlNFeViagem_(dados,ambiente,papel){
 }
 function salvarNFeViagem_(dados,ambiente,papel,usuario){
   const role=normalizarPapelMapa_(papel),env=normalizarAmbienteMapa_(ambiente);
-  if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode vincular notas fiscais."};
-  if(!dados||!dados.viagemId||!dados.idEntrega||!dados.xmlBase64)return {ok:false,erro:"Informe viagem, entrega e arquivo XML."};
+  if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode vincular notas fiscais à viagem."};
+  if(!dados||!dados.viagemId||!dados.xmlBase64)return {ok:false,erro:"Informe a viagem e o arquivo XML."};
   const xml=decodificarXmlNFeBase64_(dados.xmlBase64);
   const nf=extrairDadosNFeXml_(xml);
   if(!nf.ok)return nf;
   const estrutura=getOrCreateEstruturaViagens_(env);
   const lock=LockService.getScriptLock();lock.waitLock(10000);
-  let arquivo=null;
+  let arquivo=null,notaId="";
   try{
     const tripLast=estrutura.viagens.getLastRow();
     const tripIds=tripLast>=2?estrutura.viagens.getRange(2,1,tripLast-1,1).getValues().flat():[];
@@ -1879,21 +1873,22 @@ function salvarNFeViagem_(dados,ambiente,papel,usuario){
     if(tripIdx<0)return {ok:false,erro:"Viagem não encontrada neste ambiente."};
     const tripRow=tripIdx+2;
     const statusTrip=String(estrutura.viagens.getRange(tripRow,11).getValue()||"");
-    if(statusTrip!=="RASCUNHO"&&!(role==="ADMIN"&&["PROGRAMADA","EM_ANDAMENTO"].indexOf(statusTrip)>=0))
-      return {ok:false,erro:"As NFs só podem ser vinculadas a um rascunho (ou viagem ativa com permissão ADMIN)."};
-    const stopLast=estrutura.entregas.getLastRow();
-    const stopRows=stopLast>=2?estrutura.entregas.getRange(2,1,stopLast-1,Math.max(3,estrutura.entregas.getLastColumn())).getValues():[];
-    const stopIdx=stopRows.findIndex(r=>String(r[1])===String(dados.viagemId)&&String(r[2])===String(dados.idEntrega));
-    if(stopIdx<0)return {ok:false,erro:"A entrega selecionada não pertence a esta viagem."};
+    const statusPermitidos=role==="ADMIN"?["RASCUNHO","PROGRAMADA","EM_ANDAMENTO"]:["RASCUNHO","PROGRAMADA"];
+    if(statusPermitidos.indexOf(statusTrip)<0)
+      return {ok:false,erro:"Só é possível vincular XML a uma viagem em rascunho ou programada."};
+    const stopRows=listarLinhasViagens_(estrutura.entregas);
+    if(!stopRows.some(r=>String(r[1])===String(dados.viagemId)))
+      return {ok:false,erro:"A viagem ainda não possui entregas vinculadas."};
     const duplicate=listarLinhasViagens_(estrutura.notas).some(r=>String(r[4])===nf.chaveAcesso&&String(r[21]||"ATIVA")==="ATIVA");
     if(duplicate)return {ok:false,erro:"Esta chave de acesso já está vinculada a uma viagem neste ambiente."};
-    const stopId=String(stopRows[stopIdx][0]||"");
     const nomeOriginal=String(dados.nomeArquivo||("NFe-"+nf.chaveAcesso+".xml")).replace(/[\\/:*?"<>|]/g,"_").slice(0,140);
-    const blob=Utilities.newBlob(Utilities.base64Decode(String(dados.xmlBase64).replace(/^data:[^,]*;base64,/i,"").replace(/\s/g,"")),"application/xml",nomeOriginal);
+    const blob=Utilities.newBlob(Utilities.base64Decode(String(dados.xmlBase64).replace(/^data:[^,]*;base64,/i,"").replace(/\\s/g,"")),"application/xml",nomeOriginal);
     arquivo=obterPastaXmlNFe_(env).createFile(blob);
+    notaId="NFE-"+Utilities.getUuid();
     const agora=new Date();
+    // A NF-e pertence à viagem inteira. PARADA_ID e ID_ENTREGA ficam vazios.
     estrutura.notas.appendRow([
-      "NFE-"+Utilities.getUuid(),String(dados.viagemId),stopId,String(dados.idEntrega),
+      notaId,String(dados.viagemId),"","",
       nf.chaveAcesso,nf.numero,nf.serie,nf.dataEmissao,nf.emitenteCnpj,nf.emitenteNome,
       nf.destinatarioCnpj,nf.destinatarioNome,nf.municipioDestino,nf.ufDestino,
       nf.valorTotal,nf.pesoLiquidoKg,arquivo.getId(),nomeOriginal,String(usuario||""),agora,env,"ATIVA"
@@ -1901,10 +1896,18 @@ function salvarNFeViagem_(dados,ambiente,papel,usuario){
     const totais=recalcularTotaisNFeViagem_(estrutura,dados.viagemId);
     return {ok:true,notaFiscal:nf,totais:totais,arquivoId:arquivo.getId()};
   }catch(err){
+    if(notaId){
+      try{
+        const rows=listarLinhasViagens_(estrutura.notas);
+        const idx=rows.findIndex(r=>String(r[0])===notaId);
+        if(idx>=0)estrutura.notas.deleteRow(idx+2);
+      }catch(ignore){}
+    }
     if(arquivo){try{arquivo.setTrashed(true);}catch(ignore){}}
     return {ok:false,erro:String(err&&err.message?err.message:err)};
   }finally{lock.releaseLock();}
 }
+
 function liberarViagemFaturamento_(dados,ambiente,papel){
   const role=normalizarPapelMapa_(papel),env=normalizarAmbienteMapa_(ambiente);
   if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode liberar viagens."};
@@ -1918,8 +1921,7 @@ function liberarViagemFaturamento_(dados,ambiente,papel){
     const stops=listarLinhasViagens_(estrutura.entregas).filter(r=>String(r[1])===String(dados.viagemId));
     if(!stops.length)return {ok:false,erro:"A viagem não possui entregas."};
     const notas=listarLinhasViagens_(estrutura.notas).filter(r=>String(r[1])===String(dados.viagemId)&&String(r[21]||"ATIVA")==="ATIVA");
-    const semNota=stops.filter(s=>!notas.some(n=>String(n[2])===String(s[0])));
-    if(semNota.length)return {ok:false,erro:"Cada entrega precisa ter ao menos uma NF-e vinculada antes da liberação. Pendentes: "+semNota.map(s=>String(s[6]||s[2])).join(", ")};
+    if(!notas.length)return {ok:false,erro:"Vincule ao menos uma NF-e XML à viagem antes de liberar para a operação."};
     recalcularTotaisNFeViagem_(estrutura,dados.viagemId);
     estrutura.viagens.getRange(row,11).setValue("PROGRAMADA");
     estrutura.viagens.getRange(row,26).setValue(new Date());
@@ -2423,7 +2425,8 @@ function doPost(e) {
     if(ambiente==="TESTE"&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"O ambiente de teste é exclusivo do perfil ADMIN."});
     const somenteAdmin=["salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo"];
     if(somenteAdmin.indexOf(acao)>=0&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"Ação permitida somente ao perfil ADMIN."});
-    if(["criarViagem","analisarXmlNFe","salvarNFeViagem","liberarViagem"].indexOf(acao)>=0&&["ADMIN","FATURAMENTO"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Somente ADMIN ou FATURAMENTO pode executar esta ação."});
+    if(acao==="criarViagem"&&["ADMIN","FATURAMENTO","OPERACIONAL"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Perfil sem permissão para criar viagens."});
+    if(["analisarXmlNFe","salvarNFeViagem","liberarViagem"].indexOf(acao)>=0&&["ADMIN","FATURAMENTO"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Somente ADMIN ou FATURAMENTO pode executar esta ação."});
     if(["atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"].indexOf(acao)>=0&&["ADMIN","OPERACIONAL"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Ação permitida somente a ADMIN ou OPERACIONAL."});
     const permitidasNoTeste=["sugerirRota","obterConfigMotivoAtraso","salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","criarViagem","analisarXmlNFe","salvarNFeViagem","liberarViagem","atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"];
     if(ambiente==="TESTE"&&permitidasNoTeste.indexOf(acao)<0)return jsonOutput_({ok:false,erro:"Esta ação não pode alterar dados reais durante o modo de teste."});
