@@ -5794,6 +5794,8 @@ async function abrirModalViagem_(){
       throw new Error(ausentes.length+' entrega(s) não possuem UUID na lista principal. Atualize a implantação do Apps Script e recarregue os dados.');
     }
     entregasParaNovaViagem_=ids.map(id=>mapa.get(String(id)));
+    notasFiscaisPendentesViagem_={};
+    viagemRascunhoEmSalvamento_=null;
     const pronto=await carregarDadosFormularioViagem_();
     if(!pronto)throw new Error('Não foi possível obter os veículos e motoristas.');
 
@@ -5820,6 +5822,8 @@ async function abrirModalViagem_(){
     document.getElementById('viagemEntregaContagem').textContent=entregasParaNovaViagem_.length+' entrega(s) recebida(s) da tabela';
     document.getElementById('viagemRotaResumo').textContent='A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.';
     renderizarResumoEntregasViagem_();
+    const btnSalvar=document.getElementById('btnSalvarViagem');
+    if(btnSalvar)btnSalvar.textContent=usuarioSessao_.role==='FATURAMENTO'?'Salvar rascunho e importar XML':'Calcular rota e programar';
     document.getElementById('modalViagemOverlay').classList.add('show');
     document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','false');
   }catch(err){
@@ -5833,9 +5837,11 @@ async function abrirModalViagem_(){
   }
 }
 function fecharModalViagem_(){
-  document.getElementById('modalViagemOverlay').classList.remove('show');
-  document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','true');
+  document.getElementById("modalViagemOverlay").classList.remove("show");
+  document.getElementById("modalViagemOverlay").setAttribute("aria-hidden","true");
   entregasParaNovaViagem_=[];
+  notasFiscaisPendentesViagem_={};
+  viagemRascunhoEmSalvamento_=null;
 }
 function atualizarTipoVeiculoViagem_(){
   const id=document.getElementById('viagemVeiculo').value;
@@ -5913,11 +5919,17 @@ async function liberarViagemFaturamentoUI_(viagemId){
 }
 
 function renderizarResumoEntregasViagem_(){
-  const area=document.getElementById('viagensEntregasResumo');
+  const area=document.getElementById("viagensEntregasResumo");
   if(!area)return;
-  area.innerHTML=entregasParaNovaViagem_.map((d,i)=>
-    '<label class="trips-selected-stop"><span><strong>'+String(i+1).padStart(2,'0')+' · '+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.endereco||d.cidade||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small></span><input type="text" class="trips-delivery-nf" data-nf-entrega="'+escaparViagem_(d.idEntrega)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'"></label>'
-  ).join('');
+  const permiteXml=["ADMIN","FATURAMENTO"].includes(usuarioSessao_.role);
+  area.innerHTML=entregasParaNovaViagem_.map((d,i)=>{
+    const id=String(d.idEntrega||""),safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
+    const detalhe=escaparViagem_(d.endereco||d.cidade||"Endereço não informado")+" · "+dataViagemBR_(d.data)+" · "+escaparViagem_(d.periodo||"Sem período");
+    const editor=permiteXml
+      ?'<div class="trips-nfe-upload"><label>Notas fiscais XML<input type="file" accept=".xml,text/xml,application/xml" multiple data-xml-entrega="'+escaparViagem_(id)+'" onchange="analisarNFeArquivosUI_(this,this.dataset.xmlEntrega)"></label><div class="trips-nfe-summary" id="resumoNFeEntrega-'+safeId+'">Nenhum XML selecionado.</div></div>'
+      :'<input type="text" class="trips-delivery-nf" data-nf-entrega="'+escaparViagem_(id)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'">';
+    return '<article class="trips-selected-stop"><span><strong>'+String(i+1).padStart(2,"0")+' · '+escaparViagem_(d.cliente)+'</strong><small>'+detalhe+'</small></span>'+editor+'</article>';
+  }).join("");
 }
 async function salvarViagemUI_(event){
   event.preventDefault();
