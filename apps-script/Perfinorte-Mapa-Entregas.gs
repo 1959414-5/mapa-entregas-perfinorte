@@ -1800,15 +1800,14 @@ function extrairDadosNFeXml_(xmlTexto){
     let valor=numeroXmlNFe_(textoXmlNFe_(total,"vNFTot"));
     if(valor===null)valor=numeroXmlNFe_(textoXmlNFe_(total,"ICMSTot/vNF"));
     if(valor===null)throw new Error("Valor total da nota não encontrado em total/vNFTot nem em total/ICMSTot/vNF.");
-    const volumes=transp?filhoXmlPorNomeNFe_(transp,"vol"):null;
+    // No leiaute NF-e, cada grupo <vol> é filho direto de <transp>.
+    // Pode haver mais de um volume; somamos pesoL uma única vez por grupo.
+    const listaVolumes=transp?transp.getChildren().filter(x=>x.getName()==="vol"):[];
     let peso=0, volumesComPeso=0;
-    if(volumes){
-      const lista=volumes.getChildren().filter(x=>x.getName()==="vol");
-      lista.forEach(v=>{
-        const p=numeroXmlNFe_(textoXmlNFe_(v,"pesoL"));
-        if(p!==null){peso+=p;volumesComPeso++;}
-      });
-    }
+    listaVolumes.forEach(v=>{
+      const p=numeroXmlNFe_(textoXmlNFe_(v,"pesoL"));
+      if(p!==null){peso+=p;volumesComPeso++;}
+    });
     if(!volumesComPeso)throw new Error("Peso líquido não encontrado em transp/vol/pesoL.");
     const emitCnpj=normalizarDocumentoNFe_(textoXmlNFe_(emit,"CNPJ"));
     const emitCpf=normalizarDocumentoNFe_(textoXmlNFe_(emit,"CPF"));
