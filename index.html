@@ -5465,6 +5465,8 @@ let filtroViagensAtual_ = 'TODAS';
 let viagensCarregando_ = false;
 let viagensDadosCarregadas_ = false;
 let viagensCarregamentoPromise_ = null;
+let viagemFormularioCarregado_ = false;
+let viagemFormularioPromise_ = null;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
 
@@ -5519,6 +5521,30 @@ function carregarViagens_(){
     }
   })();
   return viagensCarregamentoPromise_;
+}
+function carregarDadosFormularioViagem_(){
+  if(viagemFormularioCarregado_)return Promise.resolve(true);
+  if(viagemFormularioPromise_)return viagemFormularioPromise_;
+  viagemFormularioPromise_=(async()=>{
+    try{
+      const [veiculos,motoristas]=await Promise.all([
+        chamarAPI_GET_({formato:'veiculos'}),
+        chamarAPI_GET_({formato:'motoristas'})
+      ]);
+      if(!Array.isArray(veiculos))throw new Error(veiculos&&(veiculos.erro||veiculos.error)?(veiculos.erro||veiculos.error):'A API não retornou a lista de veículos.');
+      if(!Array.isArray(motoristas))throw new Error(motoristas&&(motoristas.erro||motoristas.error)?(motoristas.erro||motoristas.error):'A API não retornou a lista de motoristas.');
+      viagensDados_.veiculos=veiculos.filter(v=>v.ativo!==false);
+      viagensDados_.motoristas=motoristas;
+      viagemFormularioCarregado_=true;
+      return true;
+    }catch(err){
+      mostrarToast('Falha ao carregar veículos e motoristas: '+String(err&&err.message?err.message:err),true);
+      return false;
+    }finally{
+      viagemFormularioPromise_=null;
+    }
+  })();
+  return viagemFormularioPromise_;
 }
 function definirFiltroViagens_(filtro,botao){
   filtroViagensAtual_=filtro;
@@ -5589,21 +5615,21 @@ async function abrirModalViagem_(){
     return;
   }
   const botao=document.getElementById('btnCriarViagemSelecaoTabela');
-  if(botao){botao.disabled=true;botao.textContent='Verificando seleção...';}
+  if(botao){botao.disabled=true;botao.textContent='Carregando veículos...';}
   try{
-    const carregou=await carregarViagens_();
-    if(!carregou)throw new Error('Não foi possível consultar as viagens e validar as entregas. Confira a mensagem exibida e a implantação do Apps Script.');
-
-    const disponiveis=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega),d]));
+    // A tabela já traz o UUID pelo endpoint formato=dados. Não é necessário
+    // carregar o histórico completo de viagens para abrir a programação.
+    const mapa=new Map((todasEntregas||[]).map(d=>[String(d.idEntrega||''),d]));
     const ids=[...entregasSelecionadasViagem_];
-    const indisponiveis=ids.filter(id=>!disponiveis.has(String(id)));
-    if(indisponiveis.length){
-      indisponiveis.forEach(id=>entregasSelecionadasViagem_.delete(String(id)));
+    const ausentes=ids.filter(id=>!mapa.has(String(id)));
+    if(ausentes.length){
+      ausentes.forEach(id=>entregasSelecionadasViagem_.delete(String(id)));
       renderTabela();
-      mostrarToast(indisponiveis.length+' entrega(s) não estão disponíveis para uma nova viagem. Podem estar concluídas, vinculadas a uma viagem em aberto ou sem endereço/código.',true);
+      throw new Error(ausentes.length+' entrega(s) não possuem UUID na lista principal. Atualize a implantação do Apps Script e recarregue os dados.');
     }
-    entregasParaNovaViagem_=ids.filter(id=>disponiveis.has(String(id))).map(id=>disponiveis.get(String(id)));
-    if(!entregasParaNovaViagem_.length)return;
+    entregasParaNovaViagem_=ids.map(id=>mapa.get(String(id)));
+    const pronto=await carregarDadosFormularioViagem_();
+    if(!pronto)throw new Error('Não foi possível obter os veículos e motoristas.');
 
     const form=document.getElementById('formViagem');
     if(!form)throw new Error('Formulário de programação não encontrado.');
@@ -5932,7 +5958,6 @@ function mostrarView(modo){
     render();
   } else if (tabela){
     renderTabela();
-    if(!viagensDadosCarregadas_&&!viagensCarregando_)carregarViagens_();
   } else if (dashboard){
     alternarPainelDashboard_(painelDashboardAtual_);
     if(painelDashboardAtual_==='entregas')setTimeout(function(){ if(dashGeoMapa_) dashGeoMapa_.invalidateSize(); }, 120);
@@ -6252,7 +6277,6 @@ function motivoInelegibilidadeViagemTabela_(d){
   if(!String(d.codigo||'').trim())return 'Informe o código do cliente.';
   if(!String(d.endereco||'').trim()||String(d.endereco).trim().toUpperCase()==='AVISO')return 'Informe um endereço válido.';
   if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Esta entrega já foi concluída.';
-  if(viagensDadosCarregadas_&&!(viagensDados_.entregasDisponiveis||[]).some(item=>String(item.idEntrega)===String(d.idEntrega)))return 'Já vinculada a uma viagem em aberto ou indisponível para programação.';
   return '';
 }
 function alternarSelecaoEntregaViagemTabela_(id,marcado){
@@ -6282,10 +6306,10 @@ function atualizarControlesSelecaoViagemTabela_(lista){
   const candidatas=(lista||[]).filter(d=>String(d.codigo||'').trim()&&String(d.endereco||'').trim()&&String(d.endereco).trim().toUpperCase()!=='AVISO'&&String(d.status||'').trim().toUpperCase()!=='ENTREGUE');
   const semUuid=candidatas.filter(d=>!d.idEntrega).length;
   if(aviso){
-    aviso.textContent=!viagensDadosCarregadas_?'Sincronizando os vínculos das viagens...':
-      (semUuid?'A API não retornou o UUID de '+semUuid+' entrega(s). Reimplante a versão atual do Apps Script (Nova versão).':
-      (total?'Seleção pronta para programação.':'Marque as entregas válidas na primeira coluna.'));
-    aviso.style.color=semUuid&&viagensDadosCarregadas_?'#b56d30':'';
+    aviso.textContent=semUuid
+      ?'A API de entregas não retornou o identificador de '+semUuid+' registro(s). Atualize a implantação do Apps Script.'
+      :(total?'Seleção pronta. A disponibilidade será validada ao gravar.':'Marque as entregas válidas na primeira coluna.');
+    aviso.style.color=semUuid?'#b56d30':'';
   }
   if(label)label.textContent=total+' selecionada(s)';
   if(btn){
