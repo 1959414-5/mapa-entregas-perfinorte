@@ -2930,7 +2930,7 @@ function sugerirRota(pontos) {
     return { ok: false, erro: "Nenhuma entrega com \"OK\" marcado nesse filtro." };
   }
   if (!MAPA_CFG.ORS_API_KEY || !MAPA_CFG.ORS_API_KEY.trim()) {
-    return { ok: false, erro: "Configure MAPA_CFG.ORS_API_KEY no code.gs." };
+    return { ok: false, erro: "Configure a propriedade de script ORS_API_KEY no projeto Apps Script deste ambiente (TESTE ou PRODUCAO)." };
   }
   if (pontos.length > 50) {
     return { ok: false, erro: "Muitos pontos de uma vez (máximo 50). Filtre por data/período." };
@@ -2958,7 +2958,7 @@ function sugerirRota(pontos) {
   };
 
   try {
-    const resp = UrlFetchApp.fetch("https://api.openrouteservice.org/optimization", {
+    const resp = UrlFetchApp.fetch("https://api.heigit.org/vroom/v0", {
       method: "post",
       contentType: "application/json",
       headers: { "Authorization": MAPA_CFG.ORS_API_KEY },
@@ -3293,7 +3293,7 @@ function obterOrigemPerfinorte() {
  */
 function calcularEtaBase(lat, lng) {
   if (!MAPA_CFG.ORS_API_KEY || !MAPA_CFG.ORS_API_KEY.trim()) {
-    return { ok: false, erro: "Configure MAPA_CFG.ORS_API_KEY no code.gs." };
+    return { ok: false, erro: "Configure a propriedade de script ORS_API_KEY no projeto Apps Script deste ambiente (TESTE ou PRODUCAO)." };
   }
   const latNum = parseFloat(lat);
   const lngNum = parseFloat(lng);
@@ -3302,7 +3302,7 @@ function calcularEtaBase(lat, lng) {
   const origem = geocodificarEndereco(MAPA_CFG.ENDERECO_ORIGEM);
   if (!origem) return { ok: false, erro: "Não foi possível localizar o endereço de origem." };
 
-  const url = "https://api.openrouteservice.org/v2/directions/driving-car"
+  const url = "https://api.heigit.org/openrouteservice/v2/directions/driving-car"
     + "?api_key=" + encodeURIComponent(MAPA_CFG.ORS_API_KEY)
     + "&start=" + lngNum + "," + latNum
     + "&end=" + origem.lng + "," + origem.lat;
@@ -3333,7 +3333,7 @@ function calcularEtaBase(lat, lng) {
  */
 function calcularRotaEntrePontos(lat1, lng1, lat2, lng2) {
   if (!MAPA_CFG.ORS_API_KEY || !MAPA_CFG.ORS_API_KEY.trim()) {
-    return { ok: false, erro: "Configure MAPA_CFG.ORS_API_KEY no code.gs." };
+    return { ok: false, erro: "Configure a propriedade de script ORS_API_KEY no projeto Apps Script deste ambiente (TESTE ou PRODUCAO)." };
   }
   const a1 = parseFloat(lat1), o1 = parseFloat(lng1);
   const a2 = parseFloat(lat2), o2 = parseFloat(lng2);
@@ -3341,7 +3341,7 @@ function calcularRotaEntrePontos(lat1, lng1, lat2, lng2) {
     return { ok: false, erro: "Coordenadas inválidas." };
   }
 
-  const url = "https://api.openrouteservice.org/v2/directions/driving-car"
+  const url = "https://api.heigit.org/openrouteservice/v2/directions/driving-car"
     + "?api_key=" + encodeURIComponent(MAPA_CFG.ORS_API_KEY)
     + "&start=" + o1 + "," + a1
     + "&end=" + o2 + "," + a2;
