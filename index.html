@@ -5764,14 +5764,10 @@ function renderizarEntregasDisponiveisViagem_(){
   if(!area)return;
   const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
   const todas=Array.isArray(viagensDados_.entregasDisponiveis)?viagensDados_.entregasDisponiveis:[];
-  const lista=todas.filter(d=>{
-    if(!busca)return true;
-    return [d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes]
-      .join(' ').toLocaleLowerCase('pt-BR').includes(busca);
-  });
+  const lista=todas.filter(d=>!busca||[d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes].join(' ').toLocaleLowerCase('pt-BR').includes(busca));
+  const selecionadas=[...selecaoEntregasDisponiveisViagem_].filter(id=>todas.some(d=>String(d.idEntrega)===id));
   const total=document.getElementById('viagensEntregasSelecionadasTotal');
   const botao=document.getElementById('btnCriarViagemEntregasDisponiveis');
-  const selecionadas=[...selecaoEntregasDisponiveisViagem_].filter(id=>todas.some(d=>String(d.idEntrega)===id));
   if(total)total.textContent=String(selecionadas.length);
   if(botao)botao.disabled=!selecionadas.length;
   if(!lista.length){
@@ -5779,31 +5775,29 @@ function renderizarEntregasDisponiveisViagem_(){
     return;
   }
   const cabecalhos=['','Código','Cliente','Repr.','Endereço','Cidade','Motorista','Data','Período','Status','OK','Observações','Reprog.','Entrada'];
-  area.innerHTML='<table class="trips-available-table"><thead><tr>'+cabecalhos.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
-    lista.map(d=>{
-      const id=String(d.idEntrega||'');
-      const motivo=estadoElegibilidadeEntregaViagem_(d);
-      const marcada=id&&selecaoEntregasDisponiveisViagem_.has(id);
-      const status=String(d.status||'').trim();
-      const statusClass=status.toUpperCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^A-Z0-9]+/g,'-').toLowerCase();
-      const data=d.data?dataViagemBR_(d.data):'—';
-      const entrada=d.dataEntrada?dataViagemBR_(d.dataEntrada):'—';
-      const periodo=d.periodo||'—';
-      return '<tr class="'+(marcada?'selected ':'')+(motivo?'not-eligible':'')+'">'+
-        '<td class="trips-available-check"><input type="checkbox" data-entrega-disponivel="'+escaparViagem_(id)+'" '+(marcada?'checked ':'')+(motivo?'disabled ':'')+'aria-label="Selecionar entrega '+escaparViagem_(d.codigo)+'"></td>'+
-        '<td class="mono">'+escaparViagem_(d.codigo||'—')+'</td>'+
-        '<td><strong>'+escaparViagem_(d.cliente||'—')+'</strong></td>'+
-        '<td>'+escaparViagem_(d.representante||d.repr||'—')+'</td>'+
-        '<td class="address">'+escaparViagem_(d.endereco||'—')+'</td>'+
-        '<td>'+escaparViagem_(d.cidade||'—')+'</td>'+
-        '<td>'+escaparViagem_(d.motorista||'—')+'</td>'+
-        '<td>'+data+'</td><td>'+escaparViagem_(periodo)+'</td>'+
-        '<td><span class="trips-available-status '+statusClass+'">'+escaparViagem_(status||'Sem status')+'</span></td>'+
-        '<td class="center">'+(d.ok===true?'✓':'—')+'</td>'+
-        '<td class="observations" title="'+escaparViagem_(d.observacoes||'')+'">'+escaparViagem_(d.observacoes||'—')+'</td>'+
-        '<td class="center">'+escaparViagem_(d.qtdReprogramacoes??0)+'</td>'+
-        '<td>'+entrada+'</td></tr>';
-    }).join('')+'</tbody></table>';
+  const corpo=lista.map(d=>{
+    const id=String(d.idEntrega||'');
+    const motivo=estadoElegibilidadeEntregaViagem_(d);
+    const marcada=id&&selecaoEntregasDisponiveisViagem_.has(id);
+    const status=String(d.status||'').trim();
+    const statusClass=status.toUpperCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^A-Z0-9]+/g,'-').toLowerCase();
+    return '<tr class="'+(marcada?'selected ':'')+(motivo?'not-eligible':'')+'">'+
+      '<td class="trips-available-check"><input type="checkbox" data-entrega-disponivel="'+escaparViagem_(id)+'" '+(marcada?'checked ':'')+(motivo?'disabled ':'')+'aria-label="Selecionar entrega '+escaparViagem_(d.codigo)+'"></td>'+
+      '<td class="mono">'+escaparViagem_(d.codigo||'—')+'</td>'+
+      '<td><strong>'+escaparViagem_(d.cliente||'—')+'</strong></td>'+
+      '<td>'+escaparViagem_(d.representante||d.repr||'—')+'</td>'+
+      '<td class="address">'+escaparViagem_(d.endereco||'—')+'</td>'+
+      '<td>'+escaparViagem_(d.cidade||'—')+'</td>'+
+      '<td>'+escaparViagem_(d.motorista||'—')+'</td>'+
+      '<td>'+(d.data?dataViagemBR_(d.data):'—')+'</td>'+
+      '<td>'+escaparViagem_(d.periodo||'—')+'</td>'+
+      '<td><span class="trips-available-status '+statusClass+'">'+escaparViagem_(status||'Sem status')+'</span></td>'+
+      '<td class="center">'+(d.ok===true?'✓':'—')+'</td>'+
+      '<td class="observations" title="'+escaparViagem_(d.observacoes||'')+'">'+escaparViagem_(d.observacoes||'—')+'</td>'+
+      '<td class="center">'+escaparViagem_(d.qtdReprogramacoes??0)+'</td>'+
+      '<td>'+(d.dataEntrada?dataViagemBR_(d.dataEntrada):'—')+'</td></tr>';
+  }).join('');
+  area.innerHTML='<table class="trips-available-table"><thead><tr>'+cabecalhos.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+corpo+'</tbody></table>';
   area.querySelectorAll('[data-entrega-disponivel]').forEach(el=>el.addEventListener('change',()=>{
     const id=String(el.getAttribute('data-entrega-disponivel')||'');
     if(!id)return;
