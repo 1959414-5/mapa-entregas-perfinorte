@@ -2098,6 +2098,35 @@ function atualizarStatusViagem_(dados){
 function incluirViagemNoModulo_(e){return listarDadosViagens_();}
 
 
+const CONFIG_MODULOS_FROTA_KEY_ = "PERFINORTE_MODULOS_FROTA_GLOBAL_V1";
+
+function obterConfigModulosFrota_() {
+  const padrao = { veiculos: false, viagens: false };
+  const salvo = PropertiesService.getScriptProperties().getProperty(CONFIG_MODULOS_FROTA_KEY_);
+  if (!salvo) return { ok: true, modulos: padrao, padrao: true };
+  try {
+    const valor = JSON.parse(salvo) || {};
+    return { ok: true, modulos: { veiculos: valor.veiculos === true, viagens: valor.viagens === true }, padrao: false };
+  } catch (err) {
+    return { ok: true, modulos: padrao, padrao: true };
+  }
+}
+
+function salvarConfigModulosFrota_(modulos) {
+  if (!modulos || typeof modulos !== "object") return { ok: false, erro: "Configuração dos módulos não recebida." };
+  const atual = obterConfigModulosFrota_().modulos;
+  const nova = {
+    veiculos: typeof modulos.veiculos === "boolean" ? modulos.veiculos : atual.veiculos,
+    viagens: typeof modulos.viagens === "boolean" ? modulos.viagens : atual.viagens
+  };
+  PropertiesService.getScriptProperties().setProperty(CONFIG_MODULOS_FROTA_KEY_, JSON.stringify(nova));
+  return { ok: true, modulos: nova };
+}
+
+function moduloFrotaAtivo_(nome) {
+  return obterConfigModulosFrota_().modulos[nome] === true;
+}
+
 function doGet(e) {
   const p = (e && e.parameter) ? e.parameter : {};
 
@@ -2107,9 +2136,12 @@ function doGet(e) {
   switch (p.formato) {
     case "dados":
       return doGetDados_(e);
+    case "configModulosFrota":
+      return jsonOutput_(obterConfigModulosFrota_());
     case "veiculos":
       return jsonOutput_(listarVeiculos_());
     case "viagens":
+      if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
       return jsonOutput_(listarDadosViagens_());
     case "precosCombustivel":
       return jsonOutput_(obterPrecosCombustivel_());
@@ -2164,6 +2196,8 @@ function doPost(e) {
         return jsonOutput_(obterConfigMotivoAtraso_());
       case "salvarConfigMotivoAtraso":
         return jsonOutput_(salvarConfigMotivoAtraso_(body.ativo));
+      case "salvarConfigModulosFrota":
+        return jsonOutput_(salvarConfigModulosFrota_(body.modulos));
       case "concluirEntrega":
         return jsonOutput_(concluirEntrega(body.linha, body.motivo, body.observacao));
       case "salvarNovaEntrega":
@@ -2183,16 +2217,22 @@ function doPost(e) {
       case "sugerirRota":
         return jsonOutput_(sugerirRota(body.pontos));
       case "salvarVeiculo":
+        if (!moduloFrotaAtivo_("veiculos")) return jsonOutput_({ ok: false, erro: "O módulo de veículos está desativado globalmente." });
         return jsonOutput_(salvarVeiculo_(body.veiculo));
       case "alterarSituacaoVeiculo":
+        if (!moduloFrotaAtivo_("veiculos")) return jsonOutput_({ ok: false, erro: "O módulo de veículos está desativado globalmente." });
         return jsonOutput_(alterarSituacaoVeiculo_(body.id,body.ativo));
       case "criarViagem":
+        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
         return jsonOutput_(criarViagem_(body.dados));
       case "atualizarParadaViagem":
+        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
         return jsonOutput_(atualizarParadaViagem_(body.dados));
       case "atualizarStatusViagem":
+        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
         return jsonOutput_(atualizarStatusViagem_(body.dados));
       case "registrarOcorrenciaViagem":
+        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
         return jsonOutput_(registrarOcorrenciaViagem_(body.dados));
       case "marcarEntregaMotorista":
         return jsonOutput_(marcarEntregaMotorista(body.linha, body.status, body.motorista));
