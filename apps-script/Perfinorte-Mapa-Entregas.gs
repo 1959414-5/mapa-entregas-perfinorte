@@ -1795,12 +1795,9 @@ function listarDadosViagens_(){
   const stopData=mapearStopsViagens_();
   const veiculos=listarVeiculos_();
   const motoristas=listarMotoristas();
-  const hist=SpreadsheetApp.getActive().getSheetByName(CFG.HIST);
-  const entregasBase=obterEntregasValidas_();
-  const entregas=entregasBase.map(function(d){
-    const audit=garantirAuditoriaLinha_(hist,d.linha);
-    return Object.assign({},d,{idEntrega:String(audit.id||"")});
-  }).filter(d=>d.idEntrega);
+  const entregas=obterEntregasValidas_().filter(function(d){
+    return String(d.idEntrega||"").trim()!=="";
+  });
 
   const ocorrenciaRows=listarLinhasViagens_(estrutura.ocorrencias);
   const ocorrenciasPorViagem={};
@@ -1888,13 +1885,11 @@ function criarViagem_(dados){
   const terceiros=String(veiculo.propriedade).toUpperCase()==="TERCEIRIZADO";
   if(terceiros&&valorNegociado<=0)return {ok:false,erro:"Informe o valor total negociado com o transportador para esta viagem."};
 
-  const hist=SpreadsheetApp.getActive().getSheetByName(CFG.HIST);
   const validas=obterEntregasValidas_();
   const porLinha={};
   validas.forEach(d=>{
-    const audit=garantirAuditoriaLinha_(hist,d.linha);
-    d.idEntrega=String(audit.id||"");
-    porLinha[d.idEntrega]=d;
+    const id=String(d.idEntrega||"").trim();
+    if(id)porLinha[id]=d;
   });
   const stopData=mapearStopsViagens_();
   const lock=LockService.getScriptLock();
