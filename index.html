@@ -3190,6 +3190,17 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-delivery-copy em{display:inline-flex;margin-top:4px;padding:2px 5px;border-radius:4px;background:#eef4f7;color:#638295;font-size:7.5px;font-style:normal;font-weight:800;}
 .trips-delivery-nf{height:32px;width:100%;min-width:0;padding:0 8px;border:1px solid #e0e7ed;border-radius:7px;background:#fff;color:#334a60;font-size:9px;}
 .trips-route-note{padding:10px 12px;border:1px solid #dce8ee;border-radius:8px;background:#f5f9fb;color:#698092;font-size:9px;line-height:1.45;}
+.trips-workspace-tabs{display:flex;align-items:stretch;gap:6px;margin:0 0 14px;padding:5px;border:1px solid #e1e8ee;border-radius:11px;background:#eaf0f4;}
+.trips-workspace-tab{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:142px;min-height:42px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:transparent;color:#718298;font-size:10px;font-weight:850;cursor:pointer;transition:background .16s,border-color .16s,color .16s,box-shadow .16s;}
+.trips-workspace-tab:hover{color:#315267;background:rgba(255,255,255,.55);}
+.trips-workspace-tab.active{border-color:#d7e3e9;background:#fff;color:#245f72;box-shadow:0 2px 7px rgba(36,64,84,.06);}
+.trips-workspace-tab-icon{display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;border-radius:6px;background:#edf3f6;color:#58768a;font-size:14px;}
+.trips-workspace-tab.active .trips-workspace-tab-icon{background:#e6f1f4;color:#24798a;}
+.trips-workspace-tab small{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#edf1f4;color:#75879a;font-size:8px;font-weight:900;}
+.trips-workspace-tab.active small{background:#e5f1f4;color:#286f80;}
+.trips-workspace-panel[hidden]{display:none!important;}
+.trips-workspace-panel{min-width:0;animation:tripsWorkspaceIn .18s ease-out;}
+@keyframes tripsWorkspaceIn{from{opacity:.72;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 .trips-available-panel{overflow:hidden;}
 .trips-available-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:14px 16px 12px;border-bottom:1px solid #e7edf2;}
 .trips-section-eyebrow{color:#8292a4;font-size:8px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;}
@@ -3227,6 +3238,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-available-status.em-fila{background:#f1e7f4;color:#81518c;}
 .trips-available-status.entregue{background:#e5f2e7;color:#397348;}
 .trips-available-status.atencao{background:#fbe8e8;color:#a84b4b;}
+@media(max-width:650px){.trips-workspace-tabs{display:grid;grid-template-columns:1fr 1fr;}.trips-workspace-tab{min-width:0;padding:0 8px;}}
 @media(max-width:1100px){.trips-available-head{align-items:stretch;flex-direction:column;}.trips-available-tools{grid-template-columns:minmax(180px,1fr) repeat(3,max-content);}.trips-available-filterbar{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:650px){.trips-available-tools{grid-template-columns:1fr 1fr;}.trips-available-tools input{grid-column:1/-1;}.trips-available-tools button{padding:0 7px;font-size:8px;}.trips-available-filterbar{grid-template-columns:1fr 1fr;padding:10px;}.trips-available-filterbar .trips-available-clear-filters{width:100%;}}
 .trips-modal-actions{flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:13px 25px;border-top:1px solid #e8edf2;background:#fbfcfd;}
@@ -3725,7 +3737,15 @@ button,input,select,textarea{font-family:var(--font-ui);}
             <button type="button" class="trips-action" onclick="carregarViagens_()">↻ Atualizar</button>
           </div>
         </header>
-        <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
+        <nav class="trips-workspace-tabs" role="tablist" aria-label="Áreas do menu Viagens">
+          <button id="tabViagensEntregas" class="trips-workspace-tab active" type="button" role="tab" aria-selected="true" aria-controls="painelViagensEntregas" onclick="definirAbaViagensMenu_('entregas')">
+            <span class="trips-workspace-tab-icon">▤</span><span>Entregas</span><small id="viagensTabCountEntregas">0</small>
+          </button>
+          <button id="tabViagensViagens" class="trips-workspace-tab" type="button" role="tab" aria-selected="false" aria-controls="painelViagensViagens" onclick="definirAbaViagensMenu_('viagens')">
+            <span class="trips-workspace-tab-icon">↗</span><span>Viagens</span><small id="viagensTabCountViagens">0</small>
+          </button>
+        </nav>
+        <div id="painelViagensEntregas" class="trips-workspace-panel" role="tabpanel" aria-labelledby="tabViagensEntregas">
         <section class="trips-panel trips-available-panel">
           <div class="trips-available-head">
             <div>
@@ -3765,6 +3785,9 @@ button,input,select,textarea{font-family:var(--font-ui);}
             <div class="trips-empty">Carregando entregas disponíveis...</div>
           </div>
         </section>
+        </div>
+        <div id="painelViagensViagens" class="trips-workspace-panel" role="tabpanel" aria-labelledby="tabViagensViagens" hidden>
+        <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
         <section class="trips-panel">
           <div class="trips-toolbar">
             <div class="trips-tabs" role="group" aria-label="Filtrar viagens">
@@ -3779,6 +3802,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <div id="viagensLista"><div class="trips-empty">Carregando viagens...</div></div>
         </section>
         <footer class="trips-footnote">Cada parada mantém seu próprio resultado. Uma viagem pode terminar parcialmente; entregas não realizadas continuam pendentes e podem ser vinculadas a outra viagem. O valor negociado com terceirizados é registrado uma única vez por viagem e rateado entre as entregas concluídas.</footer>
+        </div>
       </div>
     </section>
   </main>
@@ -5943,6 +5967,8 @@ function renderizarEntregasDisponiveisViagem_(){
   const area=document.getElementById('viagensEntregasDisponiveisTabela');
   if(!area)return;
   const todas=Array.isArray(viagensDados_.entregasDisponiveis)?viagensDados_.entregasDisponiveis:[];
+  const contadorEntregas=document.getElementById('viagensTabCountEntregas');
+  if(contadorEntregas)contadorEntregas.textContent=String(todas.length);
   atualizarFiltrosEntregasViagem_(todas);
   const lista=obterEntregasFiltradasViagem_();
   const selecionadas=[...selecaoEntregasDisponiveisViagem_].filter(id=>todas.some(d=>String(d.idEntrega)===id));
@@ -6014,6 +6040,17 @@ async function abrirViagemComEntregasDisponiveis_(){
   entregasSelecionadasViagem_=new Set(ids);
   await abrirModalViagem_();
 }
+function definirAbaViagensMenu_(aba){
+  const ativa=aba==='viagens'?'viagens':'entregas';
+  const tabEntregas=document.getElementById('tabViagensEntregas');
+  const tabViagens=document.getElementById('tabViagensViagens');
+  const painelEntregas=document.getElementById('painelViagensEntregas');
+  const painelViagens=document.getElementById('painelViagensViagens');
+  if(tabEntregas){const on=ativa==='entregas';tabEntregas.classList.toggle('active',on);tabEntregas.setAttribute('aria-selected',String(on));}
+  if(tabViagens){const on=ativa==='viagens';tabViagens.classList.toggle('active',on);tabViagens.setAttribute('aria-selected',String(on));}
+  if(painelEntregas)painelEntregas.hidden=ativa!=='entregas';
+  if(painelViagens)painelViagens.hidden=ativa!=='viagens';
+}
 function definirFiltroViagens_(filtro,botao){
   filtroViagensAtual_=filtro;
   document.querySelectorAll('[data-viagem-filtro]').forEach(b=>b.classList.toggle('active',b===botao));
@@ -6025,6 +6062,8 @@ function renderizarViagens_(){
   if(!area||!kpis)return;
   renderizarEntregasDisponiveisViagem_();
   const viagens=Array.isArray(viagensDados_.viagens)?viagensDados_.viagens:[];
+  const contadorViagens=document.getElementById('viagensTabCountViagens');
+  if(contadorViagens)contadorViagens.textContent=String(viagens.length);
   const programadas=viagens.filter(v=>v.status==='PROGRAMADA').length;
   const andamento=viagens.filter(v=>v.status==='EM_ANDAMENTO').length;
   const interrompidas=viagens.filter(v=>v.status==='INTERROMPIDA').length;
@@ -6395,6 +6434,7 @@ async function salvarViagemUI_(event){
     renderTabela();
     mostrarToast(res.numero+' programada com '+res.totalEntregas+' entrega(s).');
     mostrarView('viagens');
+    definirAbaViagensMenu_('viagens');
   }catch(err){mostrarToast(err.message||String(err),true);}
   finally{btn.disabled=false;btn.textContent='Calcular rota e programar';}
 }
