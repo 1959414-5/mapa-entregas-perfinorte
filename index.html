@@ -3311,6 +3311,27 @@ button,input,select,textarea{font-family:var(--font-ui);}
   .trips-available-list{grid-template-columns:1fr;}
   .trips-available-item:nth-child(odd){border-right:0;}
 }
+
+/* Itens complementares da programação e XMLs vinculados à viagem */
+#modalViagemOverlay .trips-stop-order{display:grid;place-items:center;width:27px;height:27px;flex:0 0 27px;border:1px solid #dce8ed;border-radius:7px;background:#edf4f6;color:#36798a;font:800 9px var(--font-mono);}
+#modalViagemOverlay .trips-nfe-empty{padding:10px 12px;border:1px solid #e6edf1;border-radius:8px;background:#fbfcfd;color:#8b98a7;font-size:9px;}
+#modalViagemOverlay .trips-nfe-total{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px;}
+#modalViagemOverlay .trips-nfe-total>span{display:flex;flex-direction:column;gap:4px;padding:9px 11px;border:1px solid #e2eaf0;border-radius:8px;background:#f8fafc;}
+#modalViagemOverlay .trips-nfe-total small{color:#8292a1;font-size:7px;font-weight:800;letter-spacing:.09em;}
+#modalViagemOverlay .trips-nfe-total strong{color:#30485e;font-size:11px;font-weight:850;}
+.trip-nfe-trip-panel{display:flex;flex-direction:column;gap:9px;margin-bottom:13px;padding:12px;border:1px solid #e3eaf0;border-radius:10px;background:#fff;}
+.trip-nfe-attach{position:relative;display:inline-flex;align-items:center;gap:7px;align-self:flex-start;min-height:32px;padding:7px 11px;border:1px solid #d6e3e9;border-radius:7px;background:#f6fafb;color:#2e6d7d;font-size:9px;font-weight:800;cursor:pointer;overflow:hidden;}
+.trip-nfe-attach:hover{border-color:#79aab5;background:#eff7f8;}
+.trip-nfe-attach input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.trip-nfe-empty{padding:6px 0;color:#8795a3;font-size:9px;}
+@media(max-width:760px){
+  .trips-available-head{align-items:stretch;}
+  .trips-available-tools{width:100%;}
+  .trips-available-tools .trips-search{width:100%;max-width:none;}
+  .trips-available-list{grid-template-columns:1fr;}
+  .trips-available-item:nth-child(odd){border-right:0;}
+  #modalViagemOverlay .trips-nfe-total{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -6845,7 +6866,7 @@ function selecionarTodasVisiveisViagemTabela_(marcado){
   if(modoAtual==="tabela")renderTabela();
 }
 function selecionarVisiveisViagemTabela_(){selecionarTodasVisiveisViagemTabela_(true);}
-function limparSelecaoViagemTabela_(){entregasSelecionadasViagem_.clear();renderTabela();}
+function limparSelecaoViagemTabela_(){entregasSelecionadasViagem_.clear();renderizarEntregasDisponiveisViagem_();atualizarControlesSelecaoViagemTabela_([]);if(modoAtual==="tabela")renderTabela();}
 function atualizarControlesSelecaoViagemTabela_(lista){
   const total=entregasSelecionadasViagem_.size;
   const label=document.getElementById('tabelaViagemSelecaoTotal');
