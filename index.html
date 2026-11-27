@@ -777,6 +777,7 @@
   }
   .tabela-viagem-actions-info{display:flex;align-items:baseline;gap:7px;font-size:10px;}
   .tabela-viagem-actions-info strong{color:#176f7f;font:800 16px var(--font-mono);}
+  .tabela-viagem-actions-info small{display:block;flex-basis:100%;margin-left:2px;color:#8b98a7;font-size:9px;line-height:1.4;}
   .tabela-viagem-actions-buttons{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
   .tabela-viagem-actions button{
     min-height:30px;padding:6px 10px;border:1px solid #d5e1e8;border-radius:7px;
@@ -6277,6 +6278,15 @@ function atualizarControlesSelecaoViagemTabela_(lista){
   const label=document.getElementById('tabelaViagemSelecaoTotal');
   const btn=document.getElementById('btnCriarViagemSelecaoTabela');
   const header=document.querySelector('#tabelaContainer [data-selecao-todas-viagem]');
+  const aviso=document.getElementById('tabelaViagemSelecaoAviso');
+  const candidatas=(lista||[]).filter(d=>String(d.codigo||'').trim()&&String(d.endereco||'').trim()&&String(d.endereco).trim().toUpperCase()!=='AVISO'&&String(d.status||'').trim().toUpperCase()!=='ENTREGUE');
+  const semUuid=candidatas.filter(d=>!d.idEntrega).length;
+  if(aviso){
+    aviso.textContent=!viagensDadosCarregadas_?'Sincronizando os vínculos das viagens...':
+      (semUuid?'A API não retornou o UUID de '+semUuid+' entrega(s). Reimplante a versão atual do Apps Script (Nova versão).':
+      (total?'Seleção pronta para programação.':'Marque as entregas válidas na primeira coluna.'));
+    aviso.style.color=semUuid&&viagensDadosCarregadas_?'#b56d30':'';
+  }
   if(label)label.textContent=total+' selecionada(s)';
   if(btn){
     btn.disabled=!total;
@@ -6380,7 +6390,7 @@ function renderTabela(ehAtualizacaoAutomatica){
       '</div>' +
     '</div>' +
     '<div class="tabela-viagem-actions">' +
-      '<div class="tabela-viagem-actions-info"><strong id="tabelaViagemSelecaoTotal">'+entregasSelecionadasViagem_.size+'</strong><span>entrega(s) marcada(s) para formar uma viagem</span></div>' +
+      '<div class="tabela-viagem-actions-info"><strong id="tabelaViagemSelecaoTotal">'+entregasSelecionadasViagem_.size+'</strong><span>entrega(s) marcada(s) para formar uma viagem</span><small id="tabelaViagemSelecaoAviso" role="status"></small></div>' +
       '<div class="tabela-viagem-actions-buttons">' +
         '<button type="button" onclick="selecionarVisiveisViagemTabela_()">Marcar visíveis</button>' +
         '<button type="button" onclick="limparSelecaoViagemTabela_()">Limpar seleção</button>' +
