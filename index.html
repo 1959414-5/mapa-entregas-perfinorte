@@ -5642,7 +5642,7 @@ function dataViagemBR_(iso){
   return m?m[3]+'/'+m[2]+'/'+m[1]:(iso||'—');
 }
 function statusViagemLabel_(status){
-  const map={PROGRAMADA:'Programada',EM_ANDAMENTO:'Em andamento',INTERROMPIDA:'Interrompida',CONCLUIDA:'Concluída',CONCLUIDA_PARCIAL:'Concluída parcialmente',CANCELADA:'Cancelada'};
+  const map={RASCUNHO:'Rascunho · aguardando faturamento',PROGRAMADA:'Programada',EM_ANDAMENTO:'Em andamento',INTERROMPIDA:'Interrompida',CONCLUIDA:'Concluída',CONCLUIDA_PARCIAL:'Concluída parcialmente',CANCELADA:'Cancelada'};
   return map[status]||status||'—';
 }
 function statusParadaLabel_(status){
@@ -5721,6 +5721,7 @@ function renderizarViagens_(){
   const kpis=document.getElementById('viagensKpis');
   if(!area||!kpis)return;
   const viagens=Array.isArray(viagensDados_.viagens)?viagensDados_.viagens:[];
+  const role=usuarioSessao_.role;
   const programadas=viagens.filter(v=>v.status==='PROGRAMADA').length;
   const andamento=viagens.filter(v=>v.status==='EM_ANDAMENTO').length;
   const interrompidas=viagens.filter(v=>v.status==='INTERROMPIDA').length;
@@ -5746,12 +5747,19 @@ function renderizarViagens_(){
     const entregues=(v.paradas||[]).filter(p=>p.status==='ENTREGUE').length;
     const total=(v.paradas||[]).length;
     const encerrada=['CONCLUIDA','CONCLUIDA_PARCIAL','CANCELADA'].includes(v.status);
+    const quantidadeNFs=(v.notasFiscais||[]).length;
+    const valorNFs=moedaVeiculoUI_(v.valorNfTotal||0);
+    const pesoNFs=Number(v.pesoLiquidoTotalKg||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
     const custo=v.custoTotalFinal!==null&&v.custoTotalFinal!==undefined?moedaVeiculoUI_(v.custoTotalFinal):v.custoEstimado!==null&&v.custoEstimado!==undefined?moedaVeiculoUI_(v.custoEstimado)+' (prev.)':'Pendente de parâmetros';
-    const statusActions=encerrada?'':v.status==='PROGRAMADA'
-      ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
-      :v.status==='EM_ANDAMENTO'
-        ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
-        :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
+    const statusActions=role==='FATURAMENTO'
+      ?(v.status==='RASCUNHO'?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+escaparViagem_(v.id)+'\')">Liberar para operação</button>':'<span class="trip-stop-cost">Disponível para operação</span>')
+      :v.status==='RASCUNHO'&&role==='ADMIN'
+        ?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+escaparViagem_(v.id)+'\')">Liberar para operação</button>'
+        :encerrada?'':v.status==='PROGRAMADA'
+          ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
+          :v.status==='EM_ANDAMENTO'
+            ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
+            :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
     const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||'')+'</small></div>').join('');
     const paradas=(v.paradas||[]).map(p=>{
       const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
@@ -5764,9 +5772,11 @@ function renderizarViagens_(){
     }).join('');
     return '<article class="trip-card">'+
       '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
-      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span></div>'+
+      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span><span class="trip-metric">NF-e <strong>'+quantidadeNFs+' · '+valorNFs+'</strong></span><span class="trip-metric">Peso líquido <strong>'+pesoNFs+' kg</strong></span></div>'+
       '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
-      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+(ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
+      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+
+      ((v.notasFiscais||[]).length?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Notas fiscais vinculadas ('+quantidadeNFs+')</span><span>'+valorNFs+' · '+pesoNFs+' kg</span></div>'+v.notasFiscais.map(n=>'<div class="trip-occurrence"><span>NF '+escaparViagem_(n.numero)+'/'+escaparViagem_(n.serie)+'</span><strong>'+escaparViagem_(n.destinatarioNome)+' · '+moedaVeiculoUI_(n.valorTotal)+'</strong><small>'+Number(n.pesoLiquidoKg||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg</small></div>').join('')+'</div>':'')+
+      (ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
       '</article>';
   }).join('')+'</div>';
 }
