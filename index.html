@@ -6184,14 +6184,12 @@ async function salvarViagemUI_(event){
   const veiculoId=document.getElementById("viagemVeiculo").value;
   const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
   if(!veiculo){mostrarToast("Selecione um veículo ativo.",true);return;}
-  if(!entregasParaNovaViagem_.length&&!viagemRascunhoEmSalvamento_){mostrarToast("Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.",true);return;}
-  const escolhidas=entregasParaNovaViagem_.map((d,i)=>{
-    const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(d.idEntrega))+'"]');
-    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():"",notas:notasFiscaisPendentesViagem_[d.idEntrega]||[],ordem:i+1,d:d};
-  });
-  if(role==="FATURAMENTO"){
-    const semXml=escolhidas.filter(x=>!x.notas.length);
-    if(semXml.length){mostrarToast("Anexe ao menos uma NF-e XML para cada entrega. Pendentes: "+semXml.map(x=>x.d.cliente).join(", "),true);return;}
+  if(!entregasParaNovaViagem_.length&&!viagemRascunhoEmSalvamento_){mostrarToast("Selecione ao menos uma entrega para a viagem.",true);return;}
+  const escolhidas=entregasParaNovaViagem_.map((d,i)=>({idEntrega:d.idEntrega,ordem:i+1,d:d}));
+  const notas=Array.isArray(notasFiscaisPendentesViagem_)?notasFiscaisPendentesViagem_:[];
+  if(role==="FATURAMENTO"&&!notas.length){
+    mostrarToast("Adicione ao menos uma NF-e XML para esta viagem. As notas pertencem à viagem inteira, não às entregas individuais.",true);
+    return;
   }
   if(veiculo.propriedade==="TERCEIRIZADO"&&Number(document.getElementById("viagemValorNegociado").value)<=0){
     mostrarToast("Informe o valor negociado por esta viagem.",true);return;
@@ -6218,7 +6216,9 @@ async function salvarViagemUI_(event){
         document.getElementById("viagemRotaResumo").textContent="Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.";
       }
       if(!rota&&!confirm("Não foi possível calcular a rota. Deseja salvar a viagem mesmo assim, sem estimativa de distância e custo por km?")){
-        btn.disabled=false;btn.textContent=role==="FATURAMENTO"?"Salvar rascunho e importar XML":"Calcular rota e programar";return;
+        btn.disabled=false;
+        btn.textContent=role==="FATURAMENTO"?"Salvar rascunho e importar XML":"Calcular rota e programar";
+        return;
       }
       const dados={
         data:document.getElementById("viagemData").value,
@@ -6232,7 +6232,7 @@ async function salvarViagemUI_(event){
         observacoes:document.getElementById("viagemObservacoes").value.trim(),
         distanciaPrevistaKm:rota?rota.distanciaKm:null,
         duracaoPrevistaMin:rota?rota.duracaoMin:null,
-        entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,nfs:x.nfs,ordem:x.ordem}))
+        entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,ordem:x.ordem}))
       };
       btn.textContent="Criando viagem...";
       const created=await chamarAPI_POST_({acao:"criarViagem",dados:dados});
@@ -6240,37 +6240,37 @@ async function salvarViagemUI_(event){
       viagemRascunhoEmSalvamento_={id:created.id,numero:created.numero,uploadedKeys:[],totalEntregas:created.totalEntregas};
     }
     const viagem=viagemRascunhoEmSalvamento_;
-    const notasParaEnviar=escolhidas.flatMap(x=>x.notas.map(n=>({idEntrega:x.idEntrega,nota:n})));
-    const pendentes=notasParaEnviar.filter(x=>!viagem.uploadedKeys.includes(x.nota.dados.chaveAcesso));
+    const pendentes=notas.filter(n=>!viagem.uploadedKeys.includes(String(n.dados.chaveAcesso||"")));
     if(pendentes.length){
       const falhas=[];
       for(let i=0;i<pendentes.length;i++){
-        const item=pendentes[i];
-        btn.textContent="Importando XML "+(i+1)+"/"+pendentes.length+"...";
+        const nota=pendentes[i];
+        btn.textContent="Vinculando XML "+(i+1)+"/"+pendentes.length+" à viagem...";
         const resposta=await chamarAPI_POST_({acao:"salvarNFeViagem",dados:{
-          viagemId:viagem.id,idEntrega:item.idEntrega,xmlBase64:item.nota.xmlBase64,nomeArquivo:item.nota.nomeArquivo
+          viagemId:viagem.id,xmlBase64:nota.xmlBase64,nomeArquivo:nota.nomeArquivo
         }});
-        if(!resposta||resposta.ok!==true)falhas.push((resposta&&(resposta.erro||resposta.error))||("Falha ao importar "+item.nota.nomeArquivo));
-        else viagem.uploadedKeys.push(item.nota.dados.chaveAcesso);
+        if(!resposta||resposta.ok!==true)falhas.push((resposta&&(resposta.erro||resposta.error))||("Falha ao importar "+nota.nomeArquivo));
+        else viagem.uploadedKeys.push(String(nota.dados.chaveAcesso||""));
       }
       if(falhas.length){
         btn.textContent="Tentar novamente";
-        mostrarToast("A viagem "+viagem.numero+" foi criada, mas "+falhas.length+" XML(s) não foram vinculados. Clique em Tentar novamente após corrigir. "+falhas.join(" · "),true);
+        mostrarToast("A viagem "+viagem.numero+" foi criada, mas "+falhas.length+" XML(s) não foram vinculados. Corrija e tente novamente. "+falhas.join(" · "),true);
         btn.disabled=false;
         return;
       }
     }
     const quantidadeNFs=viagem.uploadedKeys.length;
-    const numeroViagem=viagem.numero, totalEntregas=viagem.totalEntregas;
+    const numeroViagem=viagem.numero,totalEntregas=viagem.totalEntregas;
     entregasSelecionadasViagem_.clear();
     entregasParaNovaViagem_=[];
+    notasFiscaisPendentesViagem_=[];
     fecharModalViagem_();
     renderTabela();
     mostrarView("viagens");
     await carregarViagens_();
     mostrarToast(role==="FATURAMENTO"
-      ?numeroViagem+" salva como rascunho com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF(s). Revise e libere para a operação."
-      :numeroViagem+" programada com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF(s).");
+      ?numeroViagem+" salva como rascunho com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF-e(s) vinculadas à viagem."
+      :numeroViagem+" programada com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF-e(s).");
   }catch(err){mostrarToast(err&&err.message?err.message:String(err),true);}
   finally{
     if(document.getElementById("btnSalvarViagem")){
@@ -6280,6 +6280,7 @@ async function salvarViagemUI_(event){
     }
   }
 }
+
 async function alterarStatusViagemUI_(id,status){
   if(status==='EM_ANDAMENTO'&&!confirm('Registrar a saída desta viagem e iniciar o acompanhamento?'))return;
   try{
