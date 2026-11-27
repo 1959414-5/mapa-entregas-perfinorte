@@ -1951,6 +1951,20 @@ button,input,select,textarea{font-family:var(--font-ui);}
 @media(max-width:900px){.fleet-module-grid-modes{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.fleet-module-grid-modes{grid-template-columns:1fr}.fleet-module-manager-head{align-items:flex-start;flex-direction:column}.fleet-env-picker,.fleet-env-picker select{width:100%}.session-context-chip{font-size:8px}}
 
+
+.trips-nfe-upload{display:flex;flex-direction:column;gap:6px;min-width:0}
+.trips-nfe-upload label{display:flex;flex-direction:column;gap:5px;color:#60788c;font-size:8px;font-weight:800}
+.trips-nfe-upload input[type=file]{width:100%;min-width:0;height:auto;padding:6px;border:1px dashed #cbd9e3;border-radius:7px;background:#fff;color:#577084;font:9px var(--font-ui)}
+.trips-nfe-summary{display:flex;flex-direction:column;gap:4px;color:#8a99a8;font-size:8px;line-height:1.35;overflow-wrap:anywhere}
+.trips-nfe-line{display:flex;flex-direction:column;gap:2px;padding:5px 7px;border:1px solid #d9e9e2;border-radius:6px;background:#f5fbf7;color:#39735c}
+.trips-nfe-line small{color:#81958a;font-size:7px}
+.trip-card-metrics{flex-wrap:wrap}
+.trip-status.rascunho{background:#fff4dc;color:#946c28;border:1px solid #ead5a9}
+
+
+.trip-nfe-add{display:flex;flex-direction:column;gap:4px;margin-top:7px;color:#638095;font-size:8px;font-weight:800}
+.trip-nfe-add input{max-width:280px;width:100%;padding:5px;border:1px dashed #cbd9e3;border-radius:6px;background:#fff;color:#60798c;font:8px var(--font-ui)}
+
 </style>
 <style>
 
@@ -3051,6 +3065,25 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-kpi span{display:block;margin-top:4px;color:#8b98a8;font-size:10px;}
 .trips-panel{overflow:hidden;border:1px solid #dce5ee;border-radius:15px;background:#fff;box-shadow:0 6px 20px rgba(22,43,62,.04);}
 .trips-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 17px;border-bottom:1px solid #e8edf2;}
+.trips-available-panel{margin-bottom:14px;}
+.trips-available-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid #e8edf2;}
+.trips-available-kicker{color:#71869a;font:750 8px var(--font-mono);letter-spacing:.15em;}
+.trips-available-head h2{margin:5px 0 3px;color:#1b3045;font-size:15px;font-weight:850;}
+.trips-available-head p{margin:0;color:#7b8999;font-size:10px;line-height:1.5;}
+.trips-available-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.trips-available-tools button{min-height:35px;padding:7px 10px;border:1px solid #d7e2ea;border-radius:8px;background:#fff;color:#52677b;font-size:9px;font-weight:750;cursor:pointer;}
+.trips-available-tools button.primary{border-color:#1d4058;background:#1d4058;color:#fff;}
+.trips-available-tools button:disabled{opacity:.42;cursor:not-allowed;}
+.trips-available-tools button span{display:inline-grid;min-width:17px;height:17px;place-items:center;margin-left:4px;border-radius:5px;background:rgba(255,255,255,.16);}
+.trips-available-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;}
+.trips-available-item{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 15px;border-bottom:1px solid #edf1f5;cursor:pointer;min-width:0;}
+.trips-available-item:nth-child(odd){border-right:1px solid #edf1f5;}
+.trips-available-item:hover{background:#f8fbfc;}
+.trips-available-item input{width:15px;height:15px;accent-color:#237f8f;}
+.trips-available-item strong{display:block;color:#263d52;font-size:10px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trips-available-item small{display:block;margin-top:3px;color:#8190a1;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trips-available-item em{font-style:normal;color:#6e8092;font-size:8px;white-space:nowrap;}
+.trips-available-foot{padding:9px 15px;color:#8290a0;font-size:9px;background:#fbfcfd;}
 .trips-tabs{display:flex;gap:5px;flex-wrap:wrap;}
 .trips-tabs button{min-height:34px;padding:7px 11px;border:1px solid transparent;border-radius:8px;background:transparent;color:#718096;font-size:10px;font-weight:750;cursor:pointer;}
 .trips-tabs button.active{border-color:#d3e4eb;background:#eaf2f6;color:#1d5b6b;}
@@ -3200,6 +3233,84 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-action-error[hidden]{display:none!important;}
 @media(max-width:600px){.trips-action-form-grid{grid-template-columns:1fr;}.trips-action-form-grid .span-2{grid-column:1;}.trips-action-modal .trips-modal-body{padding:16px;}}
 
+
+/* Programar viagem | interface operacional premium */
+#modalViagemOverlay{padding:22px;background:rgba(11,24,38,.66);backdrop-filter:blur(7px);}
+#modalViagemOverlay .trips-modal{width:min(1040px,calc(100vw - 36px));max-height:min(94dvh,980px);border:1px solid #d6e0e9;border-radius:19px;box-shadow:0 32px 90px rgba(9,25,42,.34);}
+#modalViagemOverlay .trips-modal-head{padding:22px 27px 21px;background:linear-gradient(112deg,#142b40 0%,#1b3a52 58%,#24485c 100%);border-bottom:0;color:#fff;}
+#modalViagemOverlay .trips-modal-head:before{height:3px;background:linear-gradient(90deg,#55a6b6,#8bbfbd 38%,rgba(139,191,189,0));}
+#modalViagemOverlay .trips-modal-kicker{color:#a8c2d2;font-size:8px;letter-spacing:.19em;}
+#modalViagemOverlay .trips-modal-kicker span{padding:0 5px;color:#6ea8b1;}
+#modalViagemOverlay .trips-modal-head h2{margin:7px 0 5px;color:#fff;font-size:25px;font-weight:800;letter-spacing:-.04em;}
+#modalViagemOverlay .trips-modal-head p{max-width:610px;color:#b7c8d4;font-size:11px;line-height:1.5;}
+#modalViagemOverlay .trips-modal-head-side{display:flex;align-items:center;gap:13px;}
+#modalViagemOverlay .trips-modal-context{padding:7px 10px;border:1px solid rgba(190,219,227,.25);border-radius:7px;background:rgba(255,255,255,.07);color:#c8d9e1;font-size:8px;font-weight:800;letter-spacing:.1em;white-space:nowrap;}
+#modalViagemOverlay .trips-modal-close{width:35px;height:35px;border:1px solid rgba(220,235,242,.28);border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:20px;transition:background .16s,border-color .16s;}
+#modalViagemOverlay .trips-modal-close:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.5);}
+#modalViagemOverlay .trips-modal-body{padding:20px 25px 24px;background:#f4f7fa;scrollbar-color:#c3d0da transparent;}
+#modalViagemOverlay .trips-form-section{margin:0 0 15px;padding:17px 19px 19px;border:1px solid #e0e7ee;border-radius:13px;background:#fff;box-shadow:0 3px 12px rgba(24,47,68,.035);}
+#modalViagemOverlay .trips-form-section-title{margin-bottom:15px;padding-bottom:12px;border-bottom:1px solid #edf1f5;}
+#modalViagemOverlay .trips-form-section-title>span{width:31px;height:31px;border:1px solid #d7e6eb;border-radius:9px;background:#edf4f6;color:#2a7181;font-size:9px;}
+#modalViagemOverlay .trips-form-section-title strong{color:#243d53;font-size:12px;font-weight:800;}
+#modalViagemOverlay .trips-form-section-title small{color:#8190a0;font-size:9.5px;line-height:1.45;}
+#modalViagemOverlay .trips-form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px 15px;}
+#modalViagemOverlay .trips-extra-grid{margin-top:13px;}
+#modalViagemOverlay .trips-field{gap:6px;color:#53677c;font-size:9px;font-weight:800;letter-spacing:.025em;}
+#modalViagemOverlay .trips-field input,#modalViagemOverlay .trips-field select,#modalViagemOverlay .trips-field textarea{min-height:41px;padding:9px 11px;border:1px solid #d8e1e9;border-radius:8px;background:#fbfcfd;color:#263d52;font:11px var(--font-ui);transition:border-color .15s,box-shadow .15s,background .15s;}
+#modalViagemOverlay .trips-field textarea{min-height:68px;background:#fbfcfd;}
+#modalViagemOverlay .trips-field input:focus,#modalViagemOverlay .trips-field select:focus,#modalViagemOverlay .trips-field textarea:focus{border-color:#5797a7;background:#fff;box-shadow:0 0 0 3px rgba(55,130,148,.11);}
+#modalViagemOverlay .trips-third-party-value{margin-top:14px;padding:13px 15px;border-color:#eadfcf;border-radius:10px;background:#fcfaf6;}
+#modalViagemOverlay .trips-third-party-value strong{color:#6e5835;font-size:10px;}
+#modalViagemOverlay .trips-third-party-value small{color:#8f8067;font-size:9px;}
+#modalViagemOverlay .trips-deliveries-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-3px 0 10px;color:#63768a;font-size:9px;font-weight:700;}
+#modalViagemOverlay .trips-selection-source{color:#8a9aaa;font-size:7px;font-weight:800;letter-spacing:.1em;}
+#modalViagemOverlay .trips-selected-stops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+#modalViagemOverlay .trips-selected-stop{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 11px;border:1px solid #e6ecf1;border-radius:9px;background:#fbfcfd;}
+#modalViagemOverlay .trips-selected-stop>span{min-width:0;display:flex;flex-direction:column;gap:4px;}
+#modalViagemOverlay .trips-selected-stop strong{color:#2e465d;font-size:10px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#modalViagemOverlay .trips-selected-stop small{color:#8492a1;font-size:8.5px;line-height:1.4;}
+#modalViagemOverlay .trips-nfe-section[hidden]{display:none!important;}
+#modalViagemOverlay .trips-upload-zone{position:relative;display:flex;align-items:center;gap:12px;min-height:76px;padding:13px 15px;border:1px dashed #b7c9d3;border-radius:10px;background:#f8fbfc;cursor:pointer;transition:border-color .15s,background .15s;}
+#modalViagemOverlay .trips-upload-zone:hover{border-color:#4e8d9d;background:#f1f8fa;}
+#modalViagemOverlay .trips-upload-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border:1px solid #dce9ed;border-radius:9px;background:#eaf3f5;color:#337b8b;font-size:20px;font-weight:600;}
+#modalViagemOverlay .trips-upload-zone>span:nth-child(2){display:flex;flex-direction:column;gap:4px;}
+#modalViagemOverlay .trips-upload-zone strong{color:#2d465c;font-size:10px;font-weight:800;}
+#modalViagemOverlay .trips-upload-zone small{color:#8795a4;font-size:9px;}
+#modalViagemOverlay .trips-upload-zone input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+#modalViagemOverlay .trips-nfe-summary{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+#modalViagemOverlay .trips-nfe-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #e4ebf0;border-radius:8px;background:#fbfcfd;color:#50667b;font-size:9px;}
+#modalViagemOverlay .trips-nfe-line small{color:#8896a4;font-size:8px;}
+#modalViagemOverlay .trips-route-note{margin:0;padding:11px 13px;border:1px solid #dce8ed;border-radius:9px;background:#eef5f7;color:#5f7e8a;font-size:9px;line-height:1.5;}
+#modalViagemOverlay .trips-modal-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 24px;border-top:1px solid #e3e9ef;background:#fff;}
+#modalViagemOverlay .trips-modal-footer-note{display:flex;align-items:center;gap:8px;color:#82909f;font-size:9px;}
+#modalViagemOverlay .trips-footer-dot{width:7px;height:7px;border-radius:50%;background:#4b9b87;box-shadow:0 0 0 3px #e9f4f0;}
+#modalViagemOverlay .trips-modal-footer-actions{display:flex;align-items:center;gap:8px;}
+#modalViagemOverlay .trips-cancel{min-height:39px;padding:0 15px;border:1px solid #dce4eb;border-radius:8px;background:#fff;color:#596d80;font-size:10px;font-weight:750;}
+#modalViagemOverlay .trips-save{min-height:40px;padding:0 18px;border:1px solid #18374f;border-radius:8px;background:linear-gradient(135deg,#1b3d56,#244d64);color:#fff;font-size:10px;font-weight:800;box-shadow:0 5px 12px rgba(26,59,83,.17);transition:transform .15s,box-shadow .15s;}
+#modalViagemOverlay .trips-save:hover{transform:translateY(-1px);box-shadow:0 7px 16px rgba(26,59,83,.22);}
+#modalViagemOverlay .trips-save:disabled{opacity:.55;transform:none;box-shadow:none;cursor:wait;}
+@media(max-width:760px){
+  #modalViagemOverlay{padding:8px;}
+  #modalViagemOverlay .trips-modal{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:13px;}
+  #modalViagemOverlay .trips-modal-head{padding:17px 16px 15px;}
+  #modalViagemOverlay .trips-modal-head h2{font-size:21px;}
+  #modalViagemOverlay .trips-modal-context{display:none;}
+  #modalViagemOverlay .trips-modal-body{padding:13px;}
+  #modalViagemOverlay .trips-form-section{padding:14px;}
+  #modalViagemOverlay .trips-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #modalViagemOverlay .trips-selected-stops{grid-template-columns:1fr;}
+  #modalViagemOverlay .trips-modal-actions{align-items:stretch;flex-direction:column;padding:12px 14px;}
+  #modalViagemOverlay .trips-modal-footer-note{display:none;}
+  #modalViagemOverlay .trips-modal-footer-actions{justify-content:flex-end;}
+}
+@media(max-width:460px){
+  #modalViagemOverlay .trips-form-grid{grid-template-columns:1fr;}
+  #modalViagemOverlay .trips-field.span-2{grid-column:1;}
+  #modalViagemOverlay .trips-third-party-value{align-items:stretch;flex-direction:column;}
+  #modalViagemOverlay .trips-slider-value{min-width:0;flex-wrap:wrap;}
+  .trips-available-list{grid-template-columns:1fr;}
+  .trips-available-item:nth-child(odd){border-right:0;}
+}
 </style>
 </head>
 <body>
@@ -3644,6 +3755,23 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </div>
         </header>
         <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
+        <section class="trips-panel trips-available-panel" aria-label="Entregas disponíveis para programação">
+          <header class="trips-available-head">
+            <div>
+              <div class="trips-available-kicker">PROGRAMAÇÃO · NOVA VIAGEM</div>
+              <h2>Entregas disponíveis</h2>
+              <p>Selecione entregas para montar uma viagem. A seleção também pode ser feita na tabela principal.</p>
+            </div>
+            <div class="trips-available-tools">
+              <input id="viagensEntregasBusca" class="trips-search" type="search" placeholder="Buscar cliente, código ou cidade..." oninput="renderizarEntregasDisponiveisViagem_()">
+              <button type="button" onclick="selecionarEntregasDisponiveisViagem_(true)">Marcar visíveis</button>
+              <button type="button" onclick="selecionarEntregasDisponiveisViagem_(false)">Limpar visíveis</button>
+              <button type="button" class="primary" id="btnCriarViagemMenu" onclick="abrirModalViagemPeloMenu_()" disabled>Criar viagem <span id="viagensEntregasSelecionadas">0</span></button>
+            </div>
+          </header>
+          <div id="viagensEntregasDisponiveis"><div class="trips-empty">Carregando entregas disponíveis...</div></div>
+          <div class="trips-available-foot">A seleção fica sincronizada com a tabela principal. Entregas concluídas ou vinculadas a viagens em aberto não aparecem nesta lista.</div>
+        </section>
         <section class="trips-panel">
           <div class="trips-toolbar">
             <div class="trips-tabs" role="group" aria-label="Filtrar viagens">
@@ -3711,17 +3839,20 @@ button,input,select,textarea{font-family:var(--font-ui);}
 <div id="modalViagemOverlay" class="modal-overlay" aria-hidden="true">
   <div class="trips-modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalViagem">
     <header class="trips-modal-head">
-      <div>
-        <div class="trips-modal-kicker">PERFINORTE · PLANEJAMENTO LOGÍSTICO</div>
+      <div class="trips-modal-heading">
+        <div class="trips-modal-kicker">PERFINORTE <span>/</span> PLANEJAMENTO LOGÍSTICO</div>
         <h2 id="tituloModalViagem">Programar viagem</h2>
-        <p>As entregas abaixo foram selecionadas na tabela. Informe os dados do veículo e da saída.</p>
+        <p>Defina a programação, o veículo responsável e as entregas que compõem a rota.</p>
       </div>
-      <button type="button" class="trips-modal-close" onclick="fecharModalViagem_()" aria-label="Fechar">×</button>
+      <div class="trips-modal-head-side">
+        <span class="trips-modal-context">NOVA PROGRAMAÇÃO</span>
+        <button type="button" class="trips-modal-close" onclick="fecharModalViagem_()" aria-label="Fechar">×</button>
+      </div>
     </header>
     <form id="formViagem" onsubmit="salvarViagemUI_(event)">
       <div class="trips-modal-body">
         <section class="trips-form-section">
-          <div class="trips-form-section-title"><span>01</span><div><strong>Dados da viagem</strong><small>Data, período, veículo e motorista responsável</small></div></div>
+          <div class="trips-form-section-title"><span>01</span><div><strong>Dados da programação</strong><small>Defina quando a viagem acontece e quem será responsável pela execução.</small></div></div>
           <div class="trips-form-grid">
             <label class="trips-field">Data da viagem<input id="viagemData" type="date" required></label>
             <label class="trips-field">Período<select id="viagemPeriodo" required><option value="">Selecione o período</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
@@ -3741,17 +3872,30 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </section>
 
         <section class="trips-form-section">
-          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas selecionadas</strong><small>Origem: tabela de entregas. Confira as paradas e informe as notas fiscais, quando disponíveis.</small></div></div>
+          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas e paradas</strong><small>Confira os clientes, endereços e sequência de atendimento desta viagem.</small></div></div>
           <div class="trips-deliveries-toolbar">
-            <span id="viagemEntregaContagem">0 entrega(s) recebida(s) da tabela</span>
+            <span id="viagemEntregaContagem">0 entrega(s) selecionada(s)</span>
+            <span class="trips-selection-source">SELEÇÃO SINCRONIZADA COM A TABELA</span>
           </div>
           <div id="viagensEntregasResumo" class="trips-selected-stops"></div>
         </section>
-        <div id="viagemRotaResumo" class="trips-route-note">A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.</div>
+        <section class="trips-form-section trips-nfe-section" id="viagemNFeSection" hidden>
+          <div class="trips-form-section-title"><span>03</span><div><strong>Documentos fiscais da viagem</strong><small>As NF-e são vinculadas à viagem como um todo, não a uma entrega individual.</small></div></div>
+          <label class="trips-upload-zone" for="viagemNFeArquivos">
+            <span class="trips-upload-icon">↑</span>
+            <span><strong>Adicionar arquivos XML</strong><small>Selecione um ou vários XMLs. Limite de 5 MB por arquivo.</small></span>
+            <input id="viagemNFeArquivos" type="file" accept=".xml,text/xml,application/xml" multiple onchange="analisarNFeArquivosUI_(this)">
+          </label>
+          <div class="trips-nfe-summary" id="resumoNFeViagem">Nenhuma NF-e adicionada.</div>
+        </section>
+        <div id="viagemRotaResumo" class="trips-route-note">A rota e a distância serão estimadas quando as entregas selecionadas tiverem coordenadas disponíveis.</div>
       </div>
       <footer class="trips-modal-actions">
-        <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
-        <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+        <div class="trips-modal-footer-note"><span class="trips-footer-dot"></span><span id="tripsModalFooterNote">Os dados serão gravados no ambiente selecionado.</span></div>
+        <div class="trips-modal-footer-actions">
+          <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
+          <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+        </div>
       </footer>
     </form>
   </div>
@@ -5378,7 +5522,7 @@ function atualizarContextoSessaoUI_(){
   const aviso=document.getElementById("ambienteTesteAviso");if(aviso)aviso.hidden=env!=="TESTE";
   const reason=document.querySelector(".dashboard-reason-toggle");if(reason)reason.hidden=role!=="ADMIN";
   const manager=document.getElementById("fleetModuleManager");if(manager)manager.hidden=role!=="ADMIN";
-  const btnNova=document.getElementById("btnCriarViagemSelecaoTabela");if(btnNova)btnNova.hidden=!(role==="ADMIN"||role==="FATURAMENTO");
+  const btnNova=document.getElementById("btnCriarViagemSelecaoTabela");if(btnNova)btnNova.hidden=!["ADMIN","FATURAMENTO","OPERACIONAL"].includes(role);
   const btnVeiculo=document.getElementById("btnNovoVeiculo");if(btnVeiculo)btnVeiculo.hidden=role!=="ADMIN";
 }
 function renderizarControlesModulosFrota_(){
@@ -5621,6 +5765,8 @@ let viagemFormularioCarregado_ = false;
 let viagemFormularioPromise_ = null;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
+let notasFiscaisPendentesViagem_ = [];
+let viagemRascunhoEmSalvamento_ = null;
 
 function escaparViagem_(valor){
   return String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -5630,7 +5776,7 @@ function dataViagemBR_(iso){
   return m?m[3]+'/'+m[2]+'/'+m[1]:(iso||'—');
 }
 function statusViagemLabel_(status){
-  const map={PROGRAMADA:'Programada',EM_ANDAMENTO:'Em andamento',INTERROMPIDA:'Interrompida',CONCLUIDA:'Concluída',CONCLUIDA_PARCIAL:'Concluída parcialmente',CANCELADA:'Cancelada'};
+  const map={RASCUNHO:'Rascunho · aguardando faturamento',PROGRAMADA:'Programada',EM_ANDAMENTO:'Em andamento',INTERROMPIDA:'Interrompida',CONCLUIDA:'Concluída',CONCLUIDA_PARCIAL:'Concluída parcialmente',CANCELADA:'Cancelada'};
   return map[status]||status||'—';
 }
 function statusParadaLabel_(status){
@@ -5661,6 +5807,8 @@ function carregarViagens_(){
       viagensDadosCarregadas_=true;
       aplicarIdsEstaveisNasEntregas_();
       renderizarViagens_();
+      renderizarEntregasDisponiveisViagem_();
+      atualizarControlesSelecaoViagemTabela_([]);
       if(modoAtual==='tabela')renderTabela();
       return true;
     }catch(err){
@@ -5699,6 +5847,50 @@ function carregarDadosFormularioViagem_(){
   })();
   return viagemFormularioPromise_;
 }
+function renderizarEntregasDisponiveisViagem_(){
+  const area=document.getElementById("viagensEntregasDisponiveis");
+  if(!area)return;
+  const busca=String((document.getElementById("viagensEntregasBusca")||{}).value||"").trim().toLocaleLowerCase("pt-BR");
+  const todos=Array.isArray(viagensDados_.entregasDisponiveis)?viagensDados_.entregasDisponiveis:[];
+  const filtradas=todos.filter(d=>{
+    const texto=[d.codigo,d.cliente,d.endereco,d.cidade,d.motorista,d.representante].join(" ").toLocaleLowerCase("pt-BR");
+    return !busca||texto.includes(busca);
+  });
+  if(!filtradas.length){
+    area.innerHTML='<div class="trips-empty">'+(todos.length?"Nenhuma entrega corresponde à busca.":"Nenhuma entrega disponível para programação.")+'</div>';
+  }else{
+    area.innerHTML='<div class="trips-available-list">'+filtradas.map(d=>{
+      const id=String(d.idEntrega||"");
+      const checked=id&&entregasSelecionadasViagem_.has(id);
+      const local=[d.cidade,d.data?dataViagemBR_(d.data):"",d.periodo].filter(Boolean).join(" · ");
+      return '<label class="trips-available-item"><input type="checkbox" data-menu-entrega="'+escapeAttr_(id)+'" '+(checked?'checked':'')+(!id?'disabled':'')+' onchange="alternarSelecaoEntregaViagemTabela_(this.getAttribute(\'data-menu-entrega\'),this.checked)"><span><strong>'+escaparViagem_(d.cliente||"Cliente não identificado")+' <small>· '+escaparViagem_(d.codigo||"Sem código")+'</small></strong><small>'+escaparViagem_(d.endereco||"Endereço não informado")+'</small></span><em>'+escaparViagem_(local||"Sem previsão")+'</em></label>';
+    }).join("")+'</div>';
+  }
+  const total=entregasSelecionadasViagem_.size;
+  const label=document.getElementById("viagensEntregasSelecionadas");
+  const botao=document.getElementById("btnCriarViagemMenu");
+  if(label)label.textContent=String(total);
+  if(botao)botao.disabled=total===0;
+}
+function selecionarEntregasDisponiveisViagem_(marcar){
+  const itens=document.querySelectorAll("#viagensEntregasDisponiveis [data-menu-entrega]");
+  itens.forEach(el=>{
+    const id=String(el.getAttribute("data-menu-entrega")||"");
+    if(!id)return;
+    if(marcar)entregasSelecionadasViagem_.add(id);
+    else entregasSelecionadasViagem_.delete(id);
+  });
+  renderizarEntregasDisponiveisViagem_();
+  atualizarControlesSelecaoViagemTabela_([]);
+  if(modoAtual==="tabela")renderTabela();
+}
+function abrirModalViagemPeloMenu_(){
+  if(!entregasSelecionadasViagem_.size){
+    mostrarToast("Selecione ao menos uma entrega disponível.",true);
+    return;
+  }
+  abrirModalViagem_();
+}
 function definirFiltroViagens_(filtro,botao){
   filtroViagensAtual_=filtro;
   document.querySelectorAll('[data-viagem-filtro]').forEach(b=>b.classList.toggle('active',b===botao));
@@ -5709,6 +5901,7 @@ function renderizarViagens_(){
   const kpis=document.getElementById('viagensKpis');
   if(!area||!kpis)return;
   const viagens=Array.isArray(viagensDados_.viagens)?viagensDados_.viagens:[];
+  const role=usuarioSessao_.role;
   const programadas=viagens.filter(v=>v.status==='PROGRAMADA').length;
   const andamento=viagens.filter(v=>v.status==='EM_ANDAMENTO').length;
   const interrompidas=viagens.filter(v=>v.status==='INTERROMPIDA').length;
@@ -5734,12 +5927,19 @@ function renderizarViagens_(){
     const entregues=(v.paradas||[]).filter(p=>p.status==='ENTREGUE').length;
     const total=(v.paradas||[]).length;
     const encerrada=['CONCLUIDA','CONCLUIDA_PARCIAL','CANCELADA'].includes(v.status);
+    const quantidadeNFs=(v.notasFiscais||[]).length;
+    const valorNFs=moedaVeiculoUI_(v.valorNfTotal||0);
+    const pesoNFs=Number(v.pesoLiquidoTotalKg||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
     const custo=v.custoTotalFinal!==null&&v.custoTotalFinal!==undefined?moedaVeiculoUI_(v.custoTotalFinal):v.custoEstimado!==null&&v.custoEstimado!==undefined?moedaVeiculoUI_(v.custoEstimado)+' (prev.)':'Pendente de parâmetros';
-    const statusActions=encerrada?'':v.status==='PROGRAMADA'
-      ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
-      :v.status==='EM_ANDAMENTO'
-        ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
-        :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
+    const statusActions=role==='FATURAMENTO'
+      ?(v.status==='RASCUNHO'?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+escaparViagem_(v.id)+'\')">Liberar para operação</button>':'<span class="trip-stop-cost">Disponível para operação</span>')
+      :v.status==='RASCUNHO'&&role==='ADMIN'
+        ?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+escaparViagem_(v.id)+'\')">Liberar para operação</button>'
+        :encerrada?'':v.status==='PROGRAMADA'
+          ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
+          :v.status==='EM_ANDAMENTO'
+            ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
+            :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
     const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||'')+'</small></div>').join('');
     const paradas=(v.paradas||[]).map(p=>{
       const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
@@ -5748,13 +5948,18 @@ function renderizarViagens_(){
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'NAO_ENTREGUE\')">Não entregue</button>'+
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'REPROGRAMAR\')">Reprogramar</button>'
       );
-      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||'Endereço não informado')+'</small><div class="trip-stop-extra">NF: '+escaparViagem_(p.nfs||'Não informada')+' · '+statusParadaLabel_(p.status)+(p.motivo?' · '+escaparViagem_(p.motivo):'')+'</div></div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':'')+buttons+'</div></div>';
+      const controleXml=v.status==='RASCUNHO'&&['ADMIN','FATURAMENTO'].includes(role)
+        ?'<label class="trip-nfe-add">Adicionar XML<input type="file" accept=".xml,text/xml,application/xml" multiple data-viagem-id="'+escaparViagem_(v.id)+'" data-entrega-id="'+escaparViagem_(p.idEntrega)+'" onchange="adicionarNFeEmRascunhoUI_(this,this.dataset.viagemId,this.dataset.entregaId)"></label>'
+        :'';
+      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||'Endereço não informado')+'</small><div class="trip-stop-extra">NF: '+escaparViagem_(p.nfs||'Não informada')+' · '+statusParadaLabel_(p.status)+(p.motivo?' · '+escaparViagem_(p.motivo):'')+'</div>'+controleXml+'</div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':'')+buttons+'</div></div>';
     }).join('');
     return '<article class="trip-card">'+
       '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
-      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span></div>'+
+      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span><span class="trip-metric">NF-e <strong>'+quantidadeNFs+' · '+valorNFs+'</strong></span><span class="trip-metric">Peso líquido <strong>'+pesoNFs+' kg</strong></span></div>'+
       '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
-      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+(ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
+      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+
+      ((v.notasFiscais||[]).length?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Notas fiscais vinculadas ('+quantidadeNFs+')</span><span>'+valorNFs+' · '+pesoNFs+' kg</span></div>'+v.notasFiscais.map(n=>'<div class="trip-occurrence"><span>NF '+escaparViagem_(n.numero)+'/'+escaparViagem_(n.serie)+'</span><strong>'+escaparViagem_(n.destinatarioNome)+' · '+moedaVeiculoUI_(n.valorTotal)+'</strong><small>'+Number(n.pesoLiquidoKg||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg</small></div>').join('')+'</div>':'')+
+      (ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
       '</article>';
   }).join('')+'</div>';
 }
@@ -5773,7 +5978,8 @@ async function abrirModalViagem_(){
   try{
     // A tabela já traz o UUID pelo endpoint formato=dados. Não é necessário
     // carregar o histórico completo de viagens para abrir a programação.
-    const mapa=new Map((todasEntregas||[]).map(d=>[String(d.idEntrega||''),d]));
+    const mapa=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega||''),d]));
+    (todasEntregas||[]).forEach(d=>{if(d.idEntrega)mapa.set(String(d.idEntrega),d);});
     const ids=[...entregasSelecionadasViagem_];
     const ausentes=ids.filter(id=>!mapa.has(String(id)));
     if(ausentes.length){
@@ -5782,6 +5988,8 @@ async function abrirModalViagem_(){
       throw new Error(ausentes.length+' entrega(s) não possuem UUID na lista principal. Atualize a implantação do Apps Script e recarregue os dados.');
     }
     entregasParaNovaViagem_=ids.map(id=>mapa.get(String(id)));
+    notasFiscaisPendentesViagem_=[];
+    viagemRascunhoEmSalvamento_=null;
     const pronto=await carregarDadosFormularioViagem_();
     if(!pronto)throw new Error('Não foi possível obter os veículos e motoristas.');
 
@@ -5808,6 +6016,15 @@ async function abrirModalViagem_(){
     document.getElementById('viagemEntregaContagem').textContent=entregasParaNovaViagem_.length+' entrega(s) recebida(s) da tabela';
     document.getElementById('viagemRotaResumo').textContent='A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.';
     renderizarResumoEntregasViagem_();
+    const permiteXml=["ADMIN","FATURAMENTO"].includes(usuarioSessao_.role);
+    const nfeSection=document.getElementById("viagemNFeSection");
+    if(nfeSection)nfeSection.hidden=!permiteXml;
+    const nfeInput=document.getElementById("viagemNFeArquivos");if(nfeInput)nfeInput.value="";
+    renderizarResumoNFePendentesViagem_();
+    const btnSalvar=document.getElementById('btnSalvarViagem');
+    if(btnSalvar)btnSalvar.textContent=usuarioSessao_.role==='FATURAMENTO'?'Salvar rascunho e importar XML':'Calcular rota e programar';
+    const footer=document.getElementById("tripsModalFooterNote");
+    if(footer)footer.textContent=usuarioSessao_.role==="FATURAMENTO"?"A viagem será salva como rascunho até a conferência fiscal.":"A programação será gravada no ambiente ativo.";
     document.getElementById('modalViagemOverlay').classList.add('show');
     document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','false');
   }catch(err){
@@ -5821,9 +6038,11 @@ async function abrirModalViagem_(){
   }
 }
 function fecharModalViagem_(){
-  document.getElementById('modalViagemOverlay').classList.remove('show');
-  document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','true');
+  document.getElementById("modalViagemOverlay").classList.remove("show");
+  document.getElementById("modalViagemOverlay").setAttribute("aria-hidden","true");
   entregasParaNovaViagem_=[];
+  notasFiscaisPendentesViagem_=[];
+  viagemRascunhoEmSalvamento_=null;
 }
 function atualizarTipoVeiculoViagem_(){
   const id=document.getElementById('viagemVeiculo').value;
@@ -5839,76 +6058,208 @@ function sincronizarValorViagem_(origem){
   if(origem==='slider')input.value=v.toFixed(2);
   else slider.value=String(Math.min(Number(slider.max)||10000,Math.round(v/25)*25));
 }
-function renderizarResumoEntregasViagem_(){
-  const area=document.getElementById('viagensEntregasResumo');
+
+function arquivoComoBase64Viagem_(arquivo){
+  return new Promise((resolve,reject)=>{
+    const leitor=new FileReader();
+    leitor.onload=()=>{const resultado=String(leitor.result||"");resolve(resultado.includes(",")?resultado.split(",")[1]:resultado);};
+    leitor.onerror=()=>reject(new Error("Não foi possível ler o arquivo "+arquivo.name+"."));
+    leitor.readAsDataURL(arquivo);
+  });
+}
+function formatarResumoNFeViagem_(nf){
+  const valor=Number(nf.valorTotal||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const peso=Number(nf.pesoLiquidoKg||0).toLocaleString("pt-BR",{minimumFractionDigits:3,maximumFractionDigits:3});
+  return "NF "+escaparViagem_(nf.numero)+"/"+escaparViagem_(nf.serie)+" · "+valor+" · "+peso+" kg";
+}
+async function analisarNFeArquivosUI_(input,idEntrega){
+  if(!input||!idEntrega)return;
+  const arquivos=Array.from(input.files||[]);
+  if(!arquivos.length)return;
+  input.disabled=true;
+  const safeId=String(idEntrega).replace(/[^a-zA-Z0-9_-]/g,"");
+  const area=document.getElementById("resumoNFeEntrega-"+safeId);
+  if(area)area.textContent="Validando XML...";
+  try{
+    if(!notasFiscaisPendentesViagem_[idEntrega])notasFiscaisPendentesViagem_[idEntrega]=[];
+    for(const arquivo of arquivos){
+      if(!/\.xml$/i.test(arquivo.name)&&arquivo.type!=="text/xml"&&arquivo.type!=="application/xml")throw new Error("Selecione um arquivo XML válido: "+arquivo.name);
+      if(arquivo.size>5*1024*1024)throw new Error("O XML "+arquivo.name+" excede o limite de 5 MB.");
+      const xmlBase64=await arquivoComoBase64Viagem_(arquivo);
+      const resposta=await chamarAPI_POST_({acao:"analisarXmlNFe",dados:{xmlBase64:xmlBase64,nomeArquivo:arquivo.name}});
+      if(!resposta||resposta.ok!==true)throw new Error(resposta&&(resposta.erro||resposta.error)?(resposta.erro||resposta.error):"Não foi possível interpretar "+arquivo.name+".");
+      const chave=String(resposta.chaveAcesso||"");
+      const jaExiste=Object.keys(notasFiscaisPendentesViagem_).some(id=>(notasFiscaisPendentesViagem_[id]||[]).some(n=>n.dados.chaveAcesso===chave));
+      if(jaExiste)throw new Error("A chave de acesso da NF "+resposta.numero+" já foi selecionada nesta viagem.");
+      notasFiscaisPendentesViagem_[idEntrega].push({nomeArquivo:arquivo.name,xmlBase64:xmlBase64,dados:resposta});
+    }
+    renderizarResumoNFePendentesEntrega_(idEntrega);
+  }catch(err){
+    if(area)area.textContent=String(err&&err.message?err.message:err);
+    mostrarToast(String(err&&err.message?err.message:err),true);
+  }finally{
+    input.disabled=false;
+    input.value="";
+  }
+}
+function renderizarResumoNFePendentesEntrega_(idEntrega){
+  const safeId=String(idEntrega).replace(/[^a-zA-Z0-9_-]/g,"");
+  const area=document.getElementById("resumoNFeEntrega-"+safeId);
   if(!area)return;
-  area.innerHTML=entregasParaNovaViagem_.map((d,i)=>
-    '<label class="trips-selected-stop"><span><strong>'+String(i+1).padStart(2,'0')+' · '+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.endereco||d.cidade||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small></span><input type="text" class="trips-delivery-nf" data-nf-entrega="'+escaparViagem_(d.idEntrega)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'"></label>'
-  ).join('');
+  const notas=notasFiscaisPendentesViagem_[idEntrega]||[];
+  area.innerHTML=notas.length?notas.map(n=>'<div class="trips-nfe-line"><span>✓ '+formatarResumoNFeViagem_(n.dados)+'</span><small>'+escaparViagem_(n.nomeArquivo)+'</small></div>').join(""):"Nenhum XML selecionado.";
+}
+async function liberarViagemFaturamentoUI_(viagemId){
+  if(!viagemId)return;
+  try{
+    const resposta=await chamarAPI_POST_({acao:"liberarViagem",dados:{viagemId:viagemId}});
+    if(!resposta||resposta.ok!==true)throw new Error(resposta&&(resposta.erro||resposta.error)?(resposta.erro||resposta.error):"Não foi possível liberar a viagem.");
+    mostrarToast((resposta.numero||"Viagem")+" liberada para a operação com "+resposta.totalEntregas+" entrega(s) e "+resposta.totalNFs+" NF(s).");
+    await carregarViagens_();
+  }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
+}
+
+
+async function adicionarNFeEmRascunhoUI_(input,viagemId,idEntrega){
+  if(!input||!viagemId||!idEntrega)return;
+  const arquivos=Array.from(input.files||[]);
+  if(!arquivos.length)return;
+  input.disabled=true;
+  let importadas=0,erros=[];
+  try{
+    for(const arquivo of arquivos){
+      if(!/\.xml$/i.test(arquivo.name)&&arquivo.type!=="text/xml"&&arquivo.type!=="application/xml")throw new Error("Selecione um arquivo XML válido: "+arquivo.name);
+      if(arquivo.size>5*1024*1024)throw new Error("O XML "+arquivo.name+" excede o limite de 5 MB.");
+      const xmlBase64=await arquivoComoBase64Viagem_(arquivo);
+      const analise=await chamarAPI_POST_({acao:"analisarXmlNFe",dados:{xmlBase64:xmlBase64,nomeArquivo:arquivo.name}});
+      if(!analise||analise.ok!==true)throw new Error(analise&&(analise.erro||analise.error)?(analise.erro||analise.error):"Não foi possível ler "+arquivo.name+".");
+      const salvo=await chamarAPI_POST_({acao:"salvarNFeViagem",dados:{viagemId:viagemId,idEntrega:idEntrega,xmlBase64:xmlBase64,nomeArquivo:arquivo.name}});
+      if(!salvo||salvo.ok!==true){erros.push((salvo&&(salvo.erro||salvo.error))||("Falha ao importar "+arquivo.name));continue;}
+      importadas++;
+    }
+    if(importadas)mostrarToast(importadas+" NF-e(s) vinculada(s) ao rascunho.");
+    if(erros.length)mostrarToast(erros.join(" · "),true);
+    await carregarViagens_();
+  }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
+  finally{input.disabled=false;input.value="";}
+}
+
+function renderizarResumoEntregasViagem_(){
+  const area=document.getElementById("viagensEntregasResumo");
+  if(!area)return;
+  const permiteXml=["ADMIN","FATURAMENTO"].includes(usuarioSessao_.role);
+  area.innerHTML=entregasParaNovaViagem_.map((d,i)=>{
+    const id=String(d.idEntrega||""),safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
+    const detalhe=escaparViagem_(d.endereco||d.cidade||"Endereço não informado")+" · "+dataViagemBR_(d.data)+" · "+escaparViagem_(d.periodo||"Sem período");
+    const editor=permiteXml
+      ?'<div class="trips-nfe-upload"><label>Notas fiscais XML<input type="file" accept=".xml,text/xml,application/xml" multiple data-xml-entrega="'+escaparViagem_(id)+'" onchange="analisarNFeArquivosUI_(this,this.dataset.xmlEntrega)"></label><div class="trips-nfe-summary" id="resumoNFeEntrega-'+safeId+'">Nenhum XML selecionado.</div></div>'
+      :'<input type="text" class="trips-delivery-nf" data-nf-entrega="'+escaparViagem_(id)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'">';
+    return '<article class="trips-selected-stop"><span><strong>'+String(i+1).padStart(2,"0")+' · '+escaparViagem_(d.cliente)+'</strong><small>'+detalhe+'</small></span>'+editor+'</article>';
+  }).join("");
 }
 async function salvarViagemUI_(event){
   event.preventDefault();
-  if(!modulosFrota_.viagens){mostrarToast('O módulo Viagens está desativado globalmente.',true);return;}
-  const btn=document.getElementById('btnSalvarViagem');
-  const veiculoId=document.getElementById('viagemVeiculo').value;
+  if(!modulosFrota_.viagens){mostrarToast("O módulo Viagens está desativado neste ambiente.",true);return;}
+  const btn=document.getElementById("btnSalvarViagem");
+  const role=usuarioSessao_.role;
+  const veiculoId=document.getElementById("viagemVeiculo").value;
   const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
-  if(!veiculo){mostrarToast('Selecione um veículo ativo.',true);return;}
-  if(!entregasParaNovaViagem_.length){mostrarToast('Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.',true);return;}
+  if(!veiculo){mostrarToast("Selecione um veículo ativo.",true);return;}
+  if(!entregasParaNovaViagem_.length&&!viagemRascunhoEmSalvamento_){mostrarToast("Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.",true);return;}
   const escolhidas=entregasParaNovaViagem_.map((d,i)=>{
     const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(d.idEntrega))+'"]');
-    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():'',ordem:i+1,d:d};
+    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():"",notas:notasFiscaisPendentesViagem_[d.idEntrega]||[],ordem:i+1,d:d};
   });
-  if(veiculo.propriedade==='TERCEIRIZADO'&&Number(document.getElementById('viagemValorNegociado').value)<=0){
-    mostrarToast('Informe o valor negociado por esta viagem.',true);return;
+  if(role==="FATURAMENTO"){
+    const semXml=escolhidas.filter(x=>!x.notas.length);
+    if(semXml.length){mostrarToast("Anexe ao menos uma NF-e XML para cada entrega. Pendentes: "+semXml.map(x=>x.d.cliente).join(", "),true);return;}
   }
-  btn.disabled=true;btn.textContent='Calculando rota...';
-  let rota=null;
-  const comCoordenadas=escolhidas.every(x=>x.d&&x.d.lat!==null&&x.d.lat!==undefined&&x.d.lng!==null&&x.d.lng!==undefined);
-  if(comCoordenadas&&escolhidas.length<=50){
-    try{
-      const res=await chamarAPI_POST_({acao:'sugerirRota',pontos:escolhidas.map(x=>({linha:x.d.linha,lat:x.d.lat,lng:x.d.lng}))});
-      if(res&&res.ok){
-        rota=res;
-        const ordenados=(res.ordem||[]).map(linha=>escolhidas.find(x=>Number(x.d.linha)===Number(linha))).filter(Boolean);
-        ordenados.forEach((x,i)=>x.ordem=i+1);
-        document.getElementById('viagemRotaResumo').textContent='Rota calculada: '+res.distanciaKm+' km · aproximadamente '+res.duracaoMin+' min, com saída e retorno à Perfinorte.';
-      }else{
-        document.getElementById('viagemRotaResumo').textContent='Não foi possível estimar a rota: '+(res&&res.erro?res.erro:'serviço indisponível')+'. A viagem poderá ser salva sem distância prevista.';
-      }
-    }catch(err){
-      document.getElementById('viagemRotaResumo').textContent='Roteirizador indisponível. A viagem poderá ser salva sem distância prevista.';
-    }
-  }else{
-    document.getElementById('viagemRotaResumo').textContent='Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.';
+  if(veiculo.propriedade==="TERCEIRIZADO"&&Number(document.getElementById("viagemValorNegociado").value)<=0){
+    mostrarToast("Informe o valor negociado por esta viagem.",true);return;
   }
-  if(!rota&&!confirm('Não foi possível calcular a rota. Deseja programar a viagem mesmo assim, sem estimativa de distância e custo por km?')){
-    btn.disabled=false;btn.textContent='Calcular rota e programar';return;
-  }
-  const dados={
-    data:document.getElementById('viagemData').value,
-    periodo:document.getElementById('viagemPeriodo').value,
-    veiculoId:veiculoId,
-    motorista:document.getElementById('viagemMotorista').value.trim(),
-    valorNegociado:veiculo.propriedade==='TERCEIRIZADO'?document.getElementById('viagemValorNegociado').value:'',
-    hodometroInicial:document.getElementById('viagemHodometroInicial').value,
-    pedagios:document.getElementById('viagemPedagios').value,
-    despesasExtras:document.getElementById('viagemExtras').value,
-    observacoes:document.getElementById('viagemObservacoes').value.trim(),
-    distanciaPrevistaKm:rota?rota.distanciaKm:null,
-    duracaoPrevistaMin:rota?rota.duracaoMin:null,
-    entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,nfs:x.nfs,ordem:x.ordem}))
-  };
+  btn.disabled=true;
   try{
-    const res=await chamarAPI_POST_({acao:'criarViagem',dados:dados});
-    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível programar a viagem.');
+    if(!viagemRascunhoEmSalvamento_){
+      btn.textContent="Calculando rota...";
+      let rota=null;
+      const comCoordenadas=escolhidas.every(x=>x.d&&x.d.lat!==null&&x.d.lat!==undefined&&x.d.lng!==null&&x.d.lng!==undefined);
+      if(comCoordenadas&&escolhidas.length<=50){
+        try{
+          const r=await chamarAPI_POST_({acao:"sugerirRota",pontos:escolhidas.map(x=>({linha:x.d.linha,lat:x.d.lat,lng:x.d.lng}))});
+          if(r&&r.ok){
+            rota=r;
+            const ordenados=(r.ordem||[]).map(linha=>escolhidas.find(x=>Number(x.d.linha)===Number(linha))).filter(Boolean);
+            ordenados.forEach((x,i)=>x.ordem=i+1);
+            document.getElementById("viagemRotaResumo").textContent="Rota calculada: "+r.distanciaKm+" km · aproximadamente "+r.duracaoMin+" min, com saída e retorno à Perfinorte.";
+          }else{
+            document.getElementById("viagemRotaResumo").textContent="Não foi possível estimar a rota: "+(r&&r.erro?r.erro:"serviço indisponível")+". A viagem poderá ser salva sem distância prevista.";
+          }
+        }catch(err){document.getElementById("viagemRotaResumo").textContent="Roteirizador indisponível. A viagem poderá ser salva sem distância prevista.";}
+      }else{
+        document.getElementById("viagemRotaResumo").textContent="Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.";
+      }
+      if(!rota&&!confirm("Não foi possível calcular a rota. Deseja salvar a viagem mesmo assim, sem estimativa de distância e custo por km?")){
+        btn.disabled=false;btn.textContent=role==="FATURAMENTO"?"Salvar rascunho e importar XML":"Calcular rota e programar";return;
+      }
+      const dados={
+        data:document.getElementById("viagemData").value,
+        periodo:document.getElementById("viagemPeriodo").value,
+        veiculoId:veiculoId,
+        motorista:document.getElementById("viagemMotorista").value.trim(),
+        valorNegociado:veiculo.propriedade==="TERCEIRIZADO"?document.getElementById("viagemValorNegociado").value:"",
+        hodometroInicial:document.getElementById("viagemHodometroInicial").value,
+        pedagios:document.getElementById("viagemPedagios").value,
+        despesasExtras:document.getElementById("viagemExtras").value,
+        observacoes:document.getElementById("viagemObservacoes").value.trim(),
+        distanciaPrevistaKm:rota?rota.distanciaKm:null,
+        duracaoPrevistaMin:rota?rota.duracaoMin:null,
+        entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,nfs:x.nfs,ordem:x.ordem}))
+      };
+      btn.textContent="Criando viagem...";
+      const created=await chamarAPI_POST_({acao:"criarViagem",dados:dados});
+      if(!created||created.ok!==true)throw new Error(created&&(created.erro||created.error)?(created.erro||created.error):"Não foi possível criar a viagem.");
+      viagemRascunhoEmSalvamento_={id:created.id,numero:created.numero,uploadedKeys:[],totalEntregas:created.totalEntregas};
+    }
+    const viagem=viagemRascunhoEmSalvamento_;
+    const notasParaEnviar=escolhidas.flatMap(x=>x.notas.map(n=>({idEntrega:x.idEntrega,nota:n})));
+    const pendentes=notasParaEnviar.filter(x=>!viagem.uploadedKeys.includes(x.nota.dados.chaveAcesso));
+    if(pendentes.length){
+      const falhas=[];
+      for(let i=0;i<pendentes.length;i++){
+        const item=pendentes[i];
+        btn.textContent="Importando XML "+(i+1)+"/"+pendentes.length+"...";
+        const resposta=await chamarAPI_POST_({acao:"salvarNFeViagem",dados:{
+          viagemId:viagem.id,idEntrega:item.idEntrega,xmlBase64:item.nota.xmlBase64,nomeArquivo:item.nota.nomeArquivo
+        }});
+        if(!resposta||resposta.ok!==true)falhas.push((resposta&&(resposta.erro||resposta.error))||("Falha ao importar "+item.nota.nomeArquivo));
+        else viagem.uploadedKeys.push(item.nota.dados.chaveAcesso);
+      }
+      if(falhas.length){
+        btn.textContent="Tentar novamente";
+        mostrarToast("A viagem "+viagem.numero+" foi criada, mas "+falhas.length+" XML(s) não foram vinculados. Clique em Tentar novamente após corrigir. "+falhas.join(" · "),true);
+        btn.disabled=false;
+        return;
+      }
+    }
+    const quantidadeNFs=viagem.uploadedKeys.length;
+    const numeroViagem=viagem.numero, totalEntregas=viagem.totalEntregas;
     entregasSelecionadasViagem_.clear();
     entregasParaNovaViagem_=[];
     fecharModalViagem_();
     renderTabela();
-    mostrarToast(res.numero+' programada com '+res.totalEntregas+' entrega(s).');
-    mostrarView('viagens');
-  }catch(err){mostrarToast(err.message||String(err),true);}
-  finally{btn.disabled=false;btn.textContent='Calcular rota e programar';}
+    mostrarView("viagens");
+    await carregarViagens_();
+    mostrarToast(role==="FATURAMENTO"
+      ?numeroViagem+" salva como rascunho com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF(s). Revise e libere para a operação."
+      :numeroViagem+" programada com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF(s).");
+  }catch(err){mostrarToast(err&&err.message?err.message:String(err),true);}
+  finally{
+    if(document.getElementById("btnSalvarViagem")){
+      btn.disabled=false;
+      if(viagemRascunhoEmSalvamento_)btn.textContent="Tentar novamente";
+      else btn.textContent=role==="FATURAMENTO"?"Salvar rascunho e importar XML":"Calcular rota e programar";
+    }
+  }
 }
 async function alterarStatusViagemUI_(id,status){
   if(status==='EM_ANDAMENTO'&&!confirm('Registrar a saída desta viagem e iniciar o acompanhamento?'))return;
@@ -6458,7 +6809,9 @@ function alternarSelecaoEntregaViagemTabela_(id,marcado){
   if(!chave)return;
   if(marcado)entregasSelecionadasViagem_.add(chave);
   else entregasSelecionadasViagem_.delete(chave);
-  renderTabela();
+  renderizarEntregasDisponiveisViagem_();
+  atualizarControlesSelecaoViagemTabela_([]);
+  if(modoAtual==="tabela")renderTabela();
 }
 function selecionarTodasVisiveisViagemTabela_(marcado){
   document.querySelectorAll('#tabelaContainer .td-selecionar-viagem:not(:disabled)').forEach(el=>{
@@ -6467,7 +6820,9 @@ function selecionarTodasVisiveisViagemTabela_(marcado){
     if(marcado)entregasSelecionadasViagem_.add(id);
     else entregasSelecionadasViagem_.delete(id);
   });
-  renderTabela();
+  renderizarEntregasDisponiveisViagem_();
+  atualizarControlesSelecaoViagemTabela_([]);
+  if(modoAtual==="tabela")renderTabela();
 }
 function selecionarVisiveisViagemTabela_(){selecionarTodasVisiveisViagemTabela_(true);}
 function limparSelecaoViagemTabela_(){entregasSelecionadasViagem_.clear();renderTabela();}
@@ -6490,6 +6845,10 @@ function atualizarControlesSelecaoViagemTabela_(lista){
     btn.disabled=!total;
     btn.title=total?'Abrir programação para as entregas marcadas':'Marque ao menos uma entrega válida para habilitar';
   }
+  const menuCount=document.getElementById("viagensEntregasSelecionadas");
+  const menuButton=document.getElementById("btnCriarViagemMenu");
+  if(menuCount)menuCount.textContent=String(total);
+  if(menuButton)menuButton.disabled=!total;
   const elegiveis=(lista||[]).filter(d=>!motivoInelegibilidadeViagemTabela_(d));
   const selecionadasVisiveis=elegiveis.filter(d=>entregasSelecionadasViagem_.has(String(d.idEntrega))).length;
   if(header){
