@@ -2838,6 +2838,35 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .fleet-dashboard-kicker{color:#2d8192;font:750 9px var(--font-mono);letter-spacing:.17em;}
 .fleet-dashboard-header h2{margin:5px 0 4px;color:#1b3045;font-size:22px;letter-spacing:-.035em;}
 .fleet-dashboard-header p{margin:0;color:#708096;font-size:11px;line-height:1.5;}
+.fleet-module-manager{margin:0 0 16px;padding:15px 17px;border:1px solid #dce6ed;border-radius:14px;background:linear-gradient(120deg,#fff 0%,#f8fbfd 100%);box-shadow:0 4px 15px rgba(22,43,62,.035);}
+.fleet-module-manager-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.fleet-module-manager-kicker{display:block;margin-bottom:4px;color:#7d98a6;font:750 8px var(--font-mono);letter-spacing:.15em;}
+.fleet-module-manager-head h3{margin:0;color:#263d52;font-size:12px;font-weight:850;}
+.fleet-module-manager-head p{margin:4px 0 0;color:#8291a1;font-size:9px;line-height:1.45;}
+.fleet-module-manager-note{flex:none;color:#8193a2;font-size:8.5px;text-align:right;}
+.fleet-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.fleet-module-option{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid #e1e9ef;border-radius:10px;background:#fbfdfe;transition:border-color .15s,background .15s;}
+.fleet-module-option.is-on{border-color:#cfe4dd;background:#f7fbf9;}
+.fleet-module-option-copy{display:flex;align-items:center;gap:10px;min-width:0;}
+.fleet-module-option-icon{width:31px;height:31px;flex:0 0 31px;display:grid;place-items:center;border-radius:9px;background:#edf3f6;color:#4b7084;font-size:14px;}
+.fleet-module-option.is-on .fleet-module-option-icon{background:#e6f4ed;color:#21815e;}
+.fleet-module-option-copy>span:last-child{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.fleet-module-option-copy strong{color:#30475d;font-size:10px;font-weight:850;}
+.fleet-module-option-copy small{color:#8997a5;font-size:8.5px;line-height:1.35;}
+.fleet-module-option-state{display:block;margin-top:2px;color:#8997a5;font-size:8px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;}
+.fleet-module-option.is-on .fleet-module-option-state{color:#23805d;}
+.fleet-module-switch{position:relative;display:inline-flex;align-items:center;flex:none;cursor:pointer;}
+.fleet-module-switch input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;}
+.fleet-module-switch-track{position:relative;width:39px;height:22px;display:block;border-radius:99px;background:#cbd5df;transition:background .18s ease;}
+.fleet-module-switch-track:after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,35,50,.2);transition:transform .18s ease;}
+.fleet-module-switch input:checked+.fleet-module-switch-track{background:#218765;}
+.fleet-module-switch input:checked+.fleet-module-switch-track:after{transform:translateX(17px);}
+.fleet-module-switch input:focus-visible+.fleet-module-switch-track{outline:3px solid rgba(43,132,151,.24);outline-offset:2px;}
+.fleet-module-switch input:disabled+.fleet-module-switch-track{opacity:.55;cursor:wait;}
+.fleet-module-manager-footer{display:flex;justify-content:space-between;gap:10px;margin-top:10px;color:#8a98a6;font-size:8px;line-height:1.4;}
+#railVehiclesView[hidden],#railTripsView[hidden]{display:none!important;}
+#app.modulo-viagens-desativado .tabela-viagem-actions,#app.modulo-viagens-desativado .th-selecao-viagem,#app.modulo-viagens-desativado .td-selecao-viagem{display:none!important;}
+@media(max-width:650px){.fleet-module-grid{grid-template-columns:1fr;}.fleet-module-manager-head{flex-direction:column;}.fleet-module-manager-note{text-align:left;}.fleet-module-manager-footer{flex-direction:column;}}
 .fleet-dashboard-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;}
 .fleet-refresh-button{
   height:39px;padding:0 13px;border:1px solid #d3e0e8;border-radius:9px;
@@ -3477,6 +3506,43 @@ button,input,select,textarea{font-family:var(--font-ui);}
               <button type="button" class="fleet-refresh-button" onclick="carregarVeiculos_()">↻ Atualizar frota</button>
             </div>
           </header>
+
+          <section class="fleet-module-manager" aria-label="Ativação global dos módulos de frota">
+            <div class="fleet-module-manager-head">
+              <div>
+                <span class="fleet-module-manager-kicker">CONFIGURAÇÃO GLOBAL</span>
+                <h3>Módulos operacionais</h3>
+                <p>Ative apenas os recursos que devem ficar disponíveis na navegação da plataforma.</p>
+              </div>
+              <span class="fleet-module-manager-note">Aplicação para todos os usuários</span>
+            </div>
+            <div class="fleet-module-grid">
+              <article class="fleet-module-option" id="opcaoModuloVeiculos">
+                <div class="fleet-module-option-copy">
+                  <span class="fleet-module-option-icon" aria-hidden="true">▰</span>
+                  <span><strong>Veículos</strong><small>Cadastro, edição, situação e parâmetros de custo</small><span class="fleet-module-option-state" id="estadoModuloVeiculos">Desativado</span></span>
+                </div>
+                <label class="fleet-module-switch" title="Ativar ou desativar o módulo Veículos">
+                  <input id="toggleModuloVeiculos" type="checkbox" role="switch" aria-label="Ativar módulo Veículos" onchange="alternarModuloFrota_('veiculos',this)">
+                  <span class="fleet-module-switch-track"></span>
+                </label>
+              </article>
+              <article class="fleet-module-option" id="opcaoModuloViagens">
+                <div class="fleet-module-option-copy">
+                  <span class="fleet-module-option-icon" aria-hidden="true">▦</span>
+                  <span><strong>Viagens</strong><small>Programação, paradas, ocorrências e custos por viagem</small><span class="fleet-module-option-state" id="estadoModuloViagens">Desativado</span></span>
+                </div>
+                <label class="fleet-module-switch" title="Ativar ou desativar o módulo Viagens">
+                  <input id="toggleModuloViagens" type="checkbox" role="switch" aria-label="Ativar módulo Viagens" onchange="alternarModuloFrota_('viagens',this)">
+                  <span class="fleet-module-switch-track"></span>
+                </label>
+              </article>
+            </div>
+            <footer class="fleet-module-manager-footer">
+              <span>Os módulos começam desativados por padrão.</span>
+              <span id="estadoConfigModulosFrota">Usando padrão global desativado</span>
+            </footer>
+          </section>
 
           <div id="dashFrotaKpis" class="fleet-dashboard-kpis" aria-label="Indicadores da frota">
             <div class="fleet-dashboard-loading">Carregando indicadores da frota...</div>
@@ -5215,6 +5281,7 @@ function ajustarCombustivelVeiculo_(){
 }
 async function salvarVeiculoUI_(event){
   event.preventDefault();
+  if(!modulosFrota_.veiculos){mostrarToast('O módulo Veículos está desativado globalmente.',true);return;}
   const btn=document.getElementById('btnSalvarVeiculo');
   btn.disabled=true;btn.textContent='Salvando...';
   const dados={
@@ -5282,6 +5349,89 @@ async function alternarSituacaoVeiculo_(id,ativo){
 
 /* ===== DASHBOARD: ALTERNÂNCIA ENTRE ENTREGAS E FROTA ===== */
 let painelDashboardAtual_ = 'entregas';
+let modulosFrota_ = { veiculos: false, viagens: false };
+let modulosFrotaCarregados_ = false;
+let modulosFrotaSalvando_ = false;
+let timerConfigModulosFrota_ = null;
+
+function renderizarControlesModulosFrota_(){
+  const defs=[
+    {key:'veiculos',toggle:'toggleModuloVeiculos',card:'opcaoModuloVeiculos',status:'estadoModuloVeiculos'},
+    {key:'viagens',toggle:'toggleModuloViagens',card:'opcaoModuloViagens',status:'estadoModuloViagens'}
+  ];
+  defs.forEach(d=>{
+    const ativo=modulosFrota_[d.key]===true;
+    const toggle=document.getElementById(d.toggle);
+    const card=document.getElementById(d.card);
+    const status=document.getElementById(d.status);
+    if(toggle){toggle.checked=ativo;toggle.disabled=modulosFrotaSalvando_;}
+    if(card)card.classList.toggle('is-on',ativo);
+    if(status)status.textContent=ativo?'Ativado':'Desativado';
+  });
+  const rodape=document.getElementById('estadoConfigModulosFrota');
+  if(rodape)rodape.textContent=modulosFrotaSalvando_?'Salvando configuração global...':
+    (modulosFrotaCarregados_?'Configuração global sincronizada':'Usando padrão global desativado');
+}
+
+function aplicarVisibilidadeModulosFrota_(){
+  const btnV=document.getElementById('railVehiclesView');
+  const btnT=document.getElementById('railTripsView');
+  const app=document.getElementById('app');
+  if(btnV)btnV.hidden=!modulosFrota_.veiculos;
+  if(btnT)btnT.hidden=!modulosFrota_.viagens;
+  if(app)app.classList.toggle('modulo-viagens-desativado',!modulosFrota_.viagens);
+}
+
+async function carregarConfigModulosFrota_(silencioso){
+  if(modulosFrotaSalvando_)return false;
+  try{
+    const res=await chamarAPI_GET_({formato:'configModulosFrota'});
+    if(!res||res.ok!==true||!res.modulos)throw new Error((res&&(res.erro||res.error))||'Resposta de configuração inválida.');
+    modulosFrota_={veiculos:res.modulos.veiculos===true,viagens:res.modulos.viagens===true};
+    modulosFrotaCarregados_=true;
+    renderizarControlesModulosFrota_();
+    aplicarVisibilidadeModulosFrota_();
+    if(modoAtual==='veiculos'&&!modulosFrota_.veiculos)mostrarView('dashboard');
+    if(modoAtual==='viagens'&&!modulosFrota_.viagens)mostrarView('dashboard');
+    return true;
+  }catch(err){
+    if(!modulosFrotaCarregados_){
+      modulosFrota_={veiculos:false,viagens:false};
+      renderizarControlesModulosFrota_();
+      aplicarVisibilidadeModulosFrota_();
+    }
+    if(!silencioso)mostrarToast('Não foi possível ler a configuração global dos módulos: '+String(err&&err.message?err.message:err),true);
+    return false;
+  }
+}
+
+async function alternarModuloFrota_(nome,toggle){
+  if(!['veiculos','viagens'].includes(nome)||modulosFrotaSalvando_)return;
+  const anterior={...modulosFrota_};
+  const nova={...modulosFrota_,[nome]:toggle.checked===true};
+  modulosFrotaSalvando_=true;
+  renderizarControlesModulosFrota_();
+  try{
+    const res=await chamarAPI_POST_({acao:'salvarConfigModulosFrota',modulos:nova});
+    if(!res||res.ok!==true||!res.modulos)throw new Error((res&&(res.erro||res.error))||'Não foi possível gravar a configuração global.');
+    modulosFrota_={veiculos:res.modulos.veiculos===true,viagens:res.modulos.viagens===true};
+    modulosFrotaCarregados_=true;
+    aplicarVisibilidadeModulosFrota_();
+    renderizarControlesModulosFrota_();
+    if((modoAtual==='veiculos'&&!modulosFrota_.veiculos)||(modoAtual==='viagens'&&!modulosFrota_.viagens)){
+      mostrarView('dashboard');
+      alternarPainelDashboard_('frota');
+    }
+    mostrarToast((nome==='veiculos'?'Veículos':'Viagens')+' '+(modulosFrota_[nome]?'ativado':'desativado')+' globalmente.');
+  }catch(err){
+    modulosFrota_=anterior;
+    aplicarVisibilidadeModulosFrota_();
+    mostrarToast('Não foi possível salvar a configuração global: '+String(err&&err.message?err.message:err),true);
+  }finally{
+    modulosFrotaSalvando_=false;
+    renderizarControlesModulosFrota_();
+  }
+}
 
 function alternarPainelDashboard_(painel){
   if(painel!=='entregas'&&painel!=='frota')return;
@@ -5493,6 +5643,7 @@ function aplicarIdsEstaveisNasEntregas_(){
   });
 }
 function carregarViagens_(){
+  if(!modulosFrota_.viagens)return Promise.resolve(false);
   // Chamadas simultâneas compartilham a mesma requisição. Assim, o botão
   // de programar aguarda a consulta iniciada ao abrir a tabela, em vez de
   // desistir enquanto ela ainda está carregando.
@@ -5610,6 +5761,7 @@ function toggleParadasViagem_(id){
   if(el)el.hidden=!el.hidden;
 }
 async function abrirModalViagem_(){
+  if(!modulosFrota_.viagens){mostrarToast('O módulo Viagens está desativado globalmente.',true);return;}
   if(!entregasSelecionadasViagem_.size){
     mostrarToast('Marque ao menos uma entrega válida na tabela antes de programar a viagem.',true);
     return;
@@ -5694,6 +5846,7 @@ function renderizarResumoEntregasViagem_(){
 }
 async function salvarViagemUI_(event){
   event.preventDefault();
+  if(!modulosFrota_.viagens){mostrarToast('O módulo Viagens está desativado globalmente.',true);return;}
   const btn=document.getElementById('btnSalvarViagem');
   const veiculoId=document.getElementById('viagemVeiculo').value;
   const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
@@ -5927,6 +6080,14 @@ async function salvarAcaoViagemUI_(event){
 }
 
 function mostrarView(modo){
+  if(modo==='veiculos'&&!modulosFrota_.veiculos){
+    mostrarToast('O módulo Veículos está desativado globalmente. Ative-o em Dashboard > Gestão de frota.',true);
+    modo='dashboard';painelDashboardAtual_='frota';
+  }
+  if(modo==='viagens'&&!modulosFrota_.viagens){
+    mostrarToast('O módulo Viagens está desativado globalmente. Ative-o em Dashboard > Gestão de frota.',true);
+    modo='dashboard';painelDashboardAtual_='frota';
+  }
   modoAtual = modo;
   const mapa = modo === 'mapa';
   const tabela = modo === 'tabela';
@@ -6857,10 +7018,11 @@ function iniciarAtualizacaoAutomatica_(){
   timerEntregas_ = setInterval(carregarEntregas, INTERVALO_ATUALIZACAO_MS);
   timerConfirmacoes_ = setInterval(carregarConfirmacoesPendentes, INTERVALO_ATUALIZACAO_MS);
   timerLocalizacoes_ = setInterval(carregarLocalizacoesMotoristas, 15000);
+  if(timerConfigModulosFrota_===null)timerConfigModulosFrota_=setInterval(()=>carregarConfigModulosFrota_(true),60000);
 }
 function pararAtualizacaoAutomatica_(){
-  clearInterval(timerEntregas_); clearInterval(timerConfirmacoes_); clearInterval(timerLocalizacoes_);
-  timerEntregas_ = timerConfirmacoes_ = timerLocalizacoes_ = null;
+  clearInterval(timerEntregas_); clearInterval(timerConfirmacoes_); clearInterval(timerLocalizacoes_); clearInterval(timerConfigModulosFrota_);
+  timerEntregas_ = timerConfirmacoes_ = timerLocalizacoes_ = timerConfigModulosFrota_ = null;
 }
 function iniciarMapaUmaVez_(){
   if (mapaJaInicializado_) { iniciarAtualizacaoAutomatica_(); return; }
@@ -6892,6 +7054,7 @@ async function enviarLogin_(e){
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
     await carregarConfigMotivoAtraso_();
+    await carregarConfigModulosFrota_();
     iniciarMapaUmaVez_();
   } catch(err) {
     msg.textContent = err.message || 'Não foi possível entrar.';
@@ -6906,6 +7069,7 @@ async function iniciarAutenticacao_(){
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
     await carregarConfigMotivoAtraso_();
+    await carregarConfigModulosFrota_();
     iniciarMapaUmaVez_();
   } else {
     TOKEN_SESSAO = '';
