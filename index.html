@@ -6275,32 +6275,40 @@ async function salvarXmlNFeViagemUI_(event){
   const validos=arquivosNFePendentes_.filter(x=>x.status==='PRONTA');
   if(!validos.length)return;
   btn.disabled=true;
+  const numeroViagem=viagemNFeAtual_.numero;
   let salvos=0, falhas=[];
-  try{
-    const numeroViagem=viagemNFeAtual_.numero;
-    for(let i=0;i<validos.length;i++){
-      const nfe=validos[i];
-      btn.textContent='Vinculando '+(i+1)+' de '+validos.length+'...';
+  for(let i=0;i<validos.length;i++){
+    const nfe=validos[i];
+    btn.textContent='Vinculando '+(i+1)+' de '+validos.length+'...';
+    try{
       const res=await chamarAPI_POST_({acao:'salvarNFeViagem',dados:{
         viagemId:viagemNFeAtual_.id,chave:nfe.chave,numero:nfe.numero,serie:nfe.serie,
         emissao:nfe.emissao,emitente:nfe.emitente,emitenteCnpj:nfe.emitenteCnpj,
         destinatario:nfe.destinatario,destinatarioDocumento:nfe.destinatarioDocumento,
         valorTotal:nfe.valorTotal,arquivoNome:nfe.arquivoNome,xml:nfe.xml
       }});
-      if(!res||!res.ok)throw new Error((nfe.arquivoNome||'XML')+': '+(res&&(res.erro||res.error)?(res.erro||res.error):'não foi possível salvar.'));
+      if(!res||!res.ok)throw new Error(res&&(res.erro||res.error)?(res.erro||res.error):'Não foi possível salvar este XML.');
+      nfe.status='VINCULADA';
       salvos++;
+    }catch(err){
+      nfe.status='ERRO';
+      nfe.erro=(nfe.arquivoNome||'XML')+': '+String(err&&err.message?err.message:err);
+      falhas.push(nfe.erro);
     }
-    fecharModalNFeViagem_();
-    await carregarViagens_();
-    mostrarToast(salvos+' XML(s) vinculado(s) à viagem '+(numeroViagem||'')+'.');
-  }catch(err){
-    falhas.push(String(err&&err.message?err.message:err));
-    const box=document.getElementById('nfeXmlErro');
-    box.textContent=salvos+' XML(s) vinculados. '+falhas.join(' ');
-    box.hidden=false;
-    btn.disabled=false;
-    renderizarPreviewNFeViagem_();
   }
+  if(salvos)await carregarViagens_();
+  if(falhas.length||arquivosNFePendentes_.some(x=>x.status==='ERRO')){
+    arquivosNFePendentes_=arquivosNFePendentes_.filter(x=>x.status!=='VINCULADA');
+    renderizarPreviewNFeViagem_();
+    const box=document.getElementById('nfeXmlErro');
+    box.textContent=salvos+' XML(s) vinculados. '+(falhas.length?falhas.join(' '):'Corrija os arquivos inválidos restantes.');
+    box.hidden=false;
+    btn.disabled=!arquivosNFePendentes_.some(x=>x.status==='PRONTA');
+    if(salvos)mostrarToast(salvos+' XML(s) vinculado(s). Confira os arquivos pendentes.');
+    return;
+  }
+  fecharModalNFeViagem_();
+  mostrarToast(salvos+' XML(s) vinculado(s) à viagem '+(numeroViagem||'')+'.');
 }
 function renderizarResumoNFeViagem_(viagem){
   const docs=Array.isArray(viagem.notasFiscais)?viagem.notasFiscais:[];
@@ -6319,7 +6327,7 @@ async function removerNFeViagemUI_(viagemId,chave){
 }
 async function baixarXmlNFeViagemUI_(viagemId,chave,nomeArquivo){
   try{
-    const qs=new URLSearchParams({viagemId:viagemId,chave:chave}).toString();
+    const qs=new URLSearchParams({viagemId:viagemId,chave:chave,ambiente:'TESTE'}).toString();
     const resp=await fetch(API_BASE+'/api/nfe-xml?'+qs,{cache:'no-store',headers:{'Authorization':'Bearer '+TOKEN_SESSAO}});
     if(!resp.ok){const msg=await resp.text();throw new Error(msg||'Não foi possível baixar o XML.');}
     const blob=await resp.blob();
