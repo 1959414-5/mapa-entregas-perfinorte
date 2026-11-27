@@ -1933,6 +1933,24 @@ button,input,select,textarea{font-family:var(--font-ui);}
   }
 
 
+
+.session-context-chip{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border:1px solid #dbe5ed;border-radius:999px;background:#f6f9fb;color:#587087;font-size:9px;font-weight:850;letter-spacing:.06em;white-space:nowrap}
+.session-context-chip.is-test{border-color:#e8c98b;background:#fff8e9;color:#9a6a22}
+.fleet-env-picker{display:flex;flex-direction:column;gap:5px;color:#61778b;font-size:9px;font-weight:800}
+.fleet-env-picker select{min-width:190px;height:34px;padding:0 10px;border:1px solid #dce5ec;border-radius:8px;background:#fff;color:#2c465d;font:700 10px var(--font-ui)}
+.fleet-module-grid-modes{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fleet-module-grid-modes .fleet-module-option{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+.fleet-module-modes{display:flex;flex-direction:column;gap:8px;padding-top:9px;border-top:1px solid #e7edf2}
+.fleet-module-modes label{display:grid;grid-template-columns:15px minmax(0,1fr);gap:7px;align-items:center;color:#435c72;font-size:9px;font-weight:800}
+.fleet-module-modes label input{margin:0;accent-color:#247d90}
+.fleet-module-modes label small{grid-column:2;color:#8998a7;font-size:7.5px;font-weight:600}
+.fleet-module-modes input:disabled{opacity:.5}
+.environment-test-banner{display:flex;flex-direction:column;gap:4px;margin:0 0 16px;padding:12px 15px;border:1px solid #efd5a5;border-radius:10px;background:#fff9ed;color:#8d662c;font-size:10px}
+.environment-test-banner strong{font-size:9px;letter-spacing:.08em}
+.environment-test-banner span{color:#8f7a58;line-height:1.4}
+@media(max-width:900px){.fleet-module-grid-modes{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.fleet-module-grid-modes{grid-template-columns:1fr}.fleet-module-manager-head{align-items:flex-start;flex-direction:column}.fleet-env-picker,.fleet-env-picker select{width:100%}.session-context-chip{font-size:8px}}
+
 </style>
 <style>
 
@@ -3368,7 +3386,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
             <h1 id="dashboardTitulo">Inteligência de entregas</h1>
             <p id="dashboardSubtitulo">Visão estratégica da distribuição, carteira de clientes e eficiência da expedição.</p>
           </div>
-          <div class="dashboard-header-actions">
+          <div class="dashboard-header-actions"><span id="contextoSessao" class="session-context-chip">OPERACIONAL · PRODUÇÃO</span>
             <span id="dashboardGeradoEm"></span>
             <label class="dashboard-reason-toggle" title="Ativa ou desativa a exigência de justificativa ao concluir uma entrega atrasada">
               <span class="dashboard-reason-copy"><strong>Motivos de atraso</strong><small id="statusMotivoAtraso">Ativado</small></span>
@@ -3509,43 +3527,28 @@ button,input,select,textarea{font-family:var(--font-ui);}
             </div>
           </header>
 
-          <section class="fleet-module-manager" aria-label="Ativação global dos módulos de frota">
+          <section id="fleetModuleManager" class="fleet-module-manager" aria-label="Configuração dos módulos por ambiente">
             <div class="fleet-module-manager-head">
-              <div>
-                <span class="fleet-module-manager-kicker">CONFIGURAÇÃO GLOBAL</span>
-                <h3>Módulos operacionais</h3>
-                <p>Ative apenas os recursos que devem ficar disponíveis na navegação da plataforma.</p>
-              </div>
-              <span class="fleet-module-manager-note">Aplicação para todos os usuários</span>
+              <div><span class="fleet-module-manager-kicker">ADMINISTRAÇÃO · CONTROLE DE ACESSO</span><h3>Módulos e ambientes</h3><p>Teste libera somente para ADMIN. Produção libera o módulo aos perfis autorizados.</p></div>
+              <label class="fleet-env-picker">Ambiente em uso<select id="selectAmbienteMapa" onchange="alterarAmbienteAdmin_(this.value)"><option value="PRODUCAO">Produção</option><option value="TESTE">Somente modo teste</option></select></label>
             </div>
-            <div class="fleet-module-grid">
+            <div class="fleet-module-grid fleet-module-grid-modes">
               <article class="fleet-module-option" id="opcaoModuloVeiculos">
-                <div class="fleet-module-option-copy">
-                  <span class="fleet-module-option-icon" aria-hidden="true">▰</span>
-                  <span><strong>Veículos</strong><small>Cadastro, edição, situação e parâmetros de custo</small><span class="fleet-module-option-state" id="estadoModuloVeiculos">Desativado</span></span>
-                </div>
-                <label class="fleet-module-switch" title="Ativar ou desativar o módulo Veículos">
-                  <input id="toggleModuloVeiculos" type="checkbox" role="switch" aria-label="Ativar módulo Veículos" onchange="alternarModuloFrota_('veiculos',this)">
-                  <span class="fleet-module-switch-track"></span>
-                </label>
+                <div class="fleet-module-option-copy"><span class="fleet-module-option-icon">▰</span><span><strong>Veículos</strong><small>Cadastro e parâmetros da frota</small></span></div>
+                <div class="fleet-module-modes"><label><input id="toggleModuloVeiculosTeste" type="checkbox" onchange="alternarModuloFrota_('veiculos','teste',this)"> Teste <small>ADMIN</small></label><label><input id="toggleModuloVeiculosProducao" type="checkbox" onchange="alternarModuloFrota_('veiculos','producao',this)"> Produção <small>todos os perfis permitidos</small></label></div>
               </article>
               <article class="fleet-module-option" id="opcaoModuloViagens">
-                <div class="fleet-module-option-copy">
-                  <span class="fleet-module-option-icon" aria-hidden="true">▦</span>
-                  <span><strong>Viagens</strong><small>Programação, paradas, ocorrências e custos por viagem</small><span class="fleet-module-option-state" id="estadoModuloViagens">Desativado</span></span>
-                </div>
-                <label class="fleet-module-switch" title="Ativar ou desativar o módulo Viagens">
-                  <input id="toggleModuloViagens" type="checkbox" role="switch" aria-label="Ativar módulo Viagens" onchange="alternarModuloFrota_('viagens',this)">
-                  <span class="fleet-module-switch-track"></span>
-                </label>
+                <div class="fleet-module-option-copy"><span class="fleet-module-option-icon">▦</span><span><strong>Viagens</strong><small>Programação, paradas e ocorrências</small></span></div>
+                <div class="fleet-module-modes"><label><input id="toggleModuloViagensTeste" type="checkbox" onchange="alternarModuloFrota_('viagens','teste',this)"> Teste <small>ADMIN</small></label><label><input id="toggleModuloViagensProducao" type="checkbox" onchange="alternarModuloFrota_('viagens','producao',this)"> Produção <small>todos os perfis permitidos</small></label></div>
+              </article>
+              <article class="fleet-module-option" id="opcaoModuloMotivosAtraso">
+                <div class="fleet-module-option-copy"><span class="fleet-module-option-icon">!</span><span><strong>Justificativas de atraso</strong><small>Exigir motivo ao concluir entrega atrasada</small></span></div>
+                <div class="fleet-module-modes"><label><input id="toggleMotivosAtrasoTeste" type="checkbox" onchange="alternarModuloFrota_('motivosAtraso','teste',this)"> Teste <small>ADMIN</small></label><label><input id="toggleMotivosAtrasoProducao" type="checkbox" onchange="alternarModuloFrota_('motivosAtraso','producao',this)"> Produção <small>todos os perfis permitidos</small></label></div>
               </article>
             </div>
-            <footer class="fleet-module-manager-footer">
-              <span>Os módulos começam desativados por padrão.</span>
-              <span id="estadoConfigModulosFrota">Usando padrão global desativado</span>
-            </footer>
+            <footer class="fleet-module-manager-footer"><span>Testes e produção usam dados de viagens/veículos separados.</span><span id="estadoConfigModulosFrota">Carregando configuração...</span></footer>
           </section>
-
+          <div id="ambienteTesteAviso" class="environment-test-banner" hidden><strong>AMBIENTE DE TESTE</strong><span>Viagens, paradas, ocorrências e veículos são gravados em abas separadas. As entregas reais são somente leitura neste ambiente.</span></div>
           <div id="dashFrotaKpis" class="fleet-dashboard-kpis" aria-label="Indicadores da frota">
             <div class="fleet-dashboard-loading">Carregando indicadores da frota...</div>
           </div>
@@ -4726,6 +4729,7 @@ function formatarDataEntradaTabela_(valor){
    GitHub Pages — então TUDO passa por fetch(), nunca google.script.run). ===== */
 async function chamarAPI_GET_(params){
   const comCacheBusting = Object.assign({}, params, { _t: Date.now() });
+  if(usuarioSessao_.role==="ADMIN")comCacheBusting.ambiente=ambienteAtual_;
   const qs = new URLSearchParams(comCacheBusting).toString();
   const resp = await fetch(API_URL + '?' + qs, {
     cache: 'no-store',
@@ -4735,13 +4739,15 @@ async function chamarAPI_GET_(params){
   return await resp.json();
 }
 async function chamarAPI_POST_(corpo){
+  const payload=Object.assign({},corpo||{});
+  if(usuarioSessao_.role==="ADMIN")payload._ambiente=ambienteAtual_;
   const resp = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/plain;charset=utf-8',
       'Authorization': 'Bearer ' + TOKEN_SESSAO
     },
-    body: JSON.stringify(corpo)
+    body: JSON.stringify(payload)
   });
   if (resp.status === 401) { encerrarSessao_(); throw new Error('Sessão inválida ou expirada.'); }
   return await resp.json();
@@ -5353,93 +5359,81 @@ async function alternarSituacaoVeiculo_(id,ativo){
 
 /* ===== DASHBOARD: ALTERNÂNCIA ENTRE ENTREGAS E FROTA ===== */
 let painelDashboardAtual_ = 'entregas';
+let usuarioSessao_ = { role: "OPERACIONAL", user: "" };
+let ambienteAtual_ = "PRODUCAO";
+let configModulosFrota_ = {
+  veiculos: { teste: false, producao: false },
+  viagens: { teste: false, producao: false },
+  motivosAtraso: { teste: false, producao: false }
+};
 let modulosFrota_ = { veiculos: false, viagens: false };
 let modulosFrotaCarregados_ = false;
 let modulosFrotaSalvando_ = false;
 let timerConfigModulosFrota_ = null;
 
+function atualizarContextoSessaoUI_(){
+  const role=String(usuarioSessao_.role||"OPERACIONAL").toUpperCase(),env=role==="ADMIN"?ambienteAtual_:"PRODUCAO";
+  const labels={ADMIN:"ADMIN",OPERACIONAL:"OPERACIONAL",FATURAMENTO:"FATURAMENTO"},chip=document.getElementById("contextoSessao");
+  if(chip){chip.textContent=(labels[role]||"OPERACIONAL")+" · "+(env==="TESTE"?"TESTE":"PRODUÇÃO");chip.classList.toggle("is-test",env==="TESTE");}
+  const aviso=document.getElementById("ambienteTesteAviso");if(aviso)aviso.hidden=env!=="TESTE";
+  const reason=document.querySelector(".dashboard-reason-toggle");if(reason)reason.hidden=role!=="ADMIN";
+  const manager=document.getElementById("fleetModuleManager");if(manager)manager.hidden=role!=="ADMIN";
+  const btnNova=document.getElementById("btnCriarViagemSelecaoTabela");if(btnNova)btnNova.hidden=!(role==="ADMIN"||role==="FATURAMENTO");
+  const btnVeiculo=document.getElementById("btnNovoVeiculo");if(btnVeiculo)btnVeiculo.hidden=role!=="ADMIN";
+}
 function renderizarControlesModulosFrota_(){
-  const defs=[
-    {key:'veiculos',toggle:'toggleModuloVeiculos',card:'opcaoModuloVeiculos',status:'estadoModuloVeiculos'},
-    {key:'viagens',toggle:'toggleModuloViagens',card:'opcaoModuloViagens',status:'estadoModuloViagens'}
-  ];
-  defs.forEach(d=>{
-    const ativo=modulosFrota_[d.key]===true;
-    const toggle=document.getElementById(d.toggle);
-    const card=document.getElementById(d.card);
-    const status=document.getElementById(d.status);
-    if(toggle){toggle.checked=ativo;toggle.disabled=modulosFrotaSalvando_;}
-    if(card)card.classList.toggle('is-on',ativo);
-    if(status)status.textContent=ativo?'Ativado':'Desativado';
-  });
-  const rodape=document.getElementById('estadoConfigModulosFrota');
-  if(rodape)rodape.textContent=modulosFrotaSalvando_?'Salvando configuração global...':
-    (modulosFrotaCarregados_?'Configuração global sincronizada':'Usando padrão global desativado');
+  const defs=[{key:"veiculos",teste:"toggleModuloVeiculosTeste",producao:"toggleModuloVeiculosProducao"},{key:"viagens",teste:"toggleModuloViagensTeste",producao:"toggleModuloViagensProducao"},{key:"motivosAtraso",teste:"toggleMotivosAtrasoTeste",producao:"toggleMotivosAtrasoProducao"}];
+  const admin=usuarioSessao_.role==="ADMIN";
+  defs.forEach(d=>[["teste",d.teste],["producao",d.producao]].forEach(([mode,id])=>{const toggle=document.getElementById(id);if(toggle){toggle.checked=configModulosFrota_[d.key][mode]===true;toggle.disabled=modulosFrotaSalvando_||!admin;}}));
+  const picker=document.getElementById("selectAmbienteMapa");if(picker){picker.value=ambienteAtual_;picker.disabled=modulosFrotaSalvando_||!admin;}
+  const manager=document.getElementById("fleetModuleManager");if(manager)manager.hidden=!admin;
+  const rodape=document.getElementById("estadoConfigModulosFrota");if(rodape)rodape.textContent=modulosFrotaSalvando_?"Salvando configuração...":(modulosFrotaCarregados_?"Configuração sincronizada":"Carregando configuração...");
 }
-
 function aplicarVisibilidadeModulosFrota_(){
-  const btnV=document.getElementById('railVehiclesView');
-  const btnT=document.getElementById('railTripsView');
-  const app=document.getElementById('app');
-  if(btnV)btnV.hidden=!modulosFrota_.veiculos;
-  if(btnT)btnT.hidden=!modulosFrota_.viagens;
-  if(app){
-    app.classList.toggle('modulo-viagens-desativado',!modulosFrota_.viagens);
-    app.classList.toggle('modulo-veiculos-desativado',!modulosFrota_.veiculos);
-  }
+  const btnV=document.getElementById("railVehiclesView"),btnT=document.getElementById("railTripsView"),app=document.getElementById("app"),fat=usuarioSessao_.role==="FATURAMENTO";
+  if(btnV)btnV.hidden=!modulosFrota_.veiculos||fat;if(btnT)btnT.hidden=!modulosFrota_.viagens;
+  if(app){app.classList.toggle("modulo-viagens-desativado",!modulosFrota_.viagens);app.classList.toggle("modulo-veiculos-desativado",!modulosFrota_.veiculos||fat);}
+  atualizarContextoSessaoUI_();
 }
-
+async async function alterarAmbienteAdmin_(ambiente){
+  if(usuarioSessao_.role!=="ADMIN")return;
+  const novo=String(ambiente||"").toUpperCase()==="TESTE"?"TESTE":"PRODUCAO";if(novo===ambienteAtual_)return;
+  ambienteAtual_=novo;atualizarContextoSessaoUI_();await carregarConfigModulosFrota_(false);await carregarConfigMotivoAtraso_();
+  if(modoAtual==="veiculos"&&!modulosFrota_.veiculos)mostrarView("dashboard");
+  if(modoAtual==="viagens"&&!modulosFrota_.viagens)mostrarView("dashboard");
+  if(modoAtual==="viagens"&&modulosFrota_.viagens)await carregarViagens_();
+  mostrarToast(novo==="TESTE"?"Ambiente de teste ativado. Dados de produção permanecem protegidos.":"Ambiente de produção ativado.");
+}
 async function carregarConfigModulosFrota_(silencioso){
   if(modulosFrotaSalvando_)return false;
   try{
-    const res=await chamarAPI_GET_({formato:'configModulosFrota'});
-    if(!res||res.ok!==true||!res.modulos)throw new Error((res&&(res.erro||res.error))||'Resposta de configuração inválida.');
-    modulosFrota_={veiculos:res.modulos.veiculos===true,viagens:res.modulos.viagens===true};
-    modulosFrotaCarregados_=true;
-    renderizarControlesModulosFrota_();
-    aplicarVisibilidadeModulosFrota_();
-    if(modoAtual==='veiculos'&&!modulosFrota_.veiculos)mostrarView('dashboard');
-    if(modoAtual==='viagens'&&!modulosFrota_.viagens)mostrarView('dashboard');
+    const res=await chamarAPI_GET_({formato:"configModulosFrota"});
+    if(!res||res.ok!==true||!res.modulos)throw new Error((res&&(res.erro||res.error))||"Resposta de configuração inválida.");
+    if(usuarioSessao_.role==="ADMIN"&&res.config)configModulosFrota_=res.config;
+    modulosFrota_={veiculos:res.modulos.veiculos===true,viagens:res.modulos.viagens===true};modulosFrotaCarregados_=true;
+    renderizarControlesModulosFrota_();aplicarVisibilidadeModulosFrota_();
+    if(modoAtual==="veiculos"&&!modulosFrota_.veiculos)mostrarView("dashboard");
+    if(modoAtual==="viagens"&&!modulosFrota_.viagens)mostrarView("dashboard");
     return true;
   }catch(err){
-    if(!modulosFrotaCarregados_){
-      modulosFrota_={veiculos:false,viagens:false};
-      renderizarControlesModulosFrota_();
-      aplicarVisibilidadeModulosFrota_();
-    }
-    if(!silencioso)mostrarToast('Não foi possível ler a configuração global dos módulos: '+String(err&&err.message?err.message:err),true);
+    if(!modulosFrotaCarregados_){modulosFrota_={veiculos:false,viagens:false};renderizarControlesModulosFrota_();aplicarVisibilidadeModulosFrota_();}
+    if(!silencioso)mostrarToast("Não foi possível ler a configuração dos módulos: "+String(err&&err.message?err.message:err),true);
     return false;
   }
 }
-
-async function alternarModuloFrota_(nome,toggle){
-  if(!['veiculos','viagens'].includes(nome)||modulosFrotaSalvando_)return;
-  const anterior={...modulosFrota_};
-  const nova={...modulosFrota_,[nome]:toggle.checked===true};
-  modulosFrotaSalvando_=true;
-  renderizarControlesModulosFrota_();
+async async function alternarModuloFrota_(nome,modo,toggle){
+  if(usuarioSessao_.role!=="ADMIN"||!["veiculos","viagens","motivosAtraso"].includes(nome)||!["teste","producao"].includes(modo)||modulosFrotaSalvando_)return;
+  const anterior=JSON.parse(JSON.stringify(configModulosFrota_)),nova=JSON.parse(JSON.stringify(configModulosFrota_));
+  nova[nome][modo]=toggle.checked===true;modulosFrotaSalvando_=true;renderizarControlesModulosFrota_();
   try{
-    const res=await chamarAPI_POST_({acao:'salvarConfigModulosFrota',modulos:nova});
-    if(!res||res.ok!==true||!res.modulos)throw new Error((res&&(res.erro||res.error))||'Não foi possível gravar a configuração global.');
-    modulosFrota_={veiculos:res.modulos.veiculos===true,viagens:res.modulos.viagens===true};
-    modulosFrotaCarregados_=true;
-    aplicarVisibilidadeModulosFrota_();
-    renderizarControlesModulosFrota_();
-    if((modoAtual==='veiculos'&&!modulosFrota_.veiculos)||(modoAtual==='viagens'&&!modulosFrota_.viagens)){
-      mostrarView('dashboard');
-      alternarPainelDashboard_('frota');
-    }
-    mostrarToast((nome==='veiculos'?'Veículos':'Viagens')+' '+(modulosFrota_[nome]?'ativado':'desativado')+' globalmente.');
-  }catch(err){
-    modulosFrota_=anterior;
-    aplicarVisibilidadeModulosFrota_();
-    mostrarToast('Não foi possível salvar a configuração global: '+String(err&&err.message?err.message:err),true);
-  }finally{
-    modulosFrotaSalvando_=false;
-    renderizarControlesModulosFrota_();
-  }
+    const res=await chamarAPI_POST_({acao:"salvarConfigModulosFrota",modulos:nova});
+    if(!res||res.ok!==true||!res.config)throw new Error((res&&(res.erro||res.error))||"Não foi possível gravar a configuração.");
+    configModulosFrota_=res.config;modulosFrotaCarregados_=true;await carregarConfigModulosFrota_(true);
+    const label=modo==="teste"?"somente para ADMIN em teste":"para os perfis autorizados em produção";
+    mostrarToast((nome==="motivosAtraso"?"Justificativas de atraso":nome==="veiculos"?"Veículos":"Viagens")+" "+(nova[nome][modo]?"ativado":"desativado")+" "+label+".");
+  }catch(err){configModulosFrota_=anterior;renderizarControlesModulosFrota_();aplicarVisibilidadeModulosFrota_();mostrarToast("Não foi possível salvar a configuração: "+String(err&&err.message?err.message:err),true);}
+  finally{modulosFrotaSalvando_=false;renderizarControlesModulosFrota_();}
 }
-
 function alternarPainelDashboard_(painel){
   if(painel!=='entregas'&&painel!=='frota')return;
   painelDashboardAtual_=painel;
@@ -7009,6 +7003,8 @@ iniciarAtualizacaoAutomatica_();
 }
 function encerrarSessao_(){
   TOKEN_SESSAO = '';
+  usuarioSessao_={role:"OPERACIONAL",user:""};
+  ambienteAtual_="PRODUCAO";
   localStorage.removeItem('mapa_entregas_token');
   pararAtualizacaoAutomatica_();
   document.getElementById('loginPassword').value = '';
@@ -7023,7 +7019,12 @@ async function validarSessao_(){
     });
     if (!r.ok) return false;
     const j = await r.json();
-    return j.valid === true;
+    if(j.valid===true){
+      usuarioSessao_={role:j.role||"OPERACIONAL",user:j.user||""};
+      atualizarContextoSessaoUI_();
+      return true;
+    }
+    return false;
   } catch(e) { return false; }
 }
 const INTERVALO_ATUALIZACAO_MS = 10000;
@@ -7069,7 +7070,10 @@ async function enviarLogin_(e){
     const j = await r.json();
     if (!r.ok || !j.token) throw new Error(j.error || 'Falha no login');
     TOKEN_SESSAO = j.token;
+    usuarioSessao_={role:j.role||"OPERACIONAL",user:j.user||document.getElementById('loginUser').value.trim()};
+    ambienteAtual_="PRODUCAO";
     localStorage.setItem('mapa_entregas_token', TOKEN_SESSAO);
+    atualizarContextoSessaoUI_();
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('app').hidden = false;
     await carregarConfigMotivoAtraso_();
