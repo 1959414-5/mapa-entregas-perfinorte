@@ -3476,6 +3476,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Aging das pendências</h2><span>Dias após a previsão original</span></div><div id="dashAging" class="dashboard-chart"></div></article>
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Motivos dos atrasos</h2><span>Conclusões atrasadas</span></div><div id="dashMotivos" class="dashboard-chart"></div></article>
           <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Reprogramações por entrega</h2><span>Mais reprogramadas</span></div><div id="dashReprogramacoes" class="dashboard-chart"></div></article>
+          <article class="dashboard-card"><div class="dashboard-card-heading"><h2>Entregas por motorista e status</h2><span>Distribuição operacional</span></div><div id="dashPorMotorista" class="dashboard-chart"></div></article>
         </section>
 
         <div class="dash-section-heading"><span>Desempenho comercial</span></div>
@@ -6115,6 +6116,17 @@ function mostrarView(modo){
   document.getElementById('viagensView').style.display = viagens ? 'block' : 'none';
 
   const app = document.getElementById('app');
+  if (dashboard){
+    app.classList.add('sidebar-colapsado','sidebar-direito-colapsado');
+    const toggleEsquerdo=document.getElementById('sidebarToggle');
+    const toggleDireito=document.getElementById('sidebarDireitoToggle');
+    if(toggleEsquerdo)toggleEsquerdo.textContent='›';
+    if(toggleDireito)toggleDireito.textContent='‹';
+    try{
+      localStorage.setItem(SIDEBAR_CHAVE,'1');
+      localStorage.setItem(SIDEBAR_DIREITO_CHAVE,'1');
+    }catch(e){}
+  }
   app.classList.toggle('tabela-ativa', tabela);
   app.classList.toggle('dashboard-ativa', dashboard);
   app.classList.toggle('veiculos-ativa', veiculos);
@@ -8290,14 +8302,16 @@ function renderizarGeografiaDashboard_(lista){
   const cidadesEl=document.getElementById('dashGeoCidadesTotal');
   const coberturaEl=document.getElementById('dashGeoCobertura');
 
-  // Linhas de AVISO são registros operacionais, não entregas reais.
-  // Elas não devem inflar "Cidade não identificada" nem a cobertura geográfica.
-  const entregasGeograficas=lista.filter(d=>String(d.endereco||'').trim().toUpperCase()!=='AVISO');
+  // Avisos operacionais e entregas sem cidade não fazem parte da análise territorial.
+  const entregasGeograficas=lista.filter(d=>
+    String(d.endereco||'').trim().toUpperCase()!=='AVISO' &&
+    String(d.cidade||'').trim()!==''
+  );
 
   const porCidade={};
   let totalComCoords=0;
   entregasGeograficas.forEach(d=>{
-    const nome=String(d.cidade||'').trim()||'Cidade não identificada';
+    const nome=String(d.cidade||'').trim();
     const key=nome.toLocaleLowerCase('pt-BR');
     if(!porCidade[key])porCidade[key]={nome:nome,total:0,latSum:0,lngSum:0,coords:0};
     const c=porCidade[key];c.total++;
@@ -8314,7 +8328,7 @@ function renderizarGeografiaDashboard_(lista){
     const max=Math.max(1,...cidades.map(c=>c.total));
     cityEl.innerHTML=cidades.length?cidades.slice(0,8).map(c=>'<div class="dash-city-item"><div><span class="dash-city-name" title="'+escapeAttr_(c.nome)+'">'+escapeAttr_(c.nome)+'</span><div class="dash-city-track"><div class="dash-city-fill" style="width:'+(c.total/max*100)+'%"></div></div></div><span class="dash-city-count">'+c.total+'</span></div>').join(''):'<div class="dash-empty">Sem cidades identificadas nos filtros.</div>';
   }
-  if(resumo)resumo.textContent='Entregas com coordenadas: '+formatarNumeroDashboard_(totalComCoords)+' de '+formatarNumeroDashboard_(entregasGeograficas.length)+'. Avisos operacionais não entram na distribuição geográfica. As bolhas representam a quantidade de entregas localizadas em cada cidade.';
+  if(resumo)resumo.textContent='Entregas com coordenadas: '+formatarNumeroDashboard_(totalComCoords)+' de '+formatarNumeroDashboard_(entregasGeograficas.length)+' com cidade identificada. Avisos operacionais e registros sem cidade foram omitidos. As bolhas representam a quantidade de entregas localizadas em cada cidade.';
   const mapa=inicializarMapaGeograficoDashboard_();
   if(!mapa||!dashGeoCamada_)return;
   dashGeoCamada_.clearLayers();
@@ -8327,7 +8341,7 @@ function renderizarGeografiaDashboard_(lista){
       radius:Math.min(22,7+Math.sqrt(c.total)*2.2),
       color:'#116d82',weight:2,opacity:.95,fillColor:'#31b5c2',fillOpacity:.72
     });
-    marker.bindPopup('<div style="min-width:150px"><b style="color:#20384d">'+escapeAttr_(c.nome)+'</b><div style="margin-top:5px;color:#63788b;font-size:11px">'+c.total+' entrega(s) · '+share.toFixed(1).replace('.',',')+'% da base filtrada</div><div style="margin-top:4px;color:#8b9aa7;font-size:10px">'+c.coords+' ponto(s) georreferenciado(s)</div></div>');
+    marker.bindPopup('<div style="min-width:150px"><b style="color:#20384d">'+escapeAttr_(c.nome)+'</b><div style="margin-top:5px;color:#63788b;font-size:11px">'+c.total+' entrega(s) · '+share.toFixed(1).replace('.',',')+'% da base com cidade identificada</div><div style="margin-top:4px;color:#8b9aa7;font-size:10px">'+c.coords+' ponto(s) georreferenciado(s)</div></div>');
     marker.bindTooltip(escapeAttr_(c.nome)+': '+c.total+' entrega(s)');
     marker.addTo(dashGeoCamada_);
   });
@@ -8495,6 +8509,25 @@ function atualizarDashboard_(){
     else porVendedor.innerHTML=
       '<div class="dash-legend"><span><i style="background:#579b78"></i>Entregue</span><span><i style="background:#d3a94a"></i>Em andamento</span><span><i style="background:#a5afbd"></i>Em fila / outros</span></div>'+
       vendedores.map(([nome,v])=>'<div class="dash-stack-row"><span class="dash-row-label" title="'+escapeAttr_(nome)+'">'+escapeAttr_(nome)+'</span><div class="dash-stacked"><span style="width:'+(v.entregue/v.total*100)+'%;background:#579b78"></span><span style="width:'+(v.andamento/v.total*100)+'%;background:#d3a94a"></span><span style="width:'+(v.fila/v.total*100)+'%;background:#a5afbd"></span></div><span class="dash-row-total">'+v.total+'</span></div>').join('');
+  }
+
+  const mapaMotorista={};
+  lista.filter(d=>String(d.endereco||'').trim().toUpperCase()!=='AVISO').forEach(d=>{
+    const nome=String(d.motorista||'').trim()||'Não informado';
+    if(!mapaMotorista[nome])mapaMotorista[nome]={entregue:0,andamento:0,fila:0,total:0};
+    const v=mapaMotorista[nome];v.total++;
+    const st=String(d.status||'').trim().toUpperCase();
+    if(st==='ENTREGUE')v.entregue++;
+    else if(st==='EM ANDAMENTO')v.andamento++;
+    else v.fila++;
+  });
+  const motoristas=Object.entries(mapaMotorista).sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0],'pt-BR'));
+  const porMotorista=document.getElementById('dashPorMotorista');
+  if(porMotorista){
+    if(!motoristas.length)renderDashSemDados_('dashPorMotorista','Sem entregas atribuídas a motoristas nos filtros selecionados.');
+    else porMotorista.innerHTML=
+      '<div class="dash-legend"><span><i style="background:#579b78"></i>Entregue</span><span><i style="background:#d3a94a"></i>Em andamento</span><span><i style="background:#a5afbd"></i>Em fila / outros</span></div>'+
+      motoristas.map(([nome,v])=>'<div class="dash-stack-row"><span class="dash-row-label" title="'+escapeAttr_(nome)+'">'+escapeAttr_(nome)+'</span><div class="dash-stacked"><span style="width:'+(v.entregue/v.total*100)+'%;background:#579b78"></span><span style="width:'+(v.andamento/v.total*100)+'%;background:#d3a94a"></span><span style="width:'+(v.fila/v.total*100)+'%;background:#a5afbd"></span></div><span class="dash-row-total">'+v.total+'</span></div>').join('');
   }
 
   const semanas={};
