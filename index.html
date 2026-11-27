@@ -1951,6 +1951,16 @@ button,input,select,textarea{font-family:var(--font-ui);}
 @media(max-width:900px){.fleet-module-grid-modes{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.fleet-module-grid-modes{grid-template-columns:1fr}.fleet-module-manager-head{align-items:flex-start;flex-direction:column}.fleet-env-picker,.fleet-env-picker select{width:100%}.session-context-chip{font-size:8px}}
 
+
+.trips-nfe-upload{display:flex;flex-direction:column;gap:6px;min-width:0}
+.trips-nfe-upload label{display:flex;flex-direction:column;gap:5px;color:#60788c;font-size:8px;font-weight:800}
+.trips-nfe-upload input[type=file]{width:100%;min-width:0;height:auto;padding:6px;border:1px dashed #cbd9e3;border-radius:7px;background:#fff;color:#577084;font:9px var(--font-ui)}
+.trips-nfe-summary{display:flex;flex-direction:column;gap:4px;color:#8a99a8;font-size:8px;line-height:1.35;overflow-wrap:anywhere}
+.trips-nfe-line{display:flex;flex-direction:column;gap:2px;padding:5px 7px;border:1px solid #d9e9e2;border-radius:6px;background:#f5fbf7;color:#39735c}
+.trips-nfe-line small{color:#81958a;font-size:7px}
+.trip-card-metrics{flex-wrap:wrap}
+.trip-status.rascunho{background:#fff4dc;color:#946c28;border:1px solid #ead5a9}
+
 </style>
 <style>
 
@@ -5621,6 +5631,8 @@ let viagemFormularioCarregado_ = false;
 let viagemFormularioPromise_ = null;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
+let notasFiscaisPendentesViagem_ = {};
+let viagemRascunhoEmSalvamento_ = null;
 
 function escaparViagem_(valor){
   return String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -5839,6 +5851,67 @@ function sincronizarValorViagem_(origem){
   if(origem==='slider')input.value=v.toFixed(2);
   else slider.value=String(Math.min(Number(slider.max)||10000,Math.round(v/25)*25));
 }
+
+function arquivoComoBase64Viagem_(arquivo){
+  return new Promise((resolve,reject)=>{
+    const leitor=new FileReader();
+    leitor.onload=()=>{const resultado=String(leitor.result||"");resolve(resultado.includes(",")?resultado.split(",")[1]:resultado);};
+    leitor.onerror=()=>reject(new Error("Não foi possível ler o arquivo "+arquivo.name+"."));
+    leitor.readAsDataURL(arquivo);
+  });
+}
+function formatarResumoNFeViagem_(nf){
+  const valor=Number(nf.valorTotal||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const peso=Number(nf.pesoLiquidoKg||0).toLocaleString("pt-BR",{minimumFractionDigits:3,maximumFractionDigits:3});
+  return "NF "+escaparViagem_(nf.numero)+"/"+escaparViagem_(nf.serie)+" · "+valor+" · "+peso+" kg";
+}
+async function analisarNFeArquivosUI_(input,idEntrega){
+  if(!input||!idEntrega)return;
+  const arquivos=Array.from(input.files||[]);
+  if(!arquivos.length)return;
+  input.disabled=true;
+  const safeId=String(idEntrega).replace(/[^a-zA-Z0-9_-]/g,"");
+  const area=document.getElementById("resumoNFeEntrega-"+safeId);
+  if(area)area.textContent="Validando XML...";
+  try{
+    if(!notasFiscaisPendentesViagem_[idEntrega])notasFiscaisPendentesViagem_[idEntrega]=[];
+    for(const arquivo of arquivos){
+      if(!/\.xml$/i.test(arquivo.name)&&arquivo.type!=="text/xml"&&arquivo.type!=="application/xml")throw new Error("Selecione um arquivo XML válido: "+arquivo.name);
+      if(arquivo.size>5*1024*1024)throw new Error("O XML "+arquivo.name+" excede o limite de 5 MB.");
+      const xmlBase64=await arquivoComoBase64Viagem_(arquivo);
+      const resposta=await chamarAPI_POST_({acao:"analisarXmlNFe",dados:{xmlBase64:xmlBase64,nomeArquivo:arquivo.name}});
+      if(!resposta||resposta.ok!==true)throw new Error(resposta&&(resposta.erro||resposta.error)?(resposta.erro||resposta.error):"Não foi possível interpretar "+arquivo.name+".");
+      const chave=String(resposta.chaveAcesso||"");
+      const jaExiste=Object.keys(notasFiscaisPendentesViagem_).some(id=>(notasFiscaisPendentesViagem_[id]||[]).some(n=>n.dados.chaveAcesso===chave));
+      if(jaExiste)throw new Error("A chave de acesso da NF "+resposta.numero+" já foi selecionada nesta viagem.");
+      notasFiscaisPendentesViagem_[idEntrega].push({nomeArquivo:arquivo.name,xmlBase64:xmlBase64,dados:resposta});
+    }
+    renderizarResumoNFePendentesEntrega_(idEntrega);
+  }catch(err){
+    if(area)area.textContent=String(err&&err.message?err.message:err);
+    mostrarToast(String(err&&err.message?err.message:err),true);
+  }finally{
+    input.disabled=false;
+    input.value="";
+  }
+}
+function renderizarResumoNFePendentesEntrega_(idEntrega){
+  const safeId=String(idEntrega).replace(/[^a-zA-Z0-9_-]/g,"");
+  const area=document.getElementById("resumoNFeEntrega-"+safeId);
+  if(!area)return;
+  const notas=notasFiscaisPendentesViagem_[idEntrega]||[];
+  area.innerHTML=notas.length?notas.map(n=>'<div class="trips-nfe-line"><span>✓ '+formatarResumoNFeViagem_(n.dados)+'</span><small>'+escaparViagem_(n.nomeArquivo)+'</small></div>').join(""):"Nenhum XML selecionado.";
+}
+async function liberarViagemFaturamentoUI_(viagemId){
+  if(!viagemId)return;
+  try{
+    const resposta=await chamarAPI_POST_({acao:"liberarViagem",dados:{viagemId:viagemId}});
+    if(!resposta||resposta.ok!==true)throw new Error(resposta&&(resposta.erro||resposta.error)?(resposta.erro||resposta.error):"Não foi possível liberar a viagem.");
+    mostrarToast((resposta.numero||"Viagem")+" liberada para a operação com "+resposta.totalEntregas+" entrega(s) e "+resposta.totalNFs+" NF(s).");
+    await carregarViagens_();
+  }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
+}
+
 function renderizarResumoEntregasViagem_(){
   const area=document.getElementById('viagensEntregasResumo');
   if(!area)return;
