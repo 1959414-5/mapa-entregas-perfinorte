@@ -6277,6 +6277,7 @@ async function salvarXmlNFeViagemUI_(event){
   btn.disabled=true;
   let salvos=0, falhas=[];
   try{
+    const numeroViagem=viagemNFeAtual_.numero;
     for(let i=0;i<validos.length;i++){
       const nfe=validos[i];
       btn.textContent='Vinculando '+(i+1)+' de '+validos.length+'...';
@@ -6291,7 +6292,7 @@ async function salvarXmlNFeViagemUI_(event){
     }
     fecharModalNFeViagem_();
     await carregarViagens_();
-    mostrarToast(salvos+' XML(s) vinculado(s) à viagem '+(viagemNFeAtual_&&viagemNFeAtual_.numero||'')+'.');
+    mostrarToast(salvos+' XML(s) vinculado(s) à viagem '+(numeroViagem||'')+'.');
   }catch(err){
     falhas.push(String(err&&err.message?err.message:err));
     const box=document.getElementById('nfeXmlErro');
