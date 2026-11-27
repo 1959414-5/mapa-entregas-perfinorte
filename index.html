@@ -5897,72 +5897,83 @@ function definirFiltroViagens_(filtro,botao){
   renderizarViagens_();
 }
 function renderizarViagens_(){
-  const area=document.getElementById('viagensLista');
-  const kpis=document.getElementById('viagensKpis');
+  const area=document.getElementById("viagensLista");
+  const kpis=document.getElementById("viagensKpis");
   if(!area||!kpis)return;
   const viagens=Array.isArray(viagensDados_.viagens)?viagensDados_.viagens:[];
   const role=usuarioSessao_.role;
-  const programadas=viagens.filter(v=>v.status==='PROGRAMADA').length;
-  const andamento=viagens.filter(v=>v.status==='EM_ANDAMENTO').length;
-  const interrompidas=viagens.filter(v=>v.status==='INTERROMPIDA').length;
-  const encerradas=viagens.filter(v=>['CONCLUIDA','CONCLUIDA_PARCIAL'].includes(v.status)).length;
+  const programadas=viagens.filter(v=>v.status==="PROGRAMADA").length;
+  const andamento=viagens.filter(v=>v.status==="EM_ANDAMENTO").length;
+  const interrompidas=viagens.filter(v=>v.status==="INTERROMPIDA").length;
+  const encerradas=viagens.filter(v=>["CONCLUIDA","CONCLUIDA_PARCIAL"].includes(v.status)).length;
   kpis.innerHTML=
     '<article class="trips-kpi"><small>Viagens cadastradas</small><strong>'+viagens.length+'</strong><span>Histórico de viagens</span></article>'+
     '<article class="trips-kpi"><small>Programadas</small><strong>'+programadas+'</strong><span>Aguardando saída</span></article>'+
     '<article class="trips-kpi"><small>Em andamento</small><strong>'+andamento+'</strong><span>Veículos na operação</span></article>'+
     '<article class="trips-kpi"><small>Interrompidas</small><strong>'+interrompidas+'</strong><span>Com ocorrência registrada</span></article>';
-  const busca=String((document.getElementById('viagensBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  const busca=String((document.getElementById("viagensBusca")||{}).value||"").trim().toLocaleLowerCase("pt-BR");
   const filtradas=viagens.filter(v=>{
-    if(filtroViagensAtual_==='ENCERRADAS'&&!['CONCLUIDA','CONCLUIDA_PARCIAL'].includes(v.status))return false;
-    if(filtroViagensAtual_!=='TODAS'&&filtroViagensAtual_!=='ENCERRADAS'&&v.status!==filtroViagensAtual_)return false;
-    if(busca&&!([v.numero,v.veiculoNome,v.placa,v.motorista,v.transportador].join(' ').toLocaleLowerCase('pt-BR').includes(busca)))return false;
+    if(filtroViagensAtual_==="ENCERRADAS"&&!["CONCLUIDA","CONCLUIDA_PARCIAL"].includes(v.status))return false;
+    if(filtroViagensAtual_!=="TODAS"&&filtroViagensAtual_!=="ENCERRADAS"&&v.status!==filtroViagensAtual_)return false;
+    if(busca&&![v.numero,v.veiculoNome,v.placa,v.motorista,v.transportador].join(" ").toLocaleLowerCase("pt-BR").includes(busca))return false;
     return true;
   });
   if(!filtradas.length){
-    area.innerHTML='<div class="trips-empty">'+(viagens.length?'Nenhuma viagem encontrada para este filtro.':'Nenhuma viagem programada ainda. Use “Programar viagem” para vincular o primeiro veículo e suas entregas.')+'</div>';
+    area.innerHTML='<div class="trips-empty">'+(viagens.length?"Nenhuma viagem encontrada para este filtro.":"Nenhuma viagem programada ainda. Selecione entregas na lista acima ou na tabela principal para criar a primeira viagem.")+'</div>';
     return;
   }
   area.innerHTML='<div class="trips-list">'+filtradas.map(v=>{
-    const statusClass=String(v.status||'').toLowerCase();
-    const entregues=(v.paradas||[]).filter(p=>p.status==='ENTREGUE').length;
-    const total=(v.paradas||[]).length;
-    const encerrada=['CONCLUIDA','CONCLUIDA_PARCIAL','CANCELADA'].includes(v.status);
-    const quantidadeNFs=(v.notasFiscais||[]).length;
+    const id=String(v.id||"");
+    const idHtml=escaparViagem_(id);
+    const status=String(v.status||"");
+    const statusClass=status.toLowerCase();
+    const paradasLista=Array.isArray(v.paradas)?v.paradas:[];
+    const entregues=paradasLista.filter(p=>p.status==="ENTREGUE").length;
+    const total=paradasLista.length;
+    const encerrada=["CONCLUIDA","CONCLUIDA_PARCIAL","CANCELADA"].includes(status);
+    const nfs=Array.isArray(v.notasFiscais)?v.notasFiscais:[];
+    const quantidadeNFs=nfs.length;
     const valorNFs=moedaVeiculoUI_(v.valorNfTotal||0);
-    const pesoNFs=Number(v.pesoLiquidoTotalKg||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
-    const custo=v.custoTotalFinal!==null&&v.custoTotalFinal!==undefined?moedaVeiculoUI_(v.custoTotalFinal):v.custoEstimado!==null&&v.custoEstimado!==undefined?moedaVeiculoUI_(v.custoEstimado)+' (prev.)':'Pendente de parâmetros';
-    const statusActions=role==='FATURAMENTO'
-      ?(v.status==='RASCUNHO'?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+escaparViagem_(v.id)+'\')">Liberar para operação</button>':'<span class="trip-stop-cost">Disponível para operação</span>')
-      :v.status==='RASCUNHO'&&role==='ADMIN'
-        ?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+escaparViagem_(v.id)+'\')">Liberar para operação</button>'
-        :encerrada?'':v.status==='PROGRAMADA'
-          ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Ocorrência</button>'
-          :v.status==='EM_ANDAMENTO'
-            ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
-            :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
-    const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||'')+'</small></div>').join('');
-    const paradas=(v.paradas||[]).map(p=>{
-      const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
-      const buttons=encerrada||stopClosed?'':(
+    const pesoNFs=Number(v.pesoLiquidoTotalKg||0).toLocaleString("pt-BR",{minimumFractionDigits:3,maximumFractionDigits:3});
+    const custo=v.custoTotalFinal!==null&&v.custoTotalFinal!==undefined?moedaVeiculoUI_(v.custoTotalFinal):v.custoEstimado!==null&&v.custoEstimado!==undefined?moedaVeiculoUI_(v.custoEstimado)+" (prev.)":"Pendente de parâmetros";
+    const statusActions=role==="FATURAMENTO"
+      ?(status==="RASCUNHO"?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+idHtml+'\')">Liberar para operação</button>':'<span class="trip-stop-cost">'+(status==="PROGRAMADA"?"Pronta para operação":"Acompanhamento da operação")+'</span>')
+      :status==="RASCUNHO"&&role==="ADMIN"
+        ?'<button class="primary" type="button" onclick="liberarViagemFaturamentoUI_(\''+idHtml+'\')">Liberar para operação</button>'
+        :encerrada?"":status==="PROGRAMADA"
+          ?'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+idHtml+'\',\'EM_ANDAMENTO\')">Iniciar viagem</button><button type="button" onclick="registrarOcorrenciaViagemUI_(\''+idHtml+'\')">Ocorrência</button>'
+          :status==="EM_ANDAMENTO"
+            ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+idHtml+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+idHtml+'\')">Fechar viagem</button>'
+            :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+idHtml+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+idHtml+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+idHtml+'\')">Fechar viagem</button>';
+    const permiteAdicionarXml=["ADMIN","FATURAMENTO"].includes(role)&&["RASCUNHO","PROGRAMADA"].includes(status);
+    const controleXmlViagem=permiteAdicionarXml
+      ?'<label class="trip-nfe-attach"><span>＋ Vincular XMLs à viagem</span><input type="file" accept=".xml,text/xml,application/xml" multiple data-viagem-id="'+idHtml+'" onchange="adicionarNFeEmRascunhoUI_(this,this.dataset.viagemId)"></label>'
+      :"";
+    const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||"")+'</small></div>').join("");
+    const paradas=paradasLista.map(p=>{
+      const stopClosed=["ENTREGUE","NAO_ENTREGUE","REPROGRAMAR"].includes(p.status);
+      const buttons=encerrada||stopClosed?"":(
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'ENTREGUE\')">Entregue</button>'+
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'NAO_ENTREGUE\')">Não entregue</button>'+
         '<button type="button" onclick="atualizarParadaViagemUI_(\''+escaparViagem_(p.id)+'\',\'REPROGRAMAR\')">Reprogramar</button>'
       );
-      const controleXml=v.status==='RASCUNHO'&&['ADMIN','FATURAMENTO'].includes(role)
-        ?'<label class="trip-nfe-add">Adicionar XML<input type="file" accept=".xml,text/xml,application/xml" multiple data-viagem-id="'+escaparViagem_(v.id)+'" data-entrega-id="'+escaparViagem_(p.idEntrega)+'" onchange="adicionarNFeEmRascunhoUI_(this,this.dataset.viagemId,this.dataset.entregaId)"></label>'
-        :'';
-      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||'Endereço não informado')+'</small><div class="trip-stop-extra">NF: '+escaparViagem_(p.nfs||'Não informada')+' · '+statusParadaLabel_(p.status)+(p.motivo?' · '+escaparViagem_(p.motivo):'')+'</div>'+controleXml+'</div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':'')+buttons+'</div></div>';
-    }).join('');
+      const legado=p.nfs?'<div class="trip-stop-extra">NF registrada anteriormente: '+escaparViagem_(p.nfs)+'</div>':'';
+      return '<div class="trip-stop"><div class="trip-stop-info"><strong>'+escaparViagem_(p.ordem)+'. '+escaparViagem_(p.cliente)+'</strong><small>'+escaparViagem_(p.endereco||p.cidade||"Endereço não informado")+'</small><div class="trip-stop-extra">'+statusParadaLabel_(p.status)+(p.motivo?" · "+escaparViagem_(p.motivo):"")+'</div>'+legado+'</div><div class="trip-stop-actions">'+(p.custoRateado!==null&&p.custoRateado!==undefined?'<span class="trip-stop-cost">'+moedaVeiculoUI_(p.custoRateado)+'</span>':"")+buttons+'</div></div>';
+    }).join("");
+    const listaNFs=nfs.length
+      ?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Documentos fiscais da viagem ('+quantidadeNFs+')</span><span>'+valorNFs+' · '+pesoNFs+' kg</span></div>'+nfs.map(n=>'<div class="trip-occurrence"><span>NF '+escaparViagem_(n.numero)+'/'+escaparViagem_(n.serie)+'</span><strong>'+escaparViagem_(n.destinatarioNome||"Destinatário não informado")+' · '+moedaVeiculoUI_(n.valorTotal)+'</strong><small>'+Number(n.pesoLiquidoKg||0).toLocaleString("pt-BR",{minimumFractionDigits:3,maximumFractionDigits:3})+' kg · '+escaparViagem_(n.nomeArquivo||"XML")+'</small></div>').join("")+'</div>'
+      :'<div class="trip-nfe-empty">Nenhum XML vinculado a esta viagem.</div>';
+    const detalhesXml=controleXmlViagem+listaNFs;
     return '<article class="trip-card">'+
-      '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
-      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span><span class="trip-metric">NF-e <strong>'+quantidadeNFs+' · '+valorNFs+'</strong></span><span class="trip-metric">Peso líquido <strong>'+pesoNFs+' kg</strong></span></div>'+
-      '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
-      '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+
-      ((v.notasFiscais||[]).length?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Notas fiscais vinculadas ('+quantidadeNFs+')</span><span>'+valorNFs+' · '+pesoNFs+' kg</span></div>'+v.notasFiscais.map(n=>'<div class="trip-occurrence"><span>NF '+escaparViagem_(n.numero)+'/'+escaparViagem_(n.serie)+'</span><strong>'+escaparViagem_(n.destinatarioNome)+' · '+moedaVeiculoUI_(n.valorTotal)+'</strong><small>'+Number(n.pesoLiquidoKg||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg</small></div>').join('')+'</div>':'')+
-      (ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
+      '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||"Veículo")+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||"Período não definido")+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==="TERCEIRIZADO"?"Terceirizado · "+escaparViagem_(v.transportador):"Frota própria")+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(status)+'</span></div>'+
+      '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+" km":v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+" km (prev.)":"Não calculada")+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span><span class="trip-metric">NF-e <strong>'+quantidadeNFs+' · '+valorNFs+'</strong></span><span class="trip-metric">Peso líquido <strong>'+pesoNFs+' kg</strong></span></div>'+
+      '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+idHtml+'\')">Detalhes, entregas e XMLs ('+total+')</button></div>'+
+      '<div id="paradas-'+idHtml+'" class="trip-stops" hidden><div class="trip-nfe-trip-panel">'+detalhesXml+'</div><div class="trip-stops-heading"><span>Entregas vinculadas à viagem</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+
+      (ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':"")+'</div>'+
       '</article>';
-  }).join('')+'</div>';
+  }).join("")+'</div>';
 }
+
 function toggleParadasViagem_(id){
   const el=document.getElementById('paradas-'+id);
   if(el)el.hidden=!el.hidden;
