@@ -1514,9 +1514,21 @@ function migrarCadastroVeiculosAntigo_(sh){
   return true;
 }
 
-function getOrCreateVeiculosSheet_(){
-  const ss=SpreadsheetApp.getActive();
-  let sh=ss.getSheetByName(VEICULOS_SHEET_NAME_);
+function getOrCreateVeiculosSheet_(ambiente){
+  const ss=SpreadsheetApp.getActive(), env=normalizarAmbienteMapa_(ambiente);
+  const nomeAba=env==="TESTE"?"CADASTRO_VEICULOS_TESTE":VEICULOS_SHEET_NAME_;
+  let sh=ss.getSheetByName(nomeAba);
+  if(env==="TESTE"&&!sh){
+    const prod=getOrCreateVeiculosSheet_("PRODUCAO"); sh=ss.insertSheet(nomeAba);
+    const vals=prod.getDataRange().getValues();
+    if(vals.length&&vals[0].length){sh.getRange(1,1,vals.length,vals[0].length).setValues(vals);sh.setFrozenRows(1);sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setBackground("#1b2b3d").setFontColor("#fff").setFontWeight("bold");}
+    return sh;
+  }
+  if(env==="TESTE"&&sh&&sh.getLastRow()<2){
+    const prod=getOrCreateVeiculosSheet_("PRODUCAO"), vals=prod.getDataRange().getValues();
+    if(vals.length>1)sh.getRange(1,1,vals.length,vals[0].length).setValues(vals);
+    return sh;
+  }
   if(!sh){
     sh=ss.insertSheet(VEICULOS_SHEET_NAME_);
     sh.getRange(1,1,1,VEICULOS_HEADERS_.length).setValues([VEICULOS_HEADERS_]);
@@ -1549,8 +1561,8 @@ function numeroVeiculoSheet_(valor){
   return Number.isFinite(n)&&n>0?n:"";
 }
 
-function listarVeiculos_(){
-  const sh=getOrCreateVeiculosSheet_();
+function listarVeiculos_(ambiente){
+  const sh=getOrCreateVeiculosSheet_(ambiente);
   const last=sh.getLastRow();
   if(last<2)return [];
   const rows=sh.getRange(2,1,last-1,VEICULOS_HEADERS_.length).getValues();
@@ -1576,7 +1588,7 @@ function listarVeiculos_(){
   });
 }
 
-function salvarVeiculo_(v){
+function salvarVeiculo_(v,ambiente){
   if(!v||typeof v!=="object")return {ok:false,erro:"Dados do veículo não recebidos."};
   const placa=String(v.placa||"").trim().toUpperCase().replace(/\s+/g,"");
   if(!placa)return {ok:false,erro:"Informe a placa do veículo."};
@@ -1592,7 +1604,7 @@ function salvarVeiculo_(v){
   const lock=LockService.getScriptLock();
   lock.waitLock(10000);
   try{
-    const sh=getOrCreateVeiculosSheet_(),last=sh.getLastRow();
+    const sh=getOrCreateVeiculosSheet_(ambiente),last=sh.getLastRow();
     const rows=last>=2?sh.getRange(2,1,last-1,VEICULOS_HEADERS_.length).getValues():[];
     let index=-1;const id=String(v.id||"").trim();
     for(let i=0;i<rows.length;i++){
@@ -1620,10 +1632,10 @@ function salvarVeiculo_(v){
   }finally{lock.releaseLock();}
 }
 
-function alterarSituacaoVeiculo_(id,ativo){
+function alterarSituacaoVeiculo_(id,ativo,ambiente){
   const chave=String(id||"").trim();
   if(!chave)return {ok:false,erro:"Identificador do veículo não informado."};
-  const sh=getOrCreateVeiculosSheet_(),last=sh.getLastRow();
+  const sh=getOrCreateVeiculosSheet_(ambiente),last=sh.getLastRow();
   if(last<2)return {ok:false,erro:"Cadastro de veículos vazio."};
   const ids=sh.getRange(2,1,last-1,1).getValues().flat();
   const idx=ids.findIndex(function(x){return String(x)===chave;});
@@ -1720,12 +1732,11 @@ function getOrCreateLogisticaSheet_(nome,headers){
   return sh;
 }
 
-function getOrCreateEstruturaViagens_(){
-  return {
-    viagens:getOrCreateLogisticaSheet_(VIAGENS_SHEET_NAME_,VIAGENS_HEADERS_),
-    entregas:getOrCreateLogisticaSheet_(VIAGEM_ENTREGAS_SHEET_NAME_,VIAGEM_ENTREGAS_HEADERS_),
-    ocorrencias:getOrCreateLogisticaSheet_(VIAGEM_OCORRENCIAS_SHEET_NAME_,VIAGEM_OCORRENCIAS_HEADERS_)
-  };
+function getOrCreateEstruturaViagens_(ambiente){
+  const teste=normalizarAmbienteMapa_(ambiente)==="TESTE";
+  return {viagens:getOrCreateLogisticaSheet_(teste?"CADASTRO_VIAGENS_TESTE":VIAGENS_SHEET_NAME_,VIAGENS_HEADERS_),
+    entregas:getOrCreateLogisticaSheet_(teste?"VIAGEM_ENTREGAS_TESTE":VIAGEM_ENTREGAS_SHEET_NAME_,VIAGEM_ENTREGAS_HEADERS_),
+    ocorrencias:getOrCreateLogisticaSheet_(teste?"VIAGEM_OCORRENCIAS_TESTE":VIAGEM_OCORRENCIAS_SHEET_NAME_,VIAGEM_OCORRENCIAS_HEADERS_)};
 }
 
 function listarLinhasViagens_(sheet){
@@ -1763,8 +1774,8 @@ function custoKmServidor_(veiculo){
   return preco/consumo+(numeroLogistica_(veiculo.custoManutencaoKm)||0);
 }
 
-function mapearStopsViagens_(){
-  const estrutura=getOrCreateEstruturaViagens_();
+function mapearStopsViagens_(ambiente){
+  const estrutura=getOrCreateEstruturaViagens_(ambiente);
   const rows=listarLinhasViagens_(estrutura.entregas);
   const mapa={};
   rows.forEach(function(r,i){
@@ -1789,11 +1800,12 @@ function mapearStopsViagens_(){
   return {rows:rows,mapa:mapa};
 }
 
-function listarDadosViagens_(){
-  const estrutura=getOrCreateEstruturaViagens_();
+function listarDadosViagens_(ambiente,papel){
+  const env=normalizarAmbienteMapa_(ambiente), role=normalizarPapelMapa_(papel);
+  const estrutura=getOrCreateEstruturaViagens_(env);
   const tripRows=listarLinhasViagens_(estrutura.viagens);
-  const stopData=mapearStopsViagens_();
-  const veiculos=listarVeiculos_();
+  const stopData=mapearStopsViagens_(env);
+  const veiculos=listarVeiculos_(env);
   const motoristas=listarMotoristas();
   const entregas=obterEntregasValidas_().filter(function(d){
     return String(d.idEntrega||"").trim()!=="";
@@ -1810,7 +1822,7 @@ function listarDadosViagens_(){
       dataHora:r[5] instanceof Date?Utilities.formatDate(r[5],Session.getScriptTimeZone(),"dd/MM/yyyy HH:mm"):String(r[5]||"")
     });
   });
-  const viagens=tripRows.map(function(r,i){
+  const viagens=tripRows.filter(function(r){return role!=="OPERACIONAL"||String(r[10]||"")!=="RASCUNHO";}).map(function(r,i){
     const id=String(r[0]||"");
     const stops=stopData.rows.filter(s=>String(s[1]||"")===id).map(function(s,j){
       return {
@@ -1868,7 +1880,7 @@ function listarDadosViagens_(){
   };
 }
 
-function criarViagem_(dados){
+function criarViagem_(dados,ambiente,papel){
   if(!dados||typeof dados!=="object")return {ok:false,erro:"Dados da viagem não recebidos."};
   const data=String(dados.data||"").trim();
   const periodo=String(dados.periodo||"").trim().toUpperCase();
@@ -1878,8 +1890,9 @@ function criarViagem_(dados){
   if(["MANHÃ","TARDE"].indexOf(periodo)<0)return {ok:false,erro:"Selecione manhã ou tarde para a viagem."};
   if(!ids.length)return {ok:false,erro:"Selecione ao menos uma entrega."};
 
-  const estrutura=getOrCreateEstruturaViagens_();
-  const veiculo=listarVeiculos_().find(v=>String(v.id)===String(dados.veiculoId||""));
+  const env=normalizarAmbienteMapa_(ambiente), role=normalizarPapelMapa_(papel);
+  const estrutura=getOrCreateEstruturaViagens_(env);
+  const veiculo=listarVeiculos_(env).find(v=>String(v.id)===String(dados.veiculoId||""));
   if(!veiculo||veiculo.ativo===false)return {ok:false,erro:"Selecione um veículo ativo."};
   const valorNegociado=numeroLogistica_(dados.valorNegociado)||0;
   const terceiros=String(veiculo.propriedade).toUpperCase()==="TERCEIRIZADO";
@@ -1891,7 +1904,7 @@ function criarViagem_(dados){
     const id=String(d.idEntrega||"").trim();
     if(id)porLinha[id]=d;
   });
-  const stopData=mapearStopsViagens_();
+  const stopData=mapearStopsViagens_(env);
   const lock=LockService.getScriptLock();
   lock.waitLock(10000);
   try{
@@ -1922,7 +1935,7 @@ function criarViagem_(dados){
       idViagem,numero,parseDataIsoParaDate_(data),String(dados.periodo||""),
       veiculo.id,veiculo.nomeExibicao||[veiculo.marca,veiculo.modelo].filter(Boolean).join(" "),
       veiculo.placa,String(veiculo.propriedade),veiculo.transportador||"",motorista,
-      "PROGRAMADA",distancia,duracao,custoKm,estimado,terceiros?valorNegociado:"",
+      role==="FATURAMENTO"?"RASCUNHO":"PROGRAMADA",distancia,duracao,custoKm,estimado,terceiros?valorNegociado:"",
       pedagios,extras,numeroLogistica_(dados.hodometroInicial)||"",
       "",numeroLogistica_(dados.combustivelReal)||"","",null,
       String(dados.observacoes||""),agora,agora,""
@@ -1941,9 +1954,9 @@ function criarViagem_(dados){
   }finally{lock.releaseLock();}
 }
 
-function atualizarParadaViagem_(dados){
+function atualizarParadaViagem_(dados,ambiente){
   if(!dados||!dados.id)return {ok:false,erro:"Parada não identificada."};
-  const estrutura=getOrCreateEstruturaViagens_();
+  const env=normalizarAmbienteMapa_(ambiente), estrutura=getOrCreateEstruturaViagens_(env);
   const last=estrutura.entregas.getLastRow();
   if(last<2)return {ok:false,erro:"Nenhuma parada cadastrada."};
   const ids=estrutura.entregas.getRange(2,1,last-1,1).getValues().flat();
@@ -1964,7 +1977,7 @@ function atualizarParadaViagem_(dados){
   const permitidos=["ENTREGUE","NAO_ENTREGUE","REPROGRAMAR","EM_ROTA","PENDENTE"];
   if(permitidos.indexOf(status)<0)return {ok:false,erro:"Situação de parada inválida."};
 
-  if(status==="ENTREGUE"){
+  if(status==="ENTREGUE"&&env!=="TESTE"){
     const idEntrega=String(estrutura.entregas.getRange(row,3).getValue()||"");
     const hist=SpreadsheetApp.getActive().getSheetByName(CFG.HIST);
     const historicoIds=hist.getRange(2,AUDITORIA_ENTREGAS_CFG_.COL_ID,Math.max(1,hist.getLastRow()-1),1).getValues().flat();
@@ -1987,10 +2000,10 @@ function atualizarParadaViagem_(dados){
   return {ok:true,id:dados.id,status:status};
 }
 
-function registrarOcorrenciaViagem_(dados){
+function registrarOcorrenciaViagem_(dados,ambiente){
   if(!dados||!dados.viagemId||!String(dados.descricao||"").trim())
     return {ok:false,erro:"Informe a viagem e descreva a ocorrência."};
-  const estrutura=getOrCreateEstruturaViagens_();
+  const estrutura=getOrCreateEstruturaViagens_(ambiente);
   const last=estrutura.viagens.getLastRow();
   if(last<2)return {ok:false,erro:"Viagem não encontrada."};
   const ids=estrutura.viagens.getRange(2,1,last-1,1).getValues().flat();
@@ -2010,9 +2023,9 @@ function registrarOcorrenciaViagem_(dados){
   return {ok:true};
 }
 
-function atualizarStatusViagem_(dados){
+function atualizarStatusViagem_(dados,ambiente){
   if(!dados||!dados.id)return {ok:false,erro:"Viagem não identificada."};
-  const estrutura=getOrCreateEstruturaViagens_();
+  const estrutura=getOrCreateEstruturaViagens_(ambiente);
   const last=estrutura.viagens.getLastRow();
   if(last<2)return {ok:false,erro:"Viagem não encontrada."};
   const ids=estrutura.viagens.getRange(2,1,last-1,1).getValues().flat();
@@ -2044,7 +2057,7 @@ function atualizarStatusViagem_(dados){
   if(pendentes.length)return {ok:false,erro:"Antes de encerrar, marque as entregas restantes como reprogramar ou não entregues."};
   const concluidas=idxs.filter(r=>String(estrutura.entregas.getRange(r,13).getValue()||"")==="ENTREGUE");
   const veiculoId=String(estrutura.viagens.getRange(row,5).getValue()||"");
-  const veiculo=listarVeiculos_().find(v=>String(v.id)===veiculoId);
+  const veiculo=listarVeiculos_(ambiente).find(v=>String(v.id)===veiculoId);
   if(!veiculo)return {ok:false,erro:"Veículo vinculado não encontrado."};
   const terceiros=String(veiculo.propriedade).toUpperCase()==="TERCEIRIZADO";
   const valorNegociado=numeroLogistica_(estrutura.viagens.getRange(row,16).getValue())||0;
@@ -2100,49 +2113,67 @@ function incluirViagemNoModulo_(e){return listarDadosViagens_();}
 
 const CONFIG_MODULOS_FROTA_KEY_ = "PERFINORTE_MODULOS_FROTA_GLOBAL_V1";
 
+function normalizarAmbienteMapa_(ambiente) {
+  return String(ambiente || "PRODUCAO").trim().toUpperCase() === "TESTE" ? "TESTE" : "PRODUCAO";
+}
+function normalizarPapelMapa_(papel) {
+  const p = String(papel || "OPERACIONAL").trim().toUpperCase();
+  return ["ADMIN", "OPERACIONAL", "FATURAMENTO"].indexOf(p) >= 0 ? p : "OPERACIONAL";
+}
+function configModulosPadraoMapa_() {
+  return {veiculos:{teste:false,producao:false},viagens:{teste:false,producao:false},motivosAtraso:{teste:false,producao:false}};
+}
 function obterConfigModulosFrota_() {
-  const padrao = { veiculos: false, viagens: false };
-  const salvo = PropertiesService.getScriptProperties().getProperty(CONFIG_MODULOS_FROTA_KEY_);
-  if (!salvo) return { ok: true, modulos: padrao, padrao: true };
-  try {
-    const valor = JSON.parse(salvo) || {};
-    return { ok: true, modulos: { veiculos: valor.veiculos === true, viagens: valor.viagens === true }, padrao: false };
-  } catch (err) {
-    return { ok: true, modulos: padrao, padrao: true };
-  }
+  const props=PropertiesService.getScriptProperties(), salvo=props.getProperty(CONFIG_MODULOS_FROTA_KEY_), legadoMotivo=props.getProperty(CONFIG_EXIGIR_MOTIVO_ATRASO_);
+  const padrao=configModulosPadraoMapa_();
+  if(!salvo){padrao.motivosAtraso.producao=legadoMotivo==="true";return {ok:true,config:padrao,padrao:true};}
+  try{
+    const valor=JSON.parse(salvo)||{}, config=configModulosPadraoMapa_();
+    ["veiculos","viagens","motivosAtraso"].forEach(function(nome){
+      const atual=valor[nome];
+      if(atual&&typeof atual==="object"){config[nome].teste=atual.teste===true;config[nome].producao=atual.producao===true;}
+      else if(typeof atual==="boolean")config[nome].producao=atual;
+    });
+    if(!valor.motivosAtraso||typeof valor.motivosAtraso!=="object")config.motivosAtraso.producao=legadoMotivo==="true";
+    return {ok:true,config:config,padrao:false};
+  }catch(err){padrao.motivosAtraso.producao=legadoMotivo==="true";return {ok:true,config:padrao,padrao:true};}
 }
-
 function salvarConfigModulosFrota_(modulos) {
-  if (!modulos || typeof modulos !== "object") return { ok: false, erro: "Configuração dos módulos não recebida." };
-  const atual = obterConfigModulosFrota_().modulos;
-  const nova = {
-    veiculos: typeof modulos.veiculos === "boolean" ? modulos.veiculos : atual.veiculos,
-    viagens: typeof modulos.viagens === "boolean" ? modulos.viagens : atual.viagens
-  };
-  PropertiesService.getScriptProperties().setProperty(CONFIG_MODULOS_FROTA_KEY_, JSON.stringify(nova));
-  return { ok: true, modulos: nova };
+  if(!modulos||typeof modulos!=="object")return {ok:false,erro:"Configuração dos módulos não recebida."};
+  const atual=obterConfigModulosFrota_().config, nova=configModulosPadraoMapa_();
+  ["veiculos","viagens","motivosAtraso"].forEach(function(nome){
+    const recebido=modulos[nome];
+    if(recebido&&typeof recebido==="object"){nova[nome].teste=recebido.teste===true;nova[nome].producao=recebido.producao===true;}
+    else if(typeof recebido==="boolean")nova[nome]={teste:atual[nome].teste,producao:recebido};
+    else nova[nome]={teste:atual[nome].teste,producao:atual[nome].producao};
+  });
+  PropertiesService.getScriptProperties().setProperty(CONFIG_MODULOS_FROTA_KEY_,JSON.stringify(nova));
+  return {ok:true,config:nova};
 }
-
-function moduloFrotaAtivo_(nome) {
-  return obterConfigModulosFrota_().modulos[nome] === true;
+function moduloFrotaAtivo_(nome,ambiente) {
+  const k=normalizarAmbienteMapa_(ambiente)==="TESTE"?"teste":"producao", c=obterConfigModulosFrota_().config;
+  return !!(c[nome]&&c[nome][k]===true);
 }
 
 function doGet(e) {
   const p = (e && e.parameter) ? e.parameter : {};
 
-  if (!validarWorkerMapa_(p.secret)) {
-    return jsonOutput_({ ok: false, erro: "Acesso não autorizado" });
-  }
+  if (!validarWorkerMapa_(p.secret)) return jsonOutput_({ok:false,erro:"Acesso não autorizado"});
+  const papel=normalizarPapelMapa_(p._authRole), ambiente=normalizarAmbienteMapa_(p._ambiente);
+  if(ambiente==="TESTE"&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"O ambiente de teste é exclusivo do perfil ADMIN."});
   switch (p.formato) {
     case "dados":
       return doGetDados_(e);
-    case "configModulosFrota":
-      return jsonOutput_(obterConfigModulosFrota_());
+    case "configModulosFrota": {
+      const conf=obterConfigModulosFrota_(), k=ambiente==="TESTE"?"teste":"producao";
+      return jsonOutput_({ok:true,config:papel==="ADMIN"?conf.config:null,modulos:{veiculos:conf.config.veiculos[k]===true,viagens:conf.config.viagens[k]===true,motivosAtraso:conf.config.motivosAtraso[k]===true},ambiente:ambiente,papel:papel,padrao:conf.padrao});
+    }
     case "veiculos":
-      return jsonOutput_(listarVeiculos_());
+      if(!moduloFrotaAtivo_("veiculos",ambiente))return jsonOutput_({ok:false,erro:"O módulo Veículos está desativado neste ambiente."});
+      return jsonOutput_(listarVeiculos_(ambiente));
     case "viagens":
-      if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
-      return jsonOutput_(listarDadosViagens_());
+      if(!moduloFrotaAtivo_("viagens",ambiente))return jsonOutput_({ok:false,erro:"O módulo Viagens está desativado neste ambiente."});
+      return jsonOutput_(listarDadosViagens_(ambiente,papel));
     case "precosCombustivel":
       return jsonOutput_(obterPrecosCombustivel_());
     case "motoristas":
@@ -2185,20 +2216,25 @@ function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || "{}");
 
-    if (!validarWorkerMapa_(body._workerSecret)) {
-      return jsonOutput_({ ok: false, erro: "Acesso não autorizado" });
-    }
-
-    const acao = body.acao;
+    if (!validarWorkerMapa_(body._workerSecret)) return jsonOutput_({ok:false,erro:"Acesso não autorizado"});
+    const papel=normalizarPapelMapa_(body._authRole), ambiente=normalizarAmbienteMapa_(body._ambiente), acao=String(body.acao||"");
+    if(ambiente==="TESTE"&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"O ambiente de teste é exclusivo do perfil ADMIN."});
+    const somenteAdmin=["salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo"];
+    if(somenteAdmin.indexOf(acao)>=0&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"Ação permitida somente ao perfil ADMIN."});
+    if(acao==="criarViagem"&&["ADMIN","FATURAMENTO"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Somente ADMIN ou FATURAMENTO pode criar viagens."});
+    if(["atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"].indexOf(acao)>=0&&["ADMIN","OPERACIONAL"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Ação permitida somente a ADMIN ou OPERACIONAL."});
+    const permitidasNoTeste=["sugerirRota","obterConfigMotivoAtraso","salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","criarViagem","atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"];
+    if(ambiente==="TESTE"&&permitidasNoTeste.indexOf(acao)<0)return jsonOutput_({ok:false,erro:"Esta ação não pode alterar dados reais durante o modo de teste."});
 
     switch (acao) {
       case "obterConfigMotivoAtraso":
-        return jsonOutput_(obterConfigMotivoAtraso_());
+        return jsonOutput_(obterConfigMotivoAtraso_(ambiente));
       case "salvarConfigMotivoAtraso":
-        return jsonOutput_(salvarConfigMotivoAtraso_(body.ativo));
+        return jsonOutput_(salvarConfigMotivoAtraso_(body.ativo,ambiente));
       case "salvarConfigModulosFrota":
         return jsonOutput_(salvarConfigModulosFrota_(body.modulos));
       case "concluirEntrega":
+        if(ambiente==="TESTE")return jsonOutput_({ok:false,erro:"A conclusão de entregas reais fica bloqueada no ambiente de teste."});
         return jsonOutput_(concluirEntrega(body.linha, body.motivo, body.observacao));
       case "salvarNovaEntrega":
         return jsonOutput_(salvarNovaEntregaManual(body.dados));
@@ -2217,23 +2253,23 @@ function doPost(e) {
       case "sugerirRota":
         return jsonOutput_(sugerirRota(body.pontos));
       case "salvarVeiculo":
-        if (!moduloFrotaAtivo_("veiculos")) return jsonOutput_({ ok: false, erro: "O módulo de veículos está desativado globalmente." });
-        return jsonOutput_(salvarVeiculo_(body.veiculo));
+        if (!moduloFrotaAtivo_("veiculos",ambiente)) return jsonOutput_({ ok: false, erro: "O módulo de veículos está desativado globalmente." });
+        return jsonOutput_(salvarVeiculo_(body.veiculo,ambiente));
       case "alterarSituacaoVeiculo":
-        if (!moduloFrotaAtivo_("veiculos")) return jsonOutput_({ ok: false, erro: "O módulo de veículos está desativado globalmente." });
-        return jsonOutput_(alterarSituacaoVeiculo_(body.id,body.ativo));
+        if (!moduloFrotaAtivo_("veiculos",ambiente)) return jsonOutput_({ ok: false, erro: "O módulo de veículos está desativado globalmente." });
+        return jsonOutput_(alterarSituacaoVeiculo_(body.id,body.ativo,ambiente));
       case "criarViagem":
-        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
-        return jsonOutput_(criarViagem_(body.dados));
+        if (!moduloFrotaAtivo_("viagens",ambiente)) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
+        return jsonOutput_(criarViagem_(body.dados,ambiente,papel));
       case "atualizarParadaViagem":
-        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
-        return jsonOutput_(atualizarParadaViagem_(body.dados));
+        if (!moduloFrotaAtivo_("viagens",ambiente)) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
+        return jsonOutput_(atualizarParadaViagem_(body.dados,ambiente));
       case "atualizarStatusViagem":
-        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
-        return jsonOutput_(atualizarStatusViagem_(body.dados));
+        if (!moduloFrotaAtivo_("viagens",ambiente)) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
+        return jsonOutput_(atualizarStatusViagem_(body.dados,ambiente));
       case "registrarOcorrenciaViagem":
-        if (!moduloFrotaAtivo_("viagens")) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
-        return jsonOutput_(registrarOcorrenciaViagem_(body.dados));
+        if (!moduloFrotaAtivo_("viagens",ambiente)) return jsonOutput_({ ok: false, erro: "O módulo de viagens está desativado globalmente." });
+        return jsonOutput_(registrarOcorrenciaViagem_(body.dados,ambiente));
       case "marcarEntregaMotorista":
         return jsonOutput_(marcarEntregaMotorista(body.linha, body.status, body.motorista));
       case "marcarEmAndamento":
@@ -3819,15 +3855,15 @@ function entregaEstaAtrasadaPelaPrevisaoOriginal_(hist, linha) {
   };
 }
 
-function obterConfigMotivoAtraso_() {
-  const salvo = PropertiesService.getScriptProperties().getProperty(CONFIG_EXIGIR_MOTIVO_ATRASO_);
-  return { ok: true, ativo: salvo === null ? false : salvo === "true" };
+function obterConfigMotivoAtraso_(ambiente) {
+  const k=normalizarAmbienteMapa_(ambiente)==="TESTE"?"teste":"producao";
+  return {ok:true,ativo:obterConfigModulosFrota_().config.motivosAtraso[k]===true,ambiente:k.toUpperCase()};
 }
-
-function salvarConfigMotivoAtraso_(ativo) {
-  const valor = ativo === true || String(ativo).trim().toLowerCase() === "true";
-  PropertiesService.getScriptProperties().setProperty(CONFIG_EXIGIR_MOTIVO_ATRASO_, String(valor));
-  return { ok: true, ativo: valor };
+function salvarConfigMotivoAtraso_(ativo,ambiente) {
+  const env=normalizarAmbienteMapa_(ambiente), c=obterConfigModulosFrota_().config, k=env==="TESTE"?"teste":"producao";
+  c.motivosAtraso[k]=ativo===true||String(ativo).trim().toLowerCase()==="true";
+  const saved=salvarConfigModulosFrota_(c);
+  return {ok:true,ativo:c.motivosAtraso[k],ambiente:env,config:saved.config};
 }
 
 function concluirEntrega(linha, motivo, observacao) {
