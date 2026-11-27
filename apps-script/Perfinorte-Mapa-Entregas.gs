@@ -2366,9 +2366,13 @@ function doGet(e) {
       const conf=obterConfigModulosFrota_(), k=ambiente==="TESTE"?"teste":"producao";
       return jsonOutput_({ok:true,config:papel==="ADMIN"?conf.config:null,modulos:{veiculos:conf.config.veiculos[k]===true,viagens:conf.config.viagens[k]===true,motivosAtraso:conf.config.motivosAtraso[k]===true},ambiente:ambiente,papel:papel,padrao:conf.padrao});
     }
-    case "veiculos":
-      if(!moduloFrotaAtivo_("veiculos",ambiente))return jsonOutput_({ok:false,erro:"O módulo Veículos está desativado neste ambiente."});
+    case "veiculos": {
+      // FATURAMENTO consulta a frota em modo somente leitura para montar a viagem.
+      const podeConsultar=moduloFrotaAtivo_("veiculos",ambiente)||
+        (papel==="FATURAMENTO"&&moduloFrotaAtivo_("viagens",ambiente));
+      if(!podeConsultar)return jsonOutput_({ok:false,erro:"O módulo Veículos está desativado neste ambiente."});
       return jsonOutput_(listarVeiculos_(ambiente));
+    }
     case "viagens":
       if(!moduloFrotaAtivo_("viagens",ambiente))return jsonOutput_({ok:false,erro:"O módulo Viagens está desativado neste ambiente."});
       return jsonOutput_(listarDadosViagens_(ambiente,papel));
