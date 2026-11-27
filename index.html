@@ -3761,17 +3761,20 @@ button,input,select,textarea{font-family:var(--font-ui);}
 <div id="modalViagemOverlay" class="modal-overlay" aria-hidden="true">
   <div class="trips-modal" role="dialog" aria-modal="true" aria-labelledby="tituloModalViagem">
     <header class="trips-modal-head">
-      <div>
-        <div class="trips-modal-kicker">PERFINORTE · PLANEJAMENTO LOGÍSTICO</div>
+      <div class="trips-modal-heading">
+        <div class="trips-modal-kicker">PERFINORTE <span>/</span> PLANEJAMENTO LOGÍSTICO</div>
         <h2 id="tituloModalViagem">Programar viagem</h2>
-        <p>As entregas abaixo foram selecionadas na tabela. Informe os dados do veículo e da saída.</p>
+        <p>Defina a programação, o veículo responsável e as entregas que compõem a rota.</p>
       </div>
-      <button type="button" class="trips-modal-close" onclick="fecharModalViagem_()" aria-label="Fechar">×</button>
+      <div class="trips-modal-head-side">
+        <span class="trips-modal-context">NOVA PROGRAMAÇÃO</span>
+        <button type="button" class="trips-modal-close" onclick="fecharModalViagem_()" aria-label="Fechar">×</button>
+      </div>
     </header>
     <form id="formViagem" onsubmit="salvarViagemUI_(event)">
       <div class="trips-modal-body">
         <section class="trips-form-section">
-          <div class="trips-form-section-title"><span>01</span><div><strong>Dados da viagem</strong><small>Data, período, veículo e motorista responsável</small></div></div>
+          <div class="trips-form-section-title"><span>01</span><div><strong>Dados da programação</strong><small>Defina quando a viagem acontece e quem será responsável pela execução.</small></div></div>
           <div class="trips-form-grid">
             <label class="trips-field">Data da viagem<input id="viagemData" type="date" required></label>
             <label class="trips-field">Período<select id="viagemPeriodo" required><option value="">Selecione o período</option><option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option></select></label>
@@ -3791,17 +3794,30 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </section>
 
         <section class="trips-form-section">
-          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas selecionadas</strong><small>Origem: tabela de entregas. Confira as paradas e informe as notas fiscais, quando disponíveis.</small></div></div>
+          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas e paradas</strong><small>Confira os clientes, endereços e sequência de atendimento desta viagem.</small></div></div>
           <div class="trips-deliveries-toolbar">
-            <span id="viagemEntregaContagem">0 entrega(s) recebida(s) da tabela</span>
+            <span id="viagemEntregaContagem">0 entrega(s) selecionada(s)</span>
+            <span class="trips-selection-source">SELEÇÃO SINCRONIZADA COM A TABELA</span>
           </div>
           <div id="viagensEntregasResumo" class="trips-selected-stops"></div>
         </section>
-        <div id="viagemRotaResumo" class="trips-route-note">A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.</div>
+        <section class="trips-form-section trips-nfe-section" id="viagemNFeSection" hidden>
+          <div class="trips-form-section-title"><span>03</span><div><strong>Documentos fiscais da viagem</strong><small>As NF-e são vinculadas à viagem como um todo, não a uma entrega individual.</small></div></div>
+          <label class="trips-upload-zone" for="viagemNFeArquivos">
+            <span class="trips-upload-icon">↑</span>
+            <span><strong>Adicionar arquivos XML</strong><small>Selecione um ou vários XMLs. Limite de 5 MB por arquivo.</small></span>
+            <input id="viagemNFeArquivos" type="file" accept=".xml,text/xml,application/xml" multiple onchange="analisarNFeArquivosUI_(this)">
+          </label>
+          <div class="trips-nfe-summary" id="resumoNFeViagem">Nenhuma NF-e adicionada.</div>
+        </section>
+        <div id="viagemRotaResumo" class="trips-route-note">A rota e a distância serão estimadas quando as entregas selecionadas tiverem coordenadas disponíveis.</div>
       </div>
       <footer class="trips-modal-actions">
-        <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
-        <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+        <div class="trips-modal-footer-note"><span class="trips-footer-dot"></span><span id="tripsModalFooterNote">Os dados serão gravados no ambiente selecionado.</span></div>
+        <div class="trips-modal-footer-actions">
+          <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
+          <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+        </div>
       </footer>
     </form>
   </div>
