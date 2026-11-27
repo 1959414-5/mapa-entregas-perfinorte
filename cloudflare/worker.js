@@ -12,7 +12,7 @@ function ambienteDaRequisicao(role,requested){return role==="ADMIN"&&String(requ
 function acaoPermitida(role,acao,ambiente){
   if(role==="ADMIN"){if(ambiente==="TESTE")return new Set(["sugerirRota","obterConfigMotivoAtraso","salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","criarViagem","atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem","analisarXmlNFe","salvarNFeViagem","liberarViagem"]).has(acao);return true}
   if(ambiente!=="PRODUCAO")return false;
-  if(role==="OPERACIONAL")return !new Set(["salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","criarViagem","analisarXmlNFe","salvarNFeViagem","removerNFeViagem","liberarViagem"]).has(acao);
+  if(role==="OPERACIONAL")return !new Set(["salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","analisarXmlNFe","salvarNFeViagem","removerNFeViagem","liberarViagem"]).has(acao);
   if(role==="FATURAMENTO")return new Set(["sugerirRota","obterConfigMotivoAtraso","criarViagem","analisarXmlNFe","salvarNFeViagem","removerNFeViagem","liberarViagem"]).has(acao);
   return false
 }
