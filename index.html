@@ -6376,16 +6376,45 @@ async function baixarXmlNFeViagemUI_(viagemId,chave,nomeArquivo){
     const a=document.createElement('a');a.href=url;a.download=String(nomeArquivo||'nfe.xml').replace(/[\\/:*?"<>|]/g,'_');document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
 }
-async function obterCoordenadasEntregaViagem_(d){
-  const lat=Number(d&&d.lat),lng=Number(d&&d.lng);
-  if(d&&d.lat!==null&&d.lat!==undefined&&d.lat!==''&&d.lng!==null&&d.lng!==undefined&&d.lng!==''&&Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180)return {lat:lat,lng:lng};
-  const endereco=String(d&&d.endereco||'').trim();
-  if(!endereco)throw new Error('Entrega '+String(d&&d.cliente||'')+' está sem endereço para geocodificação.');
-  const geo=await chamarAPI_GET_({formato:'geocodificarPreview',endereco:endereco});
-  if(!geo||!geo.ok||!Number.isFinite(Number(geo.lat))||!Number.isFinite(Number(geo.lng))){
-    throw new Error('Não foi possível localizar "'+endereco+'": '+(geo&&(geo.erro||geo.error)?(geo.erro||geo.error):'geocodificação indisponível.'));
+function normalizarEnderecoCacheViagem_(valor){
+  return String(valor||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')
+    .toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\\s+/g,' ').trim();
+}
+function obterRegistroEntregaCacheViagem_(d){
+  const fonte=Array.isArray(todasEntregas)?todasEntregas:[];
+  const linha=Number(d&& (d.linhaSnapshot||d.linha)||0);
+  if(linha){
+    const porLinha=fonte.find(x=>Number(x.linha)===linha);
+    if(porLinha)return porLinha;
   }
-  return {lat:Number(geo.lat),lng:Number(geo.lng)};
+  const id=String(d&&d.idEntrega||'').trim();
+  if(id){
+    const porId=fonte.find(x=>String(x.idEntrega||'').trim()===id);
+    if(porId)return porId;
+  }
+  const endereco=normalizarEnderecoCacheViagem_(d&&d.endereco);
+  if(endereco){
+    const porEndereco=fonte.find(x=>normalizarEnderecoCacheViagem_(x.endereco)===endereco&&
+      x.lat!==null&&x.lat!==undefined&&x.lng!==null&&x.lng!==undefined);
+    if(porEndereco)return porEndereco;
+  }
+  return null;
+}
+function coordenadasValidasEntregaViagem_(registro){
+  if(!registro||registro.lat===null||registro.lat===undefined||registro.lat===''||
+     registro.lng===null||registro.lng===undefined||registro.lng==='')return null;
+  const lat=Number(registro.lat),lng=Number(registro.lng);
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat < -90||lat > 90||lng < -180||lng > 180)return null;
+  return {lat:lat,lng:lng};
+}
+async function obterCoordenadasEntregaViagem_(d){
+  const direta=coordenadasValidasEntregaViagem_(d);
+  if(direta)return direta;
+  const registroCache=obterRegistroEntregaCacheViagem_(d);
+  const cache=coordenadasValidasEntregaViagem_(registroCache);
+  if(cache)return cache;
+  const endereco=String(d&&d.endereco||'').trim();
+  throw new Error('Não encontrei as coordenadas desta entrega na Cache_Geocoding'+(endereco?' para "'+endereco+'"':'')+'. Confira se a entrega está carregada na lista ou se a linha ainda existe na planilha.');
 }
 async function prepararPontosRotaViagem_(itens,onProgress){
   const pontos=[];
