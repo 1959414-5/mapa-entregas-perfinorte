@@ -5801,7 +5801,7 @@ function renderizarEntregasDisponiveisViagem_(){
         '<td><span class="trips-available-status '+statusClass+'">'+escaparViagem_(status||'Sem status')+'</span></td>'+
         '<td class="center">'+(d.ok===true?'✓':'—')+'</td>'+
         '<td class="observations" title="'+escaparViagem_(d.observacoes||'')+'">'+escaparViagem_(d.observacoes||'—')+'</td>'+
-        '<td class="center">'+escaparViagem_(d.reprogramacoes??d.reprogramacao??0)+'</td>'+
+        '<td class="center">'+escaparViagem_(d.qtdReprogramacoes??0)+'</td>'+
         '<td>'+entrada+'</td></tr>';
     }).join('')+'</tbody></table>';
   area.querySelectorAll('[data-entrega-disponivel]').forEach(el=>el.addEventListener('change',()=>{
