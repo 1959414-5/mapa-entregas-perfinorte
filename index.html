@@ -5463,6 +5463,7 @@ let viagensDados_ = {viagens:[],veiculos:[],motoristas:[],entregasDisponiveis:[]
 let filtroViagensAtual_ = 'TODAS';
 let viagensCarregando_ = false;
 let viagensDadosCarregadas_ = false;
+let viagensCarregamentoPromise_ = null;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
 
@@ -5488,25 +5489,35 @@ function aplicarIdsEstaveisNasEntregas_(){
     if(!d.idEntrega)d.idEntrega=porLinha.get(String(d.linha))||'';
   });
 }
-async function carregarViagens_(){
-  if(viagensCarregando_)return false;
+function carregarViagens_(){
+  // Chamadas simultâneas compartilham a mesma requisição. Assim, o botão
+  // de programar aguarda a consulta iniciada ao abrir a tabela, em vez de
+  // desistir enquanto ela ainda está carregando.
+  if(viagensCarregamentoPromise_)return viagensCarregamentoPromise_;
   viagensCarregando_=true;
   const lista=document.getElementById('viagensLista');
   if(lista&&!viagensDados_.viagens.length)lista.innerHTML='<div class="trips-empty">Carregando viagens...</div>';
-  try{
-    const res=await chamarAPI_GET_({formato:'viagens'});
-    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível carregar as viagens.');
-    viagensDados_=res;
-    viagensDadosCarregadas_=true;
-    aplicarIdsEstaveisNasEntregas_();
-    renderizarViagens_();
-    if(modoAtual==='tabela')renderTabela();
-    return true;
-  }catch(err){
-    if(lista)lista.innerHTML='<div class="trips-empty">Falha ao carregar viagens.<br><small>'+escaparViagem_(err.message||err)+'</small></div>';
-    mostrarToast('Falha ao carregar módulo de viagens.',true);
-    return false;
-  }finally{viagensCarregando_=false;}
+  viagensCarregamentoPromise_=(async()=>{
+    try{
+      const res=await chamarAPI_GET_({formato:'viagens'});
+      if(!res||!res.ok)throw new Error(res&&(res.erro||res.error)?(res.erro||res.error):'O endpoint formato=viagens não retornou dados válidos.');
+      viagensDados_=res;
+      viagensDadosCarregadas_=true;
+      aplicarIdsEstaveisNasEntregas_();
+      renderizarViagens_();
+      if(modoAtual==='tabela')renderTabela();
+      return true;
+    }catch(err){
+      const mensagem=String(err&&err.message?err.message:err);
+      if(lista)lista.innerHTML='<div class="trips-empty">Falha ao carregar viagens.<br><small>'+escaparViagem_(mensagem)+'</small></div>';
+      mostrarToast('Falha ao consultar viagens: '+mensagem,true);
+      return false;
+    }finally{
+      viagensCarregando_=false;
+      viagensCarregamentoPromise_=null;
+    }
+  })();
+  return viagensCarregamentoPromise_;
 }
 function definirFiltroViagens_(filtro,botao){
   filtroViagensAtual_=filtro;
@@ -5573,48 +5584,60 @@ function toggleParadasViagem_(id){
 }
 async function abrirModalViagem_(){
   if(!entregasSelecionadasViagem_.size){
-    mostrarToast('Marque ao menos uma entrega na tabela antes de programar a viagem.',true);
+    mostrarToast('Marque ao menos uma entrega válida na tabela antes de programar a viagem.',true);
     return;
   }
-  const carregou=await carregarViagens_();
-  if(!carregou)return;
+  const botao=document.getElementById('btnCriarViagemSelecaoTabela');
+  if(botao){botao.disabled=true;botao.textContent='Verificando seleção...';}
+  try{
+    const carregou=await carregarViagens_();
+    if(!carregou)throw new Error('Não foi possível consultar as viagens e validar as entregas. Confira a mensagem exibida e a implantação do Apps Script.');
 
-  const disponiveis=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega),d]));
-  const ids=[...entregasSelecionadasViagem_];
-  const indisponiveis=ids.filter(id=>!disponiveis.has(String(id)));
-  if(indisponiveis.length){
-    indisponiveis.forEach(id=>entregasSelecionadasViagem_.delete(String(id)));
-    renderTabela();
-    mostrarToast(indisponiveis.length+' entrega(s) não puderam ser vinculadas. Verifique se já foram entregues, não possuem código/endereço ou estão em outra viagem aberta.',true);
+    const disponiveis=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega),d]));
+    const ids=[...entregasSelecionadasViagem_];
+    const indisponiveis=ids.filter(id=>!disponiveis.has(String(id)));
+    if(indisponiveis.length){
+      indisponiveis.forEach(id=>entregasSelecionadasViagem_.delete(String(id)));
+      renderTabela();
+      mostrarToast(indisponiveis.length+' entrega(s) não estão disponíveis para uma nova viagem. Podem estar concluídas, vinculadas a uma viagem em aberto ou sem endereço/código.',true);
+    }
+    entregasParaNovaViagem_=ids.filter(id=>disponiveis.has(String(id))).map(id=>disponiveis.get(String(id)));
+    if(!entregasParaNovaViagem_.length)return;
+
+    const form=document.getElementById('formViagem');
+    if(!form)throw new Error('Formulário de programação não encontrado.');
+    form.reset();
+    const hoje=new Date();
+    const hojeIso=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
+    const datas=[...new Set(entregasParaNovaViagem_.map(d=>String(d.data||'')).filter(Boolean))];
+    const periodos=[...new Set(entregasParaNovaViagem_.map(d=>String(d.periodo||'').toUpperCase()).filter(Boolean))];
+    const motoristas=[...new Set(entregasParaNovaViagem_.map(d=>String(d.motorista||'').trim()).filter(Boolean))];
+    document.getElementById('viagemData').value=datas.length===1?datas[0]:(datas.length>1?'':hojeIso);
+    document.getElementById('viagemPeriodo').value=periodos.length===1?periodos[0]:'';
+    document.getElementById('viagemPedagios').value='0';
+    document.getElementById('viagemExtras').value='0';
+    document.getElementById('viagemValorSlider').value='0';
+    document.getElementById('viagemValorNegociado').value='0';
+    document.getElementById('viagemMotorista').value=motoristas.length===1?motoristas[0]:'';
+    document.getElementById('viagemObservacoes').value='';
+    const select=document.getElementById('viagemVeiculo');
+    select.innerHTML='<option value="">Selecione o veículo</option>'+(viagensDados_.veiculos||[]).map(v=>'<option value="'+escaparViagem_(v.id)+'">'+escaparViagem_(v.nomeExibicao||v.modelo)+' · '+escaparViagem_(v.placa)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado':'Frota própria')+'</option>').join('');
+    document.getElementById('viagemMotoristasLista').innerHTML=(viagensDados_.motoristas||[]).map(n=>'<option value="'+escaparViagem_(n)+'"></option>').join('');
+    document.getElementById('viagemTerceiroValor').hidden=true;
+    document.getElementById('viagemEntregaContagem').textContent=entregasParaNovaViagem_.length+' entrega(s) recebida(s) da tabela';
+    document.getElementById('viagemRotaResumo').textContent='A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.';
+    renderizarResumoEntregasViagem_();
+    document.getElementById('modalViagemOverlay').classList.add('show');
+    document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','false');
+  }catch(err){
+    mostrarToast('Não foi possível abrir a programação: '+String(err&&err.message?err.message:err),true);
+  }finally{
+    const atual=document.getElementById('btnCriarViagemSelecaoTabela');
+    if(atual){
+      atual.textContent='Programar viagem com seleção';
+      atual.disabled=!entregasSelecionadasViagem_.size;
+    }
   }
-  entregasParaNovaViagem_=ids.filter(id=>disponiveis.has(String(id))).map(id=>disponiveis.get(String(id)));
-  if(!entregasParaNovaViagem_.length)return;
-
-  const form=document.getElementById('formViagem');
-  if(!form)return;
-  form.reset();
-  const hoje=new Date();
-  const hojeIso=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
-  const datas=[...new Set(entregasParaNovaViagem_.map(d=>String(d.data||'')).filter(Boolean))];
-  const periodos=[...new Set(entregasParaNovaViagem_.map(d=>String(d.periodo||'').toUpperCase()).filter(Boolean))];
-  const motoristas=[...new Set(entregasParaNovaViagem_.map(d=>String(d.motorista||'').trim()).filter(Boolean))];
-  document.getElementById('viagemData').value=datas.length===1?datas[0]:(datas.length>1?'':hojeIso);
-  document.getElementById('viagemPeriodo').value=periodos.length===1?periodos[0]:'';
-  document.getElementById('viagemPedagios').value='0';
-  document.getElementById('viagemExtras').value='0';
-  document.getElementById('viagemValorSlider').value='0';
-  document.getElementById('viagemValorNegociado').value='0';
-  document.getElementById('viagemMotorista').value=motoristas.length===1?motoristas[0]:'';
-  document.getElementById('viagemObservacoes').value='';
-  const select=document.getElementById('viagemVeiculo');
-  select.innerHTML='<option value="">Selecione o veículo</option>'+(viagensDados_.veiculos||[]).map(v=>'<option value="'+escaparViagem_(v.id)+'">'+escaparViagem_(v.nomeExibicao||v.modelo)+' · '+escaparViagem_(v.placa)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado':'Frota própria')+'</option>').join('');
-  document.getElementById('viagemMotoristasLista').innerHTML=(viagensDados_.motoristas||[]).map(n=>'<option value="'+escaparViagem_(n)+'"></option>').join('');
-  document.getElementById('viagemTerceiroValor').hidden=true;
-  document.getElementById('viagemEntregaContagem').textContent=entregasParaNovaViagem_.length+' entrega(s) recebida(s) da tabela';
-  document.getElementById('viagemRotaResumo').textContent='A rota e a distância serão estimadas pelo roteirizador quando as entregas selecionadas tiverem coordenadas disponíveis.';
-  renderizarResumoEntregasViagem_();
-  document.getElementById('modalViagemOverlay').classList.add('show');
-  document.getElementById('modalViagemOverlay').setAttribute('aria-hidden','false');
 }
 function fecharModalViagem_(){
   document.getElementById('modalViagemOverlay').classList.remove('show');
@@ -6224,7 +6247,7 @@ function alternarOrdenacaoData_(){
 }
 
 function motivoInelegibilidadeViagemTabela_(d){
-  if(!d||!d.idEntrega)return viagensDadosCarregadas_?'Esta linha não possui UUID disponível para vincular a uma viagem.':'Carregando identificadores de viagem...';
+  if(!d||!d.idEntrega)return 'UUID não retornado pela API. Confirme a implantação do Apps Script atualizado.';
   if(!String(d.codigo||'').trim())return 'Informe o código do cliente.';
   if(!String(d.endereco||'').trim()||String(d.endereco).trim().toUpperCase()==='AVISO')return 'Informe um endereço válido.';
   if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Esta entrega já foi concluída.';
