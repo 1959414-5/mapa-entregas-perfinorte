@@ -3147,6 +3147,39 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-delivery-copy em{display:inline-flex;margin-top:4px;padding:2px 5px;border-radius:4px;background:#eef4f7;color:#638295;font-size:7.5px;font-style:normal;font-weight:800;}
 .trips-delivery-nf{height:32px;width:100%;min-width:0;padding:0 8px;border:1px solid #e0e7ed;border-radius:7px;background:#fff;color:#334a60;font-size:9px;}
 .trips-route-note{padding:10px 12px;border:1px solid #dce8ee;border-radius:8px;background:#f5f9fb;color:#698092;font-size:9px;line-height:1.45;}
+.trips-available-panel{overflow:hidden;}
+.trips-available-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:14px 16px 12px;border-bottom:1px solid #e7edf2;}
+.trips-section-eyebrow{color:#8292a4;font-size:8px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;}
+.trips-available-head h2{margin:4px 0 3px;color:#263c52;font-size:14px;font-weight:850;}
+.trips-available-head p{margin:0;color:#8997a6;font-size:9px;}
+.trips-available-tools{display:grid;grid-template-columns:minmax(190px,260px) auto auto auto;gap:6px;align-items:center;}
+.trips-available-tools input{height:34px;min-width:0;padding:0 10px;border:1px solid #dce5ec;border-radius:7px;background:#fbfcfd;color:#30465b;font:10px var(--font-ui);}
+.trips-available-tools button{height:34px;padding:0 10px;border:1px solid #d9e3ea;border-radius:7px;background:#fff;color:#536b80;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer;}
+.trips-available-tools .trips-available-create{border-color:#247d90;background:#247d90;color:#fff;}
+.trips-available-create:disabled{border-color:#dce4e9;background:#aebbc5;color:#fff;cursor:not-allowed;}
+.trips-available-create span{display:inline-flex;min-width:18px;height:18px;margin-left:4px;align-items:center;justify-content:center;border-radius:5px;background:rgba(255,255,255,.2);}
+.trips-available-table-wrap{max-height:610px;overflow:auto;}
+.trips-available-table{width:100%;min-width:1250px;border-collapse:separate;border-spacing:0;table-layout:auto;font-size:9px;}
+.trips-available-table th{position:sticky;top:0;z-index:2;padding:9px 8px;background:#f4f6f8;border-bottom:1px solid #e2e8ed;color:#63758a;text-align:left;font-size:8px;font-weight:900;letter-spacing:.04em;white-space:nowrap;}
+.trips-available-table td{height:39px;padding:6px 8px;border-bottom:1px solid #e8edf1;color:#52677b;white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis;}
+.trips-available-table tbody tr:hover{background:#f6fafb;}
+.trips-available-table tbody tr.selected{background:#eff7f8;}
+.trips-available-table tbody tr.not-eligible{opacity:.58;}
+.trips-available-table .trips-available-check{text-align:center;width:36px;}
+.trips-available-table input{width:14px;height:14px;accent-color:#247d90;cursor:pointer;}
+.trips-available-table input:disabled{cursor:not-allowed;}
+.trips-available-table .mono{font-variant-numeric:tabular-nums;font-weight:800;color:#344b61;}
+.trips-available-table td strong{color:#263e54;font-size:9px;font-weight:850;}
+.trips-available-table td.address{max-width:280px;}
+.trips-available-table td.observations{max-width:180px;}
+.trips-available-table .center{text-align:center;}
+.trips-available-status{display:inline-flex;padding:3px 6px;border-radius:4px;background:#edf2f6;color:#64778a;font-size:8px;font-weight:850;}
+.trips-available-status.em-andamento{background:#fff1cf;color:#96640b;}
+.trips-available-status.em-fila{background:#f1e7f4;color:#81518c;}
+.trips-available-status.entregue{background:#e5f2e7;color:#397348;}
+.trips-available-status.atencao{background:#fbe8e8;color:#a84b4b;}
+@media(max-width:1100px){.trips-available-head{align-items:stretch;flex-direction:column;}.trips-available-tools{grid-template-columns:minmax(180px,1fr) repeat(3,max-content);}}
+@media(max-width:650px){.trips-available-tools{grid-template-columns:1fr 1fr;}.trips-available-tools input{grid-column:1/-1;}.trips-available-tools button{padding:0 7px;font-size:8px;}}
 .trips-modal-actions{flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:13px 25px;border-top:1px solid #e8edf2;background:#fbfcfd;}
 .trips-modal-actions button{min-height:37px;padding:8px 14px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;}
 .trips-cancel{border:1px solid #d8e1e9;background:#fff;color:#55677b;}
@@ -3644,6 +3677,24 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </div>
         </header>
         <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
+        <section class="trips-panel trips-available-panel">
+          <div class="trips-available-head">
+            <div>
+              <div class="trips-section-eyebrow">PROGRAMAÇÃO · NOVA VIAGEM</div>
+              <h2>Entregas disponíveis</h2>
+              <p>Selecione as entregas para montar uma viagem. A seleção também pode ser feita na tabela principal.</p>
+            </div>
+            <div class="trips-available-tools">
+              <input id="viagensEntregasBusca" type="search" placeholder="Buscar cliente, código ou cidade..." oninput="renderizarEntregasDisponiveisViagem_()">
+              <button type="button" onclick="selecionarVisiveisEntregasViagem_()">Marcar visíveis</button>
+              <button type="button" onclick="limparSelecaoEntregasDisponiveisViagem_()">Limpar visíveis</button>
+              <button type="button" class="trips-available-create" id="btnCriarViagemEntregasDisponiveis" disabled onclick="abrirViagemComEntregasDisponiveis_()">Criar viagem <span id="viagensEntregasSelecionadasTotal">0</span></button>
+            </div>
+          </div>
+          <div id="viagensEntregasDisponiveisTabela" class="trips-available-table-wrap">
+            <div class="trips-empty">Carregando entregas disponíveis...</div>
+          </div>
+        </section>
         <section class="trips-panel">
           <div class="trips-toolbar">
             <div class="trips-tabs" role="group" aria-label="Filtrar viagens">
@@ -5699,6 +5750,93 @@ function carregarDadosFormularioViagem_(){
   })();
   return viagemFormularioPromise_;
 }
+const selecaoEntregasDisponiveisViagem_ = new Set();
+
+function estadoElegibilidadeEntregaViagem_(d){
+  if(!d||!d.idEntrega)return 'Identificador não disponível';
+  if(!String(d.codigo||'').trim())return 'Código do cliente ausente';
+  if(!String(d.endereco||'').trim()||String(d.endereco).trim().toUpperCase()==='AVISO')return 'Endereço pendente';
+  if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Entrega concluída';
+  return '';
+}
+function renderizarEntregasDisponiveisViagem_(){
+  const area=document.getElementById('viagensEntregasDisponiveisTabela');
+  if(!area)return;
+  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  const todas=Array.isArray(viagensDados_.entregasDisponiveis)?viagensDados_.entregasDisponiveis:[];
+  const lista=todas.filter(d=>{
+    if(!busca)return true;
+    return [d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes]
+      .join(' ').toLocaleLowerCase('pt-BR').includes(busca);
+  });
+  const total=document.getElementById('viagensEntregasSelecionadasTotal');
+  const botao=document.getElementById('btnCriarViagemEntregasDisponiveis');
+  const selecionadas=[...selecaoEntregasDisponiveisViagem_].filter(id=>todas.some(d=>String(d.idEntrega)===id));
+  if(total)total.textContent=String(selecionadas.length);
+  if(botao)botao.disabled=!selecionadas.length;
+  if(!lista.length){
+    area.innerHTML='<div class="trips-empty">'+(todas.length?'Nenhuma entrega corresponde à busca.':'Nenhuma entrega disponível para programar.')+'</div>';
+    return;
+  }
+  const cabecalhos=['','Código','Cliente','Repr.','Endereço','Cidade','Motorista','Data','Período','Status','OK','Observações','Reprog.','Entrada'];
+  area.innerHTML='<table class="trips-available-table"><thead><tr>'+cabecalhos.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
+    lista.map(d=>{
+      const id=String(d.idEntrega||'');
+      const motivo=estadoElegibilidadeEntregaViagem_(d);
+      const marcada=id&&selecaoEntregasDisponiveisViagem_.has(id);
+      const status=String(d.status||'').trim();
+      const statusClass=status.toUpperCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^A-Z0-9]+/g,'-').toLowerCase();
+      const data=d.data?dataViagemBR_(d.data):'—';
+      const entrada=d.dataEntrada?dataViagemBR_(d.dataEntrada):'—';
+      const periodo=d.periodo||'—';
+      return '<tr class="'+(marcada?'selected ':'')+(motivo?'not-eligible':'')+'">'+
+        '<td class="trips-available-check"><input type="checkbox" data-entrega-disponivel="'+escaparViagem_(id)+'" '+(marcada?'checked ':'')+(motivo?'disabled ':'')+'aria-label="Selecionar entrega '+escaparViagem_(d.codigo)+'"></td>'+
+        '<td class="mono">'+escaparViagem_(d.codigo||'—')+'</td>'+
+        '<td><strong>'+escaparViagem_(d.cliente||'—')+'</strong></td>'+
+        '<td>'+escaparViagem_(d.representante||d.repr||'—')+'</td>'+
+        '<td class="address">'+escaparViagem_(d.endereco||'—')+'</td>'+
+        '<td>'+escaparViagem_(d.cidade||'—')+'</td>'+
+        '<td>'+escaparViagem_(d.motorista||'—')+'</td>'+
+        '<td>'+data+'</td><td>'+escaparViagem_(periodo)+'</td>'+
+        '<td><span class="trips-available-status '+statusClass+'">'+escaparViagem_(status||'Sem status')+'</span></td>'+
+        '<td class="center">'+(d.ok===true?'✓':'—')+'</td>'+
+        '<td class="observations" title="'+escaparViagem_(d.observacoes||'')+'">'+escaparViagem_(d.observacoes||'—')+'</td>'+
+        '<td class="center">'+escaparViagem_(d.reprogramacoes??d.reprogramacao??0)+'</td>'+
+        '<td>'+entrada+'</td></tr>';
+    }).join('')+'</tbody></table>';
+  area.querySelectorAll('[data-entrega-disponivel]').forEach(el=>el.addEventListener('change',()=>{
+    const id=String(el.getAttribute('data-entrega-disponivel')||'');
+    if(!id)return;
+    if(el.checked)selecaoEntregasDisponiveisViagem_.add(id);
+    else selecaoEntregasDisponiveisViagem_.delete(id);
+    renderizarEntregasDisponiveisViagem_();
+  }));
+}
+function selecionarVisiveisEntregasViagem_(){
+  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  (viagensDados_.entregasDisponiveis||[]).forEach(d=>{
+    const corresponde=!busca||[d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes].join(' ').toLocaleLowerCase('pt-BR').includes(busca);
+    if(corresponde&&!estadoElegibilidadeEntregaViagem_(d))selecaoEntregasDisponiveisViagem_.add(String(d.idEntrega));
+  });
+  renderizarEntregasDisponiveisViagem_();
+}
+function limparSelecaoEntregasDisponiveisViagem_(){
+  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  (viagensDados_.entregasDisponiveis||[]).forEach(d=>{
+    const corresponde=!busca||[d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes].join(' ').toLocaleLowerCase('pt-BR').includes(busca);
+    if(corresponde)selecaoEntregasDisponiveisViagem_.delete(String(d.idEntrega));
+  });
+  renderizarEntregasDisponiveisViagem_();
+}
+async function abrirViagemComEntregasDisponiveis_(){
+  const ids=[...selecaoEntregasDisponiveisViagem_];
+  if(!ids.length)return;
+  const mapa=new Map((viagensDados_.entregasDisponiveis||[]).map(d=>[String(d.idEntrega||''),d]));
+  const faltantes=ids.filter(id=>!mapa.has(id));
+  if(faltantes.length){mostrarToast('Atualize a lista de entregas antes de continuar.',true);return;}
+  entregasSelecionadasViagem_=new Set(ids);
+  await abrirModalViagem_();
+}
 function definirFiltroViagens_(filtro,botao){
   filtroViagensAtual_=filtro;
   document.querySelectorAll('[data-viagem-filtro]').forEach(b=>b.classList.toggle('active',b===botao));
@@ -5708,6 +5846,7 @@ function renderizarViagens_(){
   const area=document.getElementById('viagensLista');
   const kpis=document.getElementById('viagensKpis');
   if(!area||!kpis)return;
+  renderizarEntregasDisponiveisViagem_();
   const viagens=Array.isArray(viagensDados_.viagens)?viagensDados_.viagens:[];
   const programadas=viagens.filter(v=>v.status==='PROGRAMADA').length;
   const andamento=viagens.filter(v=>v.status==='EM_ANDAMENTO').length;
