@@ -3158,6 +3158,12 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-available-tools .trips-available-create{border-color:#247d90;background:#247d90;color:#fff;}
 .trips-available-create:disabled{border-color:#dce4e9;background:#aebbc5;color:#fff;cursor:not-allowed;}
 .trips-available-create span{display:inline-flex;min-width:18px;height:18px;margin-left:4px;align-items:center;justify-content:center;border-radius:5px;background:rgba(255,255,255,.2);}
+.trips-available-filterbar{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr)) auto;gap:9px;align-items:end;padding:11px 15px;border-bottom:1px solid #e9eef2;background:#fbfcfd;}
+.trips-available-filterbar label{display:flex;flex-direction:column;gap:5px;min-width:0;color:#75869a;font-size:8px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;}
+.trips-available-filterbar input,.trips-available-filterbar select{width:100%;height:32px;min-width:0;padding:0 9px;border:1px solid #dce5ec;border-radius:6px;background:#fff;color:#344b61;font:10px var(--font-ui);text-transform:none;letter-spacing:normal;outline:none;}
+.trips-available-filterbar input:focus,.trips-available-filterbar select:focus{border-color:#78aeb8;box-shadow:0 0 0 2px rgba(36,125,144,.1);}
+.trips-available-filterbar .trips-available-clear-filters{height:32px;padding:0 11px;border:1px solid #d9e3ea;border-radius:6px;background:#fff;color:#63758a;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer;}
+.trips-available-filterbar .trips-available-clear-filters:hover{background:#f1f6f8;border-color:#b8cbd5;}
 .trips-available-table-wrap{max-height:610px;overflow:auto;}
 .trips-available-table{width:100%;min-width:1250px;border-collapse:separate;border-spacing:0;table-layout:auto;font-size:9px;}
 .trips-available-table th{position:sticky;top:0;z-index:2;padding:9px 8px;background:#f4f6f8;border-bottom:1px solid #e2e8ed;color:#63758a;text-align:left;font-size:8px;font-weight:900;letter-spacing:.04em;white-space:nowrap;}
@@ -3178,8 +3184,8 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-available-status.em-fila{background:#f1e7f4;color:#81518c;}
 .trips-available-status.entregue{background:#e5f2e7;color:#397348;}
 .trips-available-status.atencao{background:#fbe8e8;color:#a84b4b;}
-@media(max-width:1100px){.trips-available-head{align-items:stretch;flex-direction:column;}.trips-available-tools{grid-template-columns:minmax(180px,1fr) repeat(3,max-content);}}
-@media(max-width:650px){.trips-available-tools{grid-template-columns:1fr 1fr;}.trips-available-tools input{grid-column:1/-1;}.trips-available-tools button{padding:0 7px;font-size:8px;}}
+@media(max-width:1100px){.trips-available-head{align-items:stretch;flex-direction:column;}.trips-available-tools{grid-template-columns:minmax(180px,1fr) repeat(3,max-content);}.trips-available-filterbar{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:650px){.trips-available-tools{grid-template-columns:1fr 1fr;}.trips-available-tools input{grid-column:1/-1;}.trips-available-tools button{padding:0 7px;font-size:8px;}.trips-available-filterbar{grid-template-columns:1fr 1fr;padding:10px;}.trips-available-filterbar .trips-available-clear-filters{width:100%;}}
 .trips-modal-actions{flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:13px 25px;border-top:1px solid #e8edf2;background:#fbfcfd;}
 .trips-modal-actions button{min-height:37px;padding:8px 14px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;}
 .trips-cancel{border:1px solid #d8e1e9;background:#fff;color:#55677b;}
@@ -3690,6 +3696,27 @@ button,input,select,textarea{font-family:var(--font-ui);}
               <button type="button" onclick="limparSelecaoEntregasDisponiveisViagem_()">Limpar visíveis</button>
               <button type="button" class="trips-available-create" id="btnCriarViagemEntregasDisponiveis" disabled onclick="abrirViagemComEntregasDisponiveis_()">Criar viagem <span id="viagensEntregasSelecionadasTotal">0</span></button>
             </div>
+          </div>
+          <div class="trips-available-filterbar" role="group" aria-label="Filtros das entregas disponíveis">
+            <label>Representante
+              <select id="viagensEntregasFiltroRepresentante" onchange="renderizarEntregasDisponiveisViagem_()">
+                <option value="">Todos os representantes</option>
+              </select>
+            </label>
+            <label>Código
+              <input id="viagensEntregasFiltroCodigo" type="search" placeholder="Filtrar código..." oninput="renderizarEntregasDisponiveisViagem_()">
+            </label>
+            <label>Motorista
+              <select id="viagensEntregasFiltroMotorista" onchange="renderizarEntregasDisponiveisViagem_()">
+                <option value="">Todos os motoristas</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="viagensEntregasFiltroStatus" onchange="renderizarEntregasDisponiveisViagem_()">
+                <option value="">Todos os status</option>
+              </select>
+            </label>
+            <button type="button" class="trips-available-clear-filters" onclick="limparFiltrosEntregasDisponiveisViagem_()">Limpar filtros</button>
           </div>
           <div id="viagensEntregasDisponiveisTabela" class="trips-available-table-wrap">
             <div class="trips-empty">Carregando entregas disponíveis...</div>
@@ -5759,22 +5786,97 @@ function estadoElegibilidadeEntregaViagem_(d){
   if(String(d.status||'').trim().toUpperCase()==='ENTREGUE')return 'Entrega concluída';
   return '';
 }
+function normalizarFiltroEntregaViagem_(valor){
+  return String(valor||'').trim().toLocaleUpperCase('pt-BR').replace(/\\s+/g,' ');
+}
+function preencherFiltroEntregasViagem_(id, valores, textoTodos){
+  const select=document.getElementById(id);
+  if(!select)return;
+  const atual=select.value;
+  const unicos=[...new Set((valores||[]).map(v=>String(v||'').trim()).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+  const opcoes='<option value="">'+textoTodos+'</option>'+unicos.map(v=>
+    '<option value="'+escaparViagem_(v)+'">'+escaparViagem_(v)+'</option>'
+  ).join('');
+  if(select.innerHTML!==opcoes){
+    select.innerHTML=opcoes;
+    select.value=unicos.includes(atual)?atual:'';
+  }
+}
+function atualizarFiltrosEntregasViagem_(todas){
+  preencherFiltroEntregasViagem_(
+    'viagensEntregasFiltroRepresentante',
+    todas.map(d=>d.representante),
+    'Todos os representantes'
+  );
+  preencherFiltroEntregasViagem_(
+    'viagensEntregasFiltroMotorista',
+    todas.map(d=>d.motorista),
+    'Todos os motoristas'
+  );
+  const statusUnicos=[...new Set(todas.map(d=>String(d.status||'').trim()).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+  const statusSelect=document.getElementById('viagensEntregasFiltroStatus');
+  if(statusSelect){
+    const atual=statusSelect.value;
+    const opcoes='<option value="">Todos os status</option>'+
+      (todas.some(d=>!String(d.status||'').trim())?'<option value="__SEM_STATUS__">Sem status</option>':'')+
+      statusUnicos.map(v=>'<option value="'+escaparViagem_(v)+'">'+escaparViagem_(v)+'</option>').join('');
+    if(statusSelect.innerHTML!==opcoes){
+      statusSelect.innerHTML=opcoes;
+      statusSelect.value=(atual==='__SEM_STATUS__'&&todas.some(d=>!String(d.status||'').trim()))||statusUnicos.includes(atual)?atual:'';
+    }
+  }
+}
+function obterEntregasFiltradasViagem_(){
+  const todas=Array.isArray(viagensDados_.entregasDisponiveis)?viagensDados_.entregasDisponiveis:[];
+  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  const codigo=String((document.getElementById('viagensEntregasFiltroCodigo')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
+  const representante=normalizarFiltroEntregaViagem_((document.getElementById('viagensEntregasFiltroRepresentante')||{}).value);
+  const motorista=normalizarFiltroEntregaViagem_((document.getElementById('viagensEntregasFiltroMotorista')||{}).value);
+  const statusFiltro=String((document.getElementById('viagensEntregasFiltroStatus')||{}).value||'');
+  const filtradas=todas.filter(d=>{
+    const texto=[d.codigo,d.cliente,d.representante,d.endereco,d.cidade,d.motorista,d.status,d.observacoes]
+      .join(' ').toLocaleLowerCase('pt-BR');
+    if(busca&&!texto.includes(busca))return false;
+    if(codigo&&!String(d.codigo||'').toLocaleLowerCase('pt-BR').includes(codigo))return false;
+    if(representante&&normalizarFiltroEntregaViagem_(d.representante)!==representante)return false;
+    if(motorista&&normalizarFiltroEntregaViagem_(d.motorista)!==motorista)return false;
+    if(statusFiltro==='__SEM_STATUS__'&&String(d.status||'').trim())return false;
+    if(statusFiltro&&statusFiltro!=='__SEM_STATUS__'&&normalizarFiltroEntregaViagem_(d.status)!==normalizarFiltroEntregaViagem_(statusFiltro))return false;
+    return true;
+  });
+  return filtradas.map((d,i)=>({d:d,i:i})).sort((a,b)=>{
+    const sa=normalizarFiltroEntregaViagem_(a.d.status);
+    const sb=normalizarFiltroEntregaViagem_(b.d.status);
+    const prioridade=st=>st==='EM ANDAMENTO'?0:st==='EM FILA'?1:2;
+    const pa=prioridade(sa),pb=prioridade(sb);
+    if(pa!==pb)return pa-pb;
+    const da=String(a.d.data||'').trim(),db=String(b.d.data||'').trim();
+    if(da!==db){
+      if(!da)return 1;
+      if(!db)return -1;
+      return da.localeCompare(db);
+    }
+    return a.i-b.i;
+  }).map(x=>x.d);
+}
 function renderizarEntregasDisponiveisViagem_(){
   const area=document.getElementById('viagensEntregasDisponiveisTabela');
   if(!area)return;
-  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
   const todas=Array.isArray(viagensDados_.entregasDisponiveis)?viagensDados_.entregasDisponiveis:[];
-  const lista=todas.filter(d=>!busca||[d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes].join(' ').toLocaleLowerCase('pt-BR').includes(busca));
+  atualizarFiltrosEntregasViagem_(todas);
+  const lista=obterEntregasFiltradasViagem_();
   const selecionadas=[...selecaoEntregasDisponiveisViagem_].filter(id=>todas.some(d=>String(d.idEntrega)===id));
   const total=document.getElementById('viagensEntregasSelecionadasTotal');
   const botao=document.getElementById('btnCriarViagemEntregasDisponiveis');
   if(total)total.textContent=String(selecionadas.length);
   if(botao)botao.disabled=!selecionadas.length;
   if(!lista.length){
-    area.innerHTML='<div class="trips-empty">'+(todas.length?'Nenhuma entrega corresponde à busca.':'Nenhuma entrega disponível para programar.')+'</div>';
+    area.innerHTML='<div class="trips-empty">'+(todas.length?'Nenhuma entrega corresponde aos filtros.':'Nenhuma entrega disponível para programar.')+'</div>';
     return;
   }
-  const cabecalhos=['','Código','Cliente','Repr.','Endereço','Cidade','Motorista','Data','Período','Status','OK','Observações','Reprog.','Entrada'];
+  const cabecalhos=['','Código','Cliente','Repr.','Endereço','Cidade','Motorista','Data','Período','Status','OK','Observações'];
   const corpo=lista.map(d=>{
     const id=String(d.idEntrega||'');
     const motivo=estadoElegibilidadeEntregaViagem_(d);
@@ -5785,7 +5887,7 @@ function renderizarEntregasDisponiveisViagem_(){
       '<td class="trips-available-check"><input type="checkbox" data-entrega-disponivel="'+escaparViagem_(id)+'" '+(marcada?'checked ':'')+(motivo?'disabled ':'')+'aria-label="Selecionar entrega '+escaparViagem_(d.codigo)+'"></td>'+
       '<td class="mono">'+escaparViagem_(d.codigo||'—')+'</td>'+
       '<td><strong>'+escaparViagem_(d.cliente||'—')+'</strong></td>'+
-      '<td>'+escaparViagem_(d.representante||d.repr||'—')+'</td>'+
+      '<td>'+escaparViagem_(d.representante||'—')+'</td>'+
       '<td class="address">'+escaparViagem_(d.endereco||'—')+'</td>'+
       '<td>'+escaparViagem_(d.cidade||'—')+'</td>'+
       '<td>'+escaparViagem_(d.motorista||'—')+'</td>'+
@@ -5793,9 +5895,7 @@ function renderizarEntregasDisponiveisViagem_(){
       '<td>'+escaparViagem_(d.periodo||'—')+'</td>'+
       '<td><span class="trips-available-status '+statusClass+'">'+escaparViagem_(status||'Sem status')+'</span></td>'+
       '<td class="center">'+(d.ok===true?'✓':'—')+'</td>'+
-      '<td class="observations" title="'+escaparViagem_(d.observacoes||'')+'">'+escaparViagem_(d.observacoes||'—')+'</td>'+
-      '<td class="center">'+escaparViagem_(d.qtdReprogramacoes??0)+'</td>'+
-      '<td>'+(d.dataEntrada?dataViagemBR_(d.dataEntrada):'—')+'</td></tr>';
+      '<td class="observations" title="'+escaparViagem_(d.observacoes||'')+'">'+escaparViagem_(d.observacoes||'—')+'</td></tr>';
   }).join('');
   area.innerHTML='<table class="trips-available-table"><thead><tr>'+cabecalhos.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+corpo+'</tbody></table>';
   area.querySelectorAll('[data-entrega-disponivel]').forEach(el=>el.addEventListener('change',()=>{
@@ -5807,18 +5907,23 @@ function renderizarEntregasDisponiveisViagem_(){
   }));
 }
 function selecionarVisiveisEntregasViagem_(){
-  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
-  (viagensDados_.entregasDisponiveis||[]).forEach(d=>{
-    const corresponde=!busca||[d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes].join(' ').toLocaleLowerCase('pt-BR').includes(busca);
-    if(corresponde&&!estadoElegibilidadeEntregaViagem_(d))selecaoEntregasDisponiveisViagem_.add(String(d.idEntrega));
+  obterEntregasFiltradasViagem_().forEach(d=>{
+    if(!estadoElegibilidadeEntregaViagem_(d))selecaoEntregasDisponiveisViagem_.add(String(d.idEntrega));
   });
   renderizarEntregasDisponiveisViagem_();
 }
 function limparSelecaoEntregasDisponiveisViagem_(){
-  const busca=String((document.getElementById('viagensEntregasBusca')||{}).value||'').trim().toLocaleLowerCase('pt-BR');
-  (viagensDados_.entregasDisponiveis||[]).forEach(d=>{
-    const corresponde=!busca||[d.codigo,d.cliente,d.representante,d.repr,d.endereco,d.cidade,d.motorista,d.status,d.observacoes].join(' ').toLocaleLowerCase('pt-BR').includes(busca);
-    if(corresponde)selecaoEntregasDisponiveisViagem_.delete(String(d.idEntrega));
+  obterEntregasFiltradasViagem_().forEach(d=>{
+    selecaoEntregasDisponiveisViagem_.delete(String(d.idEntrega));
+  });
+  renderizarEntregasDisponiveisViagem_();
+}
+function limparFiltrosEntregasDisponiveisViagem_(){
+  ['viagensEntregasBusca','viagensEntregasFiltroCodigo'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  ['viagensEntregasFiltroRepresentante','viagensEntregasFiltroMotorista','viagensEntregasFiltroStatus'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
   });
   renderizarEntregasDisponiveisViagem_();
 }
