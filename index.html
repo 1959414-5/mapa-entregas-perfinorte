@@ -5933,67 +5933,107 @@ function renderizarResumoEntregasViagem_(){
 }
 async function salvarViagemUI_(event){
   event.preventDefault();
-  if(!modulosFrota_.viagens){mostrarToast('O módulo Viagens está desativado globalmente.',true);return;}
-  const btn=document.getElementById('btnSalvarViagem');
-  const veiculoId=document.getElementById('viagemVeiculo').value;
+  if(!modulosFrota_.viagens){mostrarToast("O módulo Viagens está desativado neste ambiente.",true);return;}
+  const btn=document.getElementById("btnSalvarViagem");
+  const role=usuarioSessao_.role;
+  const veiculoId=document.getElementById("viagemVeiculo").value;
   const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
-  if(!veiculo){mostrarToast('Selecione um veículo ativo.',true);return;}
-  if(!entregasParaNovaViagem_.length){mostrarToast('Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.',true);return;}
+  if(!veiculo){mostrarToast("Selecione um veículo ativo.",true);return;}
+  if(!entregasParaNovaViagem_.length&&!viagemRascunhoEmSalvamento_){mostrarToast("Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.",true);return;}
   const escolhidas=entregasParaNovaViagem_.map((d,i)=>{
     const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(d.idEntrega))+'"]');
-    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():'',ordem:i+1,d:d};
+    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():"",notas:notasFiscaisPendentesViagem_[d.idEntrega]||[],ordem:i+1,d:d};
   });
-  if(veiculo.propriedade==='TERCEIRIZADO'&&Number(document.getElementById('viagemValorNegociado').value)<=0){
-    mostrarToast('Informe o valor negociado por esta viagem.',true);return;
+  if(role==="FATURAMENTO"){
+    const semXml=escolhidas.filter(x=>!x.notas.length);
+    if(semXml.length){mostrarToast("Anexe ao menos uma NF-e XML para cada entrega. Pendentes: "+semXml.map(x=>x.d.cliente).join(", "),true);return;}
   }
-  btn.disabled=true;btn.textContent='Calculando rota...';
-  let rota=null;
-  const comCoordenadas=escolhidas.every(x=>x.d&&x.d.lat!==null&&x.d.lat!==undefined&&x.d.lng!==null&&x.d.lng!==undefined);
-  if(comCoordenadas&&escolhidas.length<=50){
-    try{
-      const res=await chamarAPI_POST_({acao:'sugerirRota',pontos:escolhidas.map(x=>({linha:x.d.linha,lat:x.d.lat,lng:x.d.lng}))});
-      if(res&&res.ok){
-        rota=res;
-        const ordenados=(res.ordem||[]).map(linha=>escolhidas.find(x=>Number(x.d.linha)===Number(linha))).filter(Boolean);
-        ordenados.forEach((x,i)=>x.ordem=i+1);
-        document.getElementById('viagemRotaResumo').textContent='Rota calculada: '+res.distanciaKm+' km · aproximadamente '+res.duracaoMin+' min, com saída e retorno à Perfinorte.';
-      }else{
-        document.getElementById('viagemRotaResumo').textContent='Não foi possível estimar a rota: '+(res&&res.erro?res.erro:'serviço indisponível')+'. A viagem poderá ser salva sem distância prevista.';
-      }
-    }catch(err){
-      document.getElementById('viagemRotaResumo').textContent='Roteirizador indisponível. A viagem poderá ser salva sem distância prevista.';
-    }
-  }else{
-    document.getElementById('viagemRotaResumo').textContent='Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.';
+  if(veiculo.propriedade==="TERCEIRIZADO"&&Number(document.getElementById("viagemValorNegociado").value)<=0){
+    mostrarToast("Informe o valor negociado por esta viagem.",true);return;
   }
-  if(!rota&&!confirm('Não foi possível calcular a rota. Deseja programar a viagem mesmo assim, sem estimativa de distância e custo por km?')){
-    btn.disabled=false;btn.textContent='Calcular rota e programar';return;
-  }
-  const dados={
-    data:document.getElementById('viagemData').value,
-    periodo:document.getElementById('viagemPeriodo').value,
-    veiculoId:veiculoId,
-    motorista:document.getElementById('viagemMotorista').value.trim(),
-    valorNegociado:veiculo.propriedade==='TERCEIRIZADO'?document.getElementById('viagemValorNegociado').value:'',
-    hodometroInicial:document.getElementById('viagemHodometroInicial').value,
-    pedagios:document.getElementById('viagemPedagios').value,
-    despesasExtras:document.getElementById('viagemExtras').value,
-    observacoes:document.getElementById('viagemObservacoes').value.trim(),
-    distanciaPrevistaKm:rota?rota.distanciaKm:null,
-    duracaoPrevistaMin:rota?rota.duracaoMin:null,
-    entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,nfs:x.nfs,ordem:x.ordem}))
-  };
+  btn.disabled=true;
   try{
-    const res=await chamarAPI_POST_({acao:'criarViagem',dados:dados});
-    if(!res||!res.ok)throw new Error(res&&res.erro?res.erro:'Não foi possível programar a viagem.');
+    if(!viagemRascunhoEmSalvamento_){
+      btn.textContent="Calculando rota...";
+      let rota=null;
+      const comCoordenadas=escolhidas.every(x=>x.d&&x.d.lat!==null&&x.d.lat!==undefined&&x.d.lng!==null&&x.d.lng!==undefined);
+      if(comCoordenadas&&escolhidas.length<=50){
+        try{
+          const r=await chamarAPI_POST_({acao:"sugerirRota",pontos:escolhidas.map(x=>({linha:x.d.linha,lat:x.d.lat,lng:x.d.lng}))});
+          if(r&&r.ok){
+            rota=r;
+            const ordenados=(r.ordem||[]).map(linha=>escolhidas.find(x=>Number(x.d.linha)===Number(linha))).filter(Boolean);
+            ordenados.forEach((x,i)=>x.ordem=i+1);
+            document.getElementById("viagemRotaResumo").textContent="Rota calculada: "+r.distanciaKm+" km · aproximadamente "+r.duracaoMin+" min, com saída e retorno à Perfinorte.";
+          }else{
+            document.getElementById("viagemRotaResumo").textContent="Não foi possível estimar a rota: "+(r&&r.erro?r.erro:"serviço indisponível")+". A viagem poderá ser salva sem distância prevista.";
+          }
+        }catch(err){document.getElementById("viagemRotaResumo").textContent="Roteirizador indisponível. A viagem poderá ser salva sem distância prevista.";}
+      }else{
+        document.getElementById("viagemRotaResumo").textContent="Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.";
+      }
+      if(!rota&&!confirm("Não foi possível calcular a rota. Deseja salvar a viagem mesmo assim, sem estimativa de distância e custo por km?")){
+        btn.disabled=false;btn.textContent=role==="FATURAMENTO"?"Salvar rascunho e importar XML":"Calcular rota e programar";return;
+      }
+      const dados={
+        data:document.getElementById("viagemData").value,
+        periodo:document.getElementById("viagemPeriodo").value,
+        veiculoId:veiculoId,
+        motorista:document.getElementById("viagemMotorista").value.trim(),
+        valorNegociado:veiculo.propriedade==="TERCEIRIZADO"?document.getElementById("viagemValorNegociado").value:"",
+        hodometroInicial:document.getElementById("viagemHodometroInicial").value,
+        pedagios:document.getElementById("viagemPedagios").value,
+        despesasExtras:document.getElementById("viagemExtras").value,
+        observacoes:document.getElementById("viagemObservacoes").value.trim(),
+        distanciaPrevistaKm:rota?rota.distanciaKm:null,
+        duracaoPrevistaMin:rota?rota.duracaoMin:null,
+        entregas:escolhidas.map(x=>({idEntrega:x.idEntrega,nfs:x.nfs,ordem:x.ordem}))
+      };
+      btn.textContent="Criando viagem...";
+      const created=await chamarAPI_POST_({acao:"criarViagem",dados:dados});
+      if(!created||created.ok!==true)throw new Error(created&&(created.erro||created.error)?(created.erro||created.error):"Não foi possível criar a viagem.");
+      viagemRascunhoEmSalvamento_={id:created.id,numero:created.numero,uploadedKeys:[],totalEntregas:created.totalEntregas};
+    }
+    const viagem=viagemRascunhoEmSalvamento_;
+    const notasParaEnviar=escolhidas.flatMap(x=>x.notas.map(n=>({idEntrega:x.idEntrega,nota:n})));
+    const pendentes=notasParaEnviar.filter(x=>!viagem.uploadedKeys.includes(x.nota.dados.chaveAcesso));
+    if(pendentes.length){
+      const falhas=[];
+      for(let i=0;i<pendentes.length;i++){
+        const item=pendentes[i];
+        btn.textContent="Importando XML "+(i+1)+"/"+pendentes.length+"...";
+        const resposta=await chamarAPI_POST_({acao:"salvarNFeViagem",dados:{
+          viagemId:viagem.id,idEntrega:item.idEntrega,xmlBase64:item.nota.xmlBase64,nomeArquivo:item.nota.nomeArquivo
+        }});
+        if(!resposta||resposta.ok!==true)falhas.push((resposta&&(resposta.erro||resposta.error))||("Falha ao importar "+item.nota.nomeArquivo));
+        else viagem.uploadedKeys.push(item.nota.dados.chaveAcesso);
+      }
+      if(falhas.length){
+        btn.textContent="Tentar novamente";
+        mostrarToast("A viagem "+viagem.numero+" foi criada, mas "+falhas.length+" XML(s) não foram vinculados. Clique em Tentar novamente após corrigir. "+falhas.join(" · "),true);
+        btn.disabled=false;
+        return;
+      }
+    }
+    const quantidadeNFs=viagem.uploadedKeys.length;
+    const numeroViagem=viagem.numero, totalEntregas=viagem.totalEntregas;
     entregasSelecionadasViagem_.clear();
     entregasParaNovaViagem_=[];
     fecharModalViagem_();
     renderTabela();
-    mostrarToast(res.numero+' programada com '+res.totalEntregas+' entrega(s).');
-    mostrarView('viagens');
-  }catch(err){mostrarToast(err.message||String(err),true);}
-  finally{btn.disabled=false;btn.textContent='Calcular rota e programar';}
+    mostrarView("viagens");
+    await carregarViagens_();
+    mostrarToast(role==="FATURAMENTO"
+      ?numeroViagem+" salva como rascunho com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF(s). Revise e libere para a operação."
+      :numeroViagem+" programada com "+totalEntregas+" entrega(s) e "+quantidadeNFs+" NF(s).");
+  }catch(err){mostrarToast(err&&err.message?err.message:String(err),true);}
+  finally{
+    if(document.getElementById("btnSalvarViagem")){
+      btn.disabled=false;
+      if(viagemRascunhoEmSalvamento_)btn.textContent="Tentar novamente";
+      else btn.textContent=role==="FATURAMENTO"?"Salvar rascunho e importar XML":"Calcular rota e programar";
+    }
+  }
 }
 async function alterarStatusViagemUI_(id,status){
   if(status==='EM_ANDAMENTO'&&!confirm('Registrar a saída desta viagem e iniciar o acompanhamento?'))return;
