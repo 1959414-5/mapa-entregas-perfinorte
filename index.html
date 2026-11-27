@@ -3065,6 +3065,25 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-kpi span{display:block;margin-top:4px;color:#8b98a8;font-size:10px;}
 .trips-panel{overflow:hidden;border:1px solid #dce5ee;border-radius:15px;background:#fff;box-shadow:0 6px 20px rgba(22,43,62,.04);}
 .trips-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 17px;border-bottom:1px solid #e8edf2;}
+.trips-available-panel{margin-bottom:14px;}
+.trips-available-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid #e8edf2;}
+.trips-available-kicker{color:#71869a;font:750 8px var(--font-mono);letter-spacing:.15em;}
+.trips-available-head h2{margin:5px 0 3px;color:#1b3045;font-size:15px;font-weight:850;}
+.trips-available-head p{margin:0;color:#7b8999;font-size:10px;line-height:1.5;}
+.trips-available-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.trips-available-tools button{min-height:35px;padding:7px 10px;border:1px solid #d7e2ea;border-radius:8px;background:#fff;color:#52677b;font-size:9px;font-weight:750;cursor:pointer;}
+.trips-available-tools button.primary{border-color:#1d4058;background:#1d4058;color:#fff;}
+.trips-available-tools button:disabled{opacity:.42;cursor:not-allowed;}
+.trips-available-tools button span{display:inline-grid;min-width:17px;height:17px;place-items:center;margin-left:4px;border-radius:5px;background:rgba(255,255,255,.16);}
+.trips-available-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;}
+.trips-available-item{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 15px;border-bottom:1px solid #edf1f5;cursor:pointer;min-width:0;}
+.trips-available-item:nth-child(odd){border-right:1px solid #edf1f5;}
+.trips-available-item:hover{background:#f8fbfc;}
+.trips-available-item input{width:15px;height:15px;accent-color:#237f8f;}
+.trips-available-item strong{display:block;color:#263d52;font-size:10px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trips-available-item small{display:block;margin-top:3px;color:#8190a1;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trips-available-item em{font-style:normal;color:#6e8092;font-size:8px;white-space:nowrap;}
+.trips-available-foot{padding:9px 15px;color:#8290a0;font-size:9px;background:#fbfcfd;}
 .trips-tabs{display:flex;gap:5px;flex-wrap:wrap;}
 .trips-tabs button{min-height:34px;padding:7px 11px;border:1px solid transparent;border-radius:8px;background:transparent;color:#718096;font-size:10px;font-weight:750;cursor:pointer;}
 .trips-tabs button.active{border-color:#d3e4eb;background:#eaf2f6;color:#1d5b6b;}
@@ -3658,6 +3677,23 @@ button,input,select,textarea{font-family:var(--font-ui);}
           </div>
         </header>
         <section id="viagensKpis" class="trips-kpis" aria-label="Resumo das viagens"></section>
+        <section class="trips-panel trips-available-panel" aria-label="Entregas disponíveis para programação">
+          <header class="trips-available-head">
+            <div>
+              <div class="trips-available-kicker">PROGRAMAÇÃO · NOVA VIAGEM</div>
+              <h2>Entregas disponíveis</h2>
+              <p>Selecione entregas para montar uma viagem. A seleção também pode ser feita na tabela principal.</p>
+            </div>
+            <div class="trips-available-tools">
+              <input id="viagensEntregasBusca" class="trips-search" type="search" placeholder="Buscar cliente, código ou cidade..." oninput="renderizarEntregasDisponiveisViagem_()">
+              <button type="button" onclick="selecionarEntregasDisponiveisViagem_(true)">Marcar visíveis</button>
+              <button type="button" onclick="selecionarEntregasDisponiveisViagem_(false)">Limpar visíveis</button>
+              <button type="button" class="primary" id="btnCriarViagemMenu" onclick="abrirModalViagemPeloMenu_()" disabled>Criar viagem <span id="viagensEntregasSelecionadas">0</span></button>
+            </div>
+          </header>
+          <div id="viagensEntregasDisponiveis"><div class="trips-empty">Carregando entregas disponíveis...</div></div>
+          <div class="trips-available-foot">A seleção fica sincronizada com a tabela principal. Entregas concluídas ou vinculadas a viagens em aberto não aparecem nesta lista.</div>
+        </section>
         <section class="trips-panel">
           <div class="trips-toolbar">
             <div class="trips-tabs" role="group" aria-label="Filtrar viagens">
@@ -5392,7 +5428,7 @@ function atualizarContextoSessaoUI_(){
   const aviso=document.getElementById("ambienteTesteAviso");if(aviso)aviso.hidden=env!=="TESTE";
   const reason=document.querySelector(".dashboard-reason-toggle");if(reason)reason.hidden=role!=="ADMIN";
   const manager=document.getElementById("fleetModuleManager");if(manager)manager.hidden=role!=="ADMIN";
-  const btnNova=document.getElementById("btnCriarViagemSelecaoTabela");if(btnNova)btnNova.hidden=!(role==="ADMIN"||role==="FATURAMENTO");
+  const btnNova=document.getElementById("btnCriarViagemSelecaoTabela");if(btnNova)btnNova.hidden=!["ADMIN","FATURAMENTO","OPERACIONAL"].includes(role);
   const btnVeiculo=document.getElementById("btnNovoVeiculo");if(btnVeiculo)btnVeiculo.hidden=role!=="ADMIN";
 }
 function renderizarControlesModulosFrota_(){
@@ -5635,7 +5671,7 @@ let viagemFormularioCarregado_ = false;
 let viagemFormularioPromise_ = null;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
-let notasFiscaisPendentesViagem_ = {};
+let notasFiscaisPendentesViagem_ = [];
 let viagemRascunhoEmSalvamento_ = null;
 
 function escaparViagem_(valor){
@@ -5677,6 +5713,8 @@ function carregarViagens_(){
       viagensDadosCarregadas_=true;
       aplicarIdsEstaveisNasEntregas_();
       renderizarViagens_();
+      renderizarEntregasDisponiveisViagem_();
+      atualizarControlesSelecaoViagemTabela_([]);
       if(modoAtual==='tabela')renderTabela();
       return true;
     }catch(err){
