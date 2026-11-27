@@ -3,10 +3,13 @@
 ## Fluxo por perfil
 
 - **ADMIN** administra os módulos, alterna entre Teste e Produção e tem acesso às funções administrativas.
-- **OPERACIONAL** acompanha somente as viagens liberadas para a operação e executa as ações de parada e viagem.
-- **FATURAMENTO** cria viagens em estado `RASCUNHO`, seleciona entregas, vincula uma ou várias NF-e por entrega e libera a viagem depois da conferência.
+- **OPERACIONAL** seleciona entregas pela tabela principal ou pela fila de entregas do menu Viagens, cria a programação em estado `PROGRAMADA` e executa as ações de parada e viagem.
+- **FATURAMENTO** pode selecionar entregas e criar uma viagem em estado `RASCUNHO`, ou localizar uma viagem já criada pela operação e anexar os XMLs a ela. Uma viagem pode receber vários XMLs, todos vinculados à viagem como um todo.
+- **ADMIN** acompanha os dois fluxos e pode anexar XMLs a viagens em homologação.
 
-A viagem em rascunho não aparece para OPERACIONAL. A liberação altera o status para `PROGRAMADA`. O backend exige ao menos uma NF-e ativa para cada parada antes de liberar.
+A seleção de entregas é compartilhada entre a tabela principal e a fila do menu Viagens. Após criada, a viagem aparece no menu Viagens. O Faturamento abre os detalhes da viagem e usa **Vincular XMLs à viagem**. A NF-e não é vinculada a uma entrega/parada individual.
+
+A viagem em rascunho não aparece para OPERACIONAL. A liberação altera o status para `PROGRAMADA`. O backend exige ao menos uma NF-e ativa para a viagem inteira antes de liberar um rascunho.
 
 ## Campos lidos do XML
 
@@ -22,12 +25,12 @@ O parser lê os elementos pelo nome local, sem depender do prefixo de namespace:
 | Emitente | CNPJ/CPF e `xNome` de `emit` |
 | Destinatário | CNPJ/CPF, `xNome`, município e UF de `dest` |
 
-O peso é somado uma vez por grupo `vol`, sem somar novamente o peso dos itens. O total da viagem é a soma das NF-e ativas vinculadas àquela viagem.
+O peso é somado uma vez por grupo `vol`, sem somar novamente o peso dos itens. O total da viagem é a soma das NF-e ativas vinculadas àquela viagem. O XML é selecionado em um único campo no modal da programação ou nos detalhes de uma viagem existente.
 
 ## Armazenamento
 
-- `VIAGEM_NOTAS_FISCAIS`: metadados normalizados e vínculo entre NF, viagem e parada.
-- `VIAGEM_NOTAS_FISCAIS_TESTE`: registros exclusivos do ambiente de teste.
+- `VIAGEM_NOTAS_FISCAIS`: metadados normalizados e vínculo entre NF e viagem. Os campos legados de parada/entrega ficam vazios para novas importações.
+- `VIAGEM_NOTAS_FISCAIS_TESTE`: registros exclusivos do ambiente de teste, também vinculados à viagem como um todo.
 - `PERFINORTE_NFE_XML` e `PERFINORTE_NFE_XML_TESTE`: arquivos XML originais no Drive.
 - `CADASTRO_VIAGENS` recebe total de valor de NF e peso líquido em colunas próprias. A versão de teste usa abas próprias.
 
