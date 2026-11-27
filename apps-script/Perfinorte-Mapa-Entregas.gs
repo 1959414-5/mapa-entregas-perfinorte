@@ -1699,7 +1699,7 @@ const VIAGENS_HEADERS_ = [
   "DURACAO_PREVISTA_MIN","CUSTO_KM_ESTIMADO","CUSTO_ESTIMADO","VALOR_NEGOCIADO",
   "PEDAGIOS","DESPESAS_EXTRAS","HODOMETRO_INICIAL","HODOMETRO_FINAL",
   "COMBUSTIVEL_REAL","CUSTO_TOTAL_FINAL","DISTANCIA_REAL_KM","OBSERVACOES",
-  "CRIADO_EM","ATUALIZADO_EM","ENCERRADO_EM"
+  "CRIADO_EM","ATUALIZADO_EM","ENCERRADO_EM","VALOR_NF_TOTAL","PESO_LIQUIDO_TOTAL_KG"
 ];
 const VIAGEM_ENTREGAS_HEADERS_ = [
   "ID","VIAGEM_ID","ID_ENTREGA","LINHA_SNAPSHOT","ORDEM","CODIGO_CLIENTE",
@@ -1709,6 +1709,12 @@ const VIAGEM_ENTREGAS_HEADERS_ = [
 ];
 const VIAGEM_OCORRENCIAS_HEADERS_ = [
   "ID","VIAGEM_ID","ID_ENTREGA","TIPO","DESCRICAO","DATA_HORA","REGISTRADO_POR"
+];
+const VIAGEM_NF_HEADERS_ = [
+  "ID","VIAGEM_ID","PARADA_ID","ID_ENTREGA","CHAVE_ACESSO","NUMERO","SERIE",
+  "DATA_EMISSAO","EMITENTE_CNPJ","EMITENTE_NOME","DESTINATARIO_CNPJ","DESTINATARIO_NOME",
+  "MUNICIPIO_DEST","UF_DEST","VALOR_TOTAL","PESO_LIQUIDO_KG","XML_FILE_ID","XML_NOME",
+  "IMPORTADO_POR","IMPORTADO_EM","AMBIENTE","STATUS"
 ];
 
 function getOrCreateLogisticaSheet_(nome,headers){
@@ -1728,6 +1734,13 @@ function getOrCreateLogisticaSheet_(nome,headers){
     if(String(atuais[0]||"")!==headers[0]){
       throw new Error("A aba "+nome+" já existe, mas não tem o cabeçalho esperado. Confira antes de continuar.");
     }
+    const ultimaColuna=sh.getLastColumn();
+    if(ultimaColuna<headers.length){
+      sh.getRange(1,ultimaColuna+1,1,headers.length-ultimaColuna)
+        .setValues([headers.slice(ultimaColuna)]);
+      sh.getRange(1,1,1,headers.length)
+        .setBackground("#183149").setFontColor("#ffffff").setFontWeight("bold");
+    }
   }
   return sh;
 }
@@ -1736,7 +1749,183 @@ function getOrCreateEstruturaViagens_(ambiente){
   const teste=normalizarAmbienteMapa_(ambiente)==="TESTE";
   return {viagens:getOrCreateLogisticaSheet_(teste?"CADASTRO_VIAGENS_TESTE":VIAGENS_SHEET_NAME_,VIAGENS_HEADERS_),
     entregas:getOrCreateLogisticaSheet_(teste?"VIAGEM_ENTREGAS_TESTE":VIAGEM_ENTREGAS_SHEET_NAME_,VIAGEM_ENTREGAS_HEADERS_),
-    ocorrencias:getOrCreateLogisticaSheet_(teste?"VIAGEM_OCORRENCIAS_TESTE":VIAGEM_OCORRENCIAS_SHEET_NAME_,VIAGEM_OCORRENCIAS_HEADERS_)};
+    ocorrencias:getOrCreateLogisticaSheet_(teste?"VIAGEM_OCORRENCIAS_TESTE":VIAGEM_OCORRENCIAS_SHEET_NAME_,VIAGEM_OCORRENCIAS_HEADERS_),
+    notas:getOrCreateLogisticaSheet_(teste?"VIAGEM_NOTAS_FISCAIS_TESTE":"VIAGEM_NOTAS_FISCAIS",VIAGEM_NF_HEADERS_)};
+}
+
+
+function filhoXmlPorNomeNFe_(elemento,nome){
+  if(!elemento||!elemento.getChildren)return null;
+  const filhos=elemento.getChildren();
+  for(let i=0;i<filhos.length;i++)if(filhos[i].getName()===nome)return filhos[i];
+  return null;
+}
+function caminhoXmlNFe_(elemento,caminho){
+  const partes=String(caminho||"").split("/").filter(Boolean);
+  let atual=elemento;
+  for(let i=0;i<partes.length;i++){atual=filhoXmlPorNomeNFe_(atual,partes[i]);if(!atual)return null;}
+  return atual;
+}
+function textoXmlNFe_(elemento,caminho){
+  const alvo=caminhoXmlNFe_(elemento,caminho);
+  return alvo?String(alvo.getText()||"").trim():"";
+}
+function normalizarDocumentoNFe_(valor){
+  return String(valor||"").replace(/\D/g,"");
+}
+function numeroXmlNFe_(valor){
+  if(valor===null||valor===undefined||String(valor).trim()==="")return null;
+  const n=Number(String(valor).trim().replace(",","."));
+  return Number.isFinite(n)&&n>=0?n:null;
+}
+function extrairDadosNFeXml_(xmlTexto){
+  try{
+    const doc=XmlService.parse(String(xmlTexto||""));
+    const raiz=doc.getRootElement();
+    const nfe=raiz.getName()==="NFe"?raiz:filhoXmlPorNomeNFe_(raiz,"NFe")||raiz;
+    const inf=filhoXmlPorNomeNFe_(nfe,"infNFe");
+    if(!inf)throw new Error("O XML não contém o grupo infNFe da NF-e.");
+    const ide=filhoXmlPorNomeNFe_(inf,"ide");
+    const emit=filhoXmlPorNomeNFe_(inf,"emit");
+    const dest=filhoXmlPorNomeNFe_(inf,"dest");
+    const total=filhoXmlPorNomeNFe_(inf,"total");
+    const transp=filhoXmlPorNomeNFe_(inf,"transp");
+    if(!ide||!emit||!dest||!total)throw new Error("A estrutura da NF-e está incompleta (ide, emit, dest ou total).");
+    const atributoId=inf.getAttribute("Id");
+    const chave=normalizarDocumentoNFe_(atributoId?atributoId.getValue().replace(/^NFe/i,""):"");
+    const chaveFinal=chave||normalizarDocumentoNFe_(textoXmlNFe_(raiz,"protNFe/infProt/chNFe"));
+    if(!/^\d{44}$/.test(chaveFinal))throw new Error("Não foi possível identificar uma chave de acesso válida de 44 dígitos.");
+    const numero=textoXmlNFe_(ide,"nNF"),serie=textoXmlNFe_(ide,"serie");
+    if(!numero||!serie)throw new Error("Número ou série da NF-e não encontrado.");
+    let valor=numeroXmlNFe_(textoXmlNFe_(total,"vNFTot"));
+    if(valor===null)valor=numeroXmlNFe_(textoXmlNFe_(total,"ICMSTot/vNF"));
+    if(valor===null)throw new Error("Valor total da nota não encontrado em total/vNFTot nem em total/ICMSTot/vNF.");
+    const volumes=transp?filhoXmlPorNomeNFe_(transp,"vol"):null;
+    let peso=0, volumesComPeso=0;
+    if(volumes){
+      const lista=volumes.getChildren().filter(x=>x.getName()==="vol");
+      lista.forEach(v=>{
+        const p=numeroXmlNFe_(textoXmlNFe_(v,"pesoL"));
+        if(p!==null){peso+=p;volumesComPeso++;}
+      });
+    }
+    if(!volumesComPeso)throw new Error("Peso líquido não encontrado em transp/vol/pesoL.");
+    const emitCnpj=normalizarDocumentoNFe_(textoXmlNFe_(emit,"CNPJ"));
+    const emitCpf=normalizarDocumentoNFe_(textoXmlNFe_(emit,"CPF"));
+    const destCnpj=normalizarDocumentoNFe_(textoXmlNFe_(dest,"CNPJ"));
+    const destCpf=normalizarDocumentoNFe_(textoXmlNFe_(dest,"CPF"));
+    const emitNome=textoXmlNFe_(emit,"xNome");
+    const destNome=textoXmlNFe_(dest,"xNome");
+    if(!emitNome||!destNome)throw new Error("Nome do emitente ou destinatário não encontrado.");
+    return {ok:true,chaveAcesso:chaveFinal,numero:numero,serie:serie,dataEmissao:textoXmlNFe_(ide,"dhEmi")||textoXmlNFe_(ide,"dEmi"),
+      emitenteCnpj:emitCnpj||emitCpf,emitenteNome:emitNome,destinatarioCnpj:destCnpj||destCpf,
+      destinatarioNome:destNome,municipioDestino:textoXmlNFe_(dest,"enderDest/xMun"),
+      ufDestino:textoXmlNFe_(dest,"enderDest/UF"),valorTotal:valor,pesoLiquidoKg:Number(peso.toFixed(3)),
+      quantidadeVolumes:volumesComPeso,versao:String(inf.getAttribute("versao")?inf.getAttribute("versao").getValue():""),
+      modelo:textoXmlNFe_(ide,"mod")};
+  }catch(err){return {ok:false,erro:String(err&&err.message?err.message:err)};}
+}
+function decodificarXmlNFeBase64_(base64){
+  const texto=String(base64||"").replace(/^data:[^,]*;base64,/i,"").replace(/\s/g,"");
+  if(!texto)return "";
+  return Utilities.newBlob(Utilities.base64Decode(texto),"application/xml").getDataAsString("UTF-8");
+}
+function obterPastaXmlNFe_(ambiente){
+  const teste=normalizarAmbienteMapa_(ambiente)==="TESTE";
+  const nome=teste?"PERFINORTE_NFE_XML_TESTE":"PERFINORTE_NFE_XML";
+  const pastas=DriveApp.getFoldersByName(nome);
+  return pastas.hasNext()?pastas.next():DriveApp.createFolder(nome);
+}
+function recalcularTotaisNFeViagem_(estrutura,viagemId){
+  const linhas=listarLinhasViagens_(estrutura.notas).filter(r=>String(r[1])===String(viagemId)&&String(r[21]||"ATIVA")==="ATIVA");
+  const valor=linhas.reduce((s,r)=>s+(numeroLogistica_(r[14])||0),0);
+  const peso=linhas.reduce((s,r)=>s+(numeroLogistica_(r[15])||0),0);
+  const tripLast=estrutura.viagens.getLastRow();
+  if(tripLast<2)return {valorTotal:valor,pesoLiquidoKg:peso,quantidadeNFs:linhas.length};
+  const tripIds=estrutura.viagens.getRange(2,1,tripLast-1,1).getValues().flat();
+  const idx=tripIds.findIndex(x=>String(x)===String(viagemId));
+  if(idx<0)throw new Error("Viagem não encontrada ao recalcular os totais das NFs.");
+  estrutura.viagens.getRange(idx+2,28,1,2).setValues([[Number(valor.toFixed(2)),Number(peso.toFixed(3))]]);
+  const paradas=listarLinhasViagens_(estrutura.entregas);
+  paradas.forEach((r,i)=>{
+    if(String(r[1])!==String(viagemId))return;
+    const nums=linhas.filter(n=>String(n[2])===String(r[0])).map(n=>String(n[5])).filter(Boolean);
+    const unicos=[...new Set(nums)];
+    estrutura.entregas.getRange(i+2,12).setValue(unicos.join(", "));
+  });
+  return {valorTotal:Number(valor.toFixed(2)),pesoLiquidoKg:Number(peso.toFixed(3)),quantidadeNFs:linhas.length};
+}
+function analisarXmlNFeViagem_(dados,ambiente,papel){
+  const role=normalizarPapelMapa_(papel);
+  if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode analisar XML de NF-e."};
+  if(!dados||!dados.xmlBase64)return {ok:false,erro:"Arquivo XML não recebido."};
+  const xml=decodificarXmlNFeBase64_(dados.xmlBase64);
+  if(!xml)return {ok:false,erro:"O arquivo XML está vazio."};
+  return extrairDadosNFeXml_(xml);
+}
+function salvarNFeViagem_(dados,ambiente,papel,usuario){
+  const role=normalizarPapelMapa_(papel),env=normalizarAmbienteMapa_(ambiente);
+  if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode vincular notas fiscais."};
+  if(!dados||!dados.viagemId||!dados.idEntrega||!dados.xmlBase64)return {ok:false,erro:"Informe viagem, entrega e arquivo XML."};
+  const xml=decodificarXmlNFeBase64_(dados.xmlBase64);
+  const nf=extrairDadosNFeXml_(xml);
+  if(!nf.ok)return nf;
+  const estrutura=getOrCreateEstruturaViagens_(env);
+  const lock=LockService.getScriptLock();lock.waitLock(10000);
+  let arquivo=null;
+  try{
+    const tripLast=estrutura.viagens.getLastRow();
+    const tripIds=tripLast>=2?estrutura.viagens.getRange(2,1,tripLast-1,1).getValues().flat():[];
+    const tripIdx=tripIds.findIndex(x=>String(x)===String(dados.viagemId));
+    if(tripIdx<0)return {ok:false,erro:"Viagem não encontrada neste ambiente."};
+    const tripRow=tripIdx+2;
+    const statusTrip=String(estrutura.viagens.getRange(tripRow,11).getValue()||"");
+    if(statusTrip!=="RASCUNHO"&&!(role==="ADMIN"&&["PROGRAMADA","EM_ANDAMENTO"].indexOf(statusTrip)>=0))
+      return {ok:false,erro:"As NFs só podem ser vinculadas a um rascunho (ou viagem ativa com permissão ADMIN)."};
+    const stopLast=estrutura.entregas.getLastRow();
+    const stopRows=stopLast>=2?estrutura.entregas.getRange(2,1,stopLast-1,Math.max(3,estrutura.entregas.getLastColumn())).getValues():[];
+    const stopIdx=stopRows.findIndex(r=>String(r[1])===String(dados.viagemId)&&String(r[2])===String(dados.idEntrega));
+    if(stopIdx<0)return {ok:false,erro:"A entrega selecionada não pertence a esta viagem."};
+    const duplicate=listarLinhasViagens_(estrutura.notas).some(r=>String(r[4])===nf.chaveAcesso&&String(r[21]||"ATIVA")==="ATIVA");
+    if(duplicate)return {ok:false,erro:"Esta chave de acesso já está vinculada a uma viagem neste ambiente."};
+    const stopId=String(stopRows[stopIdx][0]||"");
+    const nomeOriginal=String(dados.nomeArquivo||("NFe-"+nf.chaveAcesso+".xml")).replace(/[\\/:*?"<>|]/g,"_").slice(0,140);
+    const blob=Utilities.newBlob(Utilities.base64Decode(String(dados.xmlBase64).replace(/^data:[^,]*;base64,/i,"").replace(/\s/g,"")),"application/xml",nomeOriginal);
+    arquivo=obterPastaXmlNFe_(env).createFile(blob);
+    const agora=new Date();
+    estrutura.notas.appendRow([
+      "NFE-"+Utilities.getUuid(),String(dados.viagemId),stopId,String(dados.idEntrega),
+      nf.chaveAcesso,nf.numero,nf.serie,nf.dataEmissao,nf.emitenteCnpj,nf.emitenteNome,
+      nf.destinatarioCnpj,nf.destinatarioNome,nf.municipioDestino,nf.ufDestino,
+      nf.valorTotal,nf.pesoLiquidoKg,arquivo.getId(),nomeOriginal,String(usuario||""),agora,env,"ATIVA"
+    ]);
+    const totais=recalcularTotaisNFeViagem_(estrutura,dados.viagemId);
+    return {ok:true,notaFiscal:nf,totais:totais,arquivoId:arquivo.getId()};
+  }catch(err){
+    if(arquivo){try{arquivo.setTrashed(true);}catch(ignore){}}
+    return {ok:false,erro:String(err&&err.message?err.message:err)};
+  }finally{lock.releaseLock();}
+}
+function liberarViagemFaturamento_(dados,ambiente,papel){
+  const role=normalizarPapelMapa_(papel),env=normalizarAmbienteMapa_(ambiente);
+  if(["ADMIN","FATURAMENTO"].indexOf(role)<0)return {ok:false,erro:"Somente ADMIN ou FATURAMENTO pode liberar viagens."};
+  if(!dados||!dados.viagemId)return {ok:false,erro:"Viagem não identificada."};
+  const estrutura=getOrCreateEstruturaViagens_(env), lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    const last=estrutura.viagens.getLastRow(),ids=last>=2?estrutura.viagens.getRange(2,1,last-1,1).getValues().flat():[];
+    const idx=ids.findIndex(x=>String(x)===String(dados.viagemId));if(idx<0)return {ok:false,erro:"Viagem não encontrada."};
+    const row=idx+2,status=String(estrutura.viagens.getRange(row,11).getValue()||"");
+    if(status!=="RASCUNHO")return {ok:false,erro:"Somente viagens em rascunho podem ser liberadas."};
+    const stops=listarLinhasViagens_(estrutura.entregas).filter(r=>String(r[1])===String(dados.viagemId));
+    if(!stops.length)return {ok:false,erro:"A viagem não possui entregas."};
+    const notas=listarLinhasViagens_(estrutura.notas).filter(r=>String(r[1])===String(dados.viagemId)&&String(r[21]||"ATIVA")==="ATIVA");
+    const semNota=stops.filter(s=>!notas.some(n=>String(n[2])===String(s[0])));
+    if(semNota.length)return {ok:false,erro:"Cada entrega precisa ter ao menos uma NF-e vinculada antes da liberação. Pendentes: "+semNota.map(s=>String(s[6]||s[2])).join(", ")};
+    recalcularTotaisNFeViagem_(estrutura,dados.viagemId);
+    estrutura.viagens.getRange(row,11).setValue("PROGRAMADA");
+    estrutura.viagens.getRange(row,26).setValue(new Date());
+    return {ok:true,status:"PROGRAMADA",numero:String(estrutura.viagens.getRange(row,2).getValue()||""),totalEntregas:stops.length,totalNFs:notas.length};
+  }finally{lock.releaseLock();}
 }
 
 function listarLinhasViagens_(sheet){
@@ -1811,6 +2000,14 @@ function listarDadosViagens_(ambiente,papel){
     return String(d.idEntrega||"").trim()!=="";
   });
 
+  const nfRows=listarLinhasViagens_(estrutura.notas);
+  const notasPorViagem={};
+  nfRows.forEach(r=>{
+    if(String(r[21]||"ATIVA")!=="ATIVA")return;
+    const tripId=String(r[1]||"");if(!tripId)return;
+    if(!notasPorViagem[tripId])notasPorViagem[tripId]=[];
+    notasPorViagem[tripId].push({id:String(r[0]||""),idEntrega:String(r[3]||""),chaveAcesso:String(r[4]||""),numero:String(r[5]||""),serie:String(r[6]||""),dataEmissao:String(r[7]||""),emitenteCnpj:String(r[8]||""),emitenteNome:String(r[9]||""),destinatarioCnpj:String(r[10]||""),destinatarioNome:String(r[11]||""),municipioDestino:String(r[12]||""),ufDestino:String(r[13]||""),valorTotal:numeroLogistica_(r[14])||0,pesoLiquidoKg:numeroLogistica_(r[15])||0,nomeArquivo:String(r[17]||"")});
+  });
   const ocorrenciaRows=listarLinhasViagens_(estrutura.ocorrencias);
   const ocorrenciasPorViagem={};
   ocorrenciaRows.forEach(function(r){
@@ -1849,7 +2046,9 @@ function listarDadosViagens_(ambiente,papel){
       observacoes:String(r[23]||""),paradas:stops,ocorrencias:ocorrenciasPorViagem[id]||[],
       criadoEm:r[24] instanceof Date?r[24].toISOString():String(r[24]||""),
       atualizadoEm:r[25] instanceof Date?r[25].toISOString():String(r[25]||""),
-      encerradoEm:r[26] instanceof Date?r[26].toISOString():String(r[26]||"")
+      encerradoEm:r[26] instanceof Date?r[26].toISOString():String(r[26]||""),
+      valorNfTotal:numeroLogistica_(r[27])||0,pesoLiquidoTotalKg:numeroLogistica_(r[28])||0,
+      notasFiscais:notasPorViagem[id]||[]
     };
   }).sort((a,b)=>String(b.data).localeCompare(String(a.data))||String(b.criadoEm).localeCompare(String(a.criadoEm)));
 
@@ -2221,9 +2420,9 @@ function doPost(e) {
     if(ambiente==="TESTE"&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"O ambiente de teste é exclusivo do perfil ADMIN."});
     const somenteAdmin=["salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo"];
     if(somenteAdmin.indexOf(acao)>=0&&papel!=="ADMIN")return jsonOutput_({ok:false,erro:"Ação permitida somente ao perfil ADMIN."});
-    if(acao==="criarViagem"&&["ADMIN","FATURAMENTO"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Somente ADMIN ou FATURAMENTO pode criar viagens."});
+    if(["criarViagem","analisarXmlNFe","salvarNFeViagem","liberarViagem"].indexOf(acao)>=0&&["ADMIN","FATURAMENTO"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Somente ADMIN ou FATURAMENTO pode executar esta ação."});
     if(["atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"].indexOf(acao)>=0&&["ADMIN","OPERACIONAL"].indexOf(papel)<0)return jsonOutput_({ok:false,erro:"Ação permitida somente a ADMIN ou OPERACIONAL."});
-    const permitidasNoTeste=["sugerirRota","obterConfigMotivoAtraso","salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","criarViagem","atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"];
+    const permitidasNoTeste=["sugerirRota","obterConfigMotivoAtraso","salvarConfigMotivoAtraso","salvarConfigModulosFrota","salvarVeiculo","alterarSituacaoVeiculo","criarViagem","analisarXmlNFe","salvarNFeViagem","liberarViagem","atualizarParadaViagem","atualizarStatusViagem","registrarOcorrenciaViagem"];
     if(ambiente==="TESTE"&&permitidasNoTeste.indexOf(acao)<0)return jsonOutput_({ok:false,erro:"Esta ação não pode alterar dados reais durante o modo de teste."});
 
     switch (acao) {
@@ -2233,6 +2432,12 @@ function doPost(e) {
         return jsonOutput_(salvarConfigMotivoAtraso_(body.ativo,ambiente));
       case "salvarConfigModulosFrota":
         return jsonOutput_(salvarConfigModulosFrota_(body.modulos));
+      case "analisarXmlNFe":
+        return jsonOutput_(analisarXmlNFeViagem_(body.dados,ambiente,papel));
+      case "salvarNFeViagem":
+        return jsonOutput_(salvarNFeViagem_(body.dados,ambiente,papel,body._authUser));
+      case "liberarViagem":
+        return jsonOutput_(liberarViagemFaturamento_(body.dados,ambiente,papel));
       case "concluirEntrega":
         if(ambiente==="TESTE")return jsonOutput_({ok:false,erro:"A conclusão de entregas reais fica bloqueada no ambiente de teste."});
         return jsonOutput_(concluirEntrega(body.linha, body.motivo, body.observacao));
