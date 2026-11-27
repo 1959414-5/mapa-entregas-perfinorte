@@ -6095,6 +6095,8 @@ function renderizarViagens_(){
       :v.status==='EM_ANDAMENTO'
         ?'<button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Interromper / ocorrência</button><button class="primary" type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>'
         :'<button class="primary" type="button" onclick="alterarStatusViagemUI_(\''+escaparViagem_(v.id)+'\',\'EM_ANDAMENTO\')">Retomar viagem</button><button class="warning" type="button" onclick="registrarOcorrenciaViagemUI_(\''+escaparViagem_(v.id)+'\')">Nova ocorrência</button><button type="button" onclick="finalizarViagemUI_(\''+escaparViagem_(v.id)+'\')">Fechar viagem</button>';
+    const needsRouteRecalc=(v.distanciaPrevistaKm===null||v.distanciaPrevistaKm===undefined||v.custoEstimado===null||v.custoEstimado===undefined)&&!encerrada;
+    const recalcAction=needsRouteRecalc?'<button id="btnRecalcularRota-'+escaparViagem_(v.id)+'" type="button" class="trip-nfe-action" onclick="recalcularRotaCustosViagemUI_(\''+escaparViagem_(v.id)+'\')">Recalcular rota e custos</button>':'';
     const ocorrencias=(v.ocorrencias||[]).map(o=>'<div class="trip-occurrence"><span>'+escaparViagem_(o.tipo)+'</span><strong>'+escaparViagem_(o.descricao)+'</strong><small>'+escaparViagem_(o.dataHora||'')+'</small></div>').join('');
     const paradas=(v.paradas||[]).map(p=>{
       const stopClosed=['ENTREGUE','NAO_ENTREGUE','REPROGRAMAR'].includes(p.status);
@@ -6108,7 +6110,7 @@ function renderizarViagens_(){
     return '<article class="trip-card">'+
       '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
       '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span></div>'+
-      '<div class="trip-card-actions">'+statusActions+'<button type="button" class="trip-nfe-action" onclick="abrirModalNFeViagem_(\''+escaparViagem_(v.id)+'\')">Vincular XMLs ('+((v.notasFiscais||[]).length)+')</button><button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
+      '<div class="trip-card-actions">'+statusActions+recalcAction+'<button type="button" class="trip-nfe-action" onclick="abrirModalNFeViagem_(\''+escaparViagem_(v.id)+'\')">Vincular XMLs ('+((v.notasFiscais||[]).length)+')</button><button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
       renderizarResumoNFeViagem_(v)+
       '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+(ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
       '</article>';
@@ -6374,6 +6376,28 @@ async function baixarXmlNFeViagemUI_(viagemId,chave,nomeArquivo){
     const a=document.createElement('a');a.href=url;a.download=String(nomeArquivo||'nfe.xml').replace(/[\\/:*?"<>|]/g,'_');document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
 }
+async function obterCoordenadasEntregaViagem_(d){
+  const lat=Number(d&&d.lat),lng=Number(d&&d.lng);
+  if(d&&d.lat!==null&&d.lat!==undefined&&d.lat!==''&&d.lng!==null&&d.lng!==undefined&&d.lng!==''&&Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180)return {lat:lat,lng:lng};
+  const endereco=String(d&&d.endereco||'').trim();
+  if(!endereco)throw new Error('Entrega '+String(d&&d.cliente||'')+' está sem endereço para geocodificação.');
+  const geo=await chamarAPI_GET_({formato:'geocodificarPreview',endereco:endereco});
+  if(!geo||!geo.ok||!Number.isFinite(Number(geo.lat))||!Number.isFinite(Number(geo.lng))){
+    throw new Error('Não foi possível localizar "'+endereco+'": '+(geo&&(geo.erro||geo.error)?(geo.erro||geo.error):'geocodificação indisponível.'));
+  }
+  return {lat:Number(geo.lat),lng:Number(geo.lng)};
+}
+async function prepararPontosRotaViagem_(itens,onProgress){
+  const pontos=[];
+  for(let i=0;i<itens.length;i++){
+    if(onProgress)onProgress(i+1,itens.length);
+    const item=itens[i],d=item.d||item;
+    const coords=await obterCoordenadasEntregaViagem_(d);
+    pontos.push({linha:Number(d.linha||d.linhaSnapshot||i+1),lat:coords.lat,lng:coords.lng});
+    if(!(d.lat!==null&&d.lat!==undefined&&d.lat!==''&&d.lng!==null&&d.lng!==undefined&&d.lng!==''))await new Promise(resolve=>setTimeout(resolve,140));
+  }
+  return pontos;
+}
 async function salvarViagemUI_(event){
   event.preventDefault();
   if(!modulosFrota_.viagens){mostrarToast('O módulo Viagens está desativado globalmente.',true);return;}
@@ -6389,26 +6413,30 @@ async function salvarViagemUI_(event){
     mostrarToast('Informe o valor negociado por esta viagem.',true);return;
   }
   btn.disabled=true;btn.textContent='Calculando rota...';
-  let rota=null;
-  const comCoordenadas=escolhidas.every(x=>x.d&&x.d.lat!==null&&x.d.lat!==undefined&&x.d.lng!==null&&x.d.lng!==undefined);
-  if(comCoordenadas&&escolhidas.length<=50){
+  let rota=null,erroRota='';
+  if(escolhidas.length<=50){
     try{
-      const res=await chamarAPI_POST_({acao:'sugerirRota',pontos:escolhidas.map(x=>({linha:x.d.linha,lat:x.d.lat,lng:x.d.lng}))});
+      document.getElementById('viagemRotaResumo').textContent='Localizando endereços e calculando a rota...';
+      const pontos=await prepararPontosRotaViagem_(escolhidas,(at,total)=>{
+        document.getElementById('viagemRotaResumo').textContent='Localizando endereços '+at+'/'+total+' e preparando a rota...';
+      });
+      const res=await chamarAPI_POST_({acao:'sugerirRota',pontos:pontos});
       if(res&&res.ok){
         rota=res;
         const ordenados=(res.ordem||[]).map(linha=>escolhidas.find(x=>Number(x.d.linha)===Number(linha))).filter(Boolean);
-        ordenados.forEach((x,i)=>x.ordem=i+1);
+        if(ordenados.length===escolhidas.length)ordenados.forEach((x,i)=>x.ordem=i+1);
         document.getElementById('viagemRotaResumo').textContent='Rota calculada: '+res.distanciaKm+' km · aproximadamente '+res.duracaoMin+' min, com saída e retorno à Perfinorte.';
       }else{
-        document.getElementById('viagemRotaResumo').textContent='Não foi possível estimar a rota: '+(res&&res.erro?res.erro:'serviço indisponível')+'. A viagem poderá ser salva sem distância prevista.';
+        erroRota=res&&(res.erro||res.error)?(res.erro||res.error):'serviço indisponível';
       }
-    }catch(err){
-      document.getElementById('viagemRotaResumo').textContent='Roteirizador indisponível. A viagem poderá ser salva sem distância prevista.';
-    }
+    }catch(err){erroRota=String(err&&err.message?err.message:err);}
   }else{
-    document.getElementById('viagemRotaResumo').textContent='Uma ou mais entregas não possuem coordenadas ou o limite de 50 paradas foi ultrapassado. A viagem será salva sem estimativa de distância.';
+    erroRota='O limite do roteirizador é de 50 paradas por viagem.';
   }
-  if(!rota&&!confirm('Não foi possível calcular a rota. Deseja programar a viagem mesmo assim, sem estimativa de distância e custo por km?')){
+  if(!rota){
+    document.getElementById('viagemRotaResumo').textContent='Não foi possível calcular distância e custo automaticamente: '+erroRota+'.';
+  }
+  if(!rota&&!confirm('Não foi possível calcular a rota. Motivo: '+erroRota+'\n\nDeseja programar a viagem mesmo assim? A distância e o custo estimado ficarão pendentes até o recálculo.')){
     btn.disabled=false;btn.textContent='Calcular rota e programar';return;
   }
   const dados={
@@ -6437,6 +6465,45 @@ async function salvarViagemUI_(event){
     definirAbaViagensMenu_('viagens');
   }catch(err){mostrarToast(err.message||String(err),true);}
   finally{btn.disabled=false;btn.textContent='Calcular rota e programar';}
+}
+async function recalcularRotaCustosViagemUI_(id){
+  const viagem=(viagensDados_.viagens||[]).find(v=>String(v.id)===String(id));
+  if(!viagem)return;
+  const paradas=Array.isArray(viagem.paradas)?viagem.paradas:[];
+  if(!paradas.length){mostrarToast('Esta viagem não possui paradas para calcular a rota.',true);return;}
+  if(paradas.length>50){mostrarToast('O roteirizador permite até 50 paradas por viagem.',true);return;}
+  const btn=document.getElementById('btnRecalcularRota-'+id);
+  if(btn){btn.disabled=true;btn.textContent='Calculando...';}
+  try{
+    const pontos=await prepararPontosRotaViagem_(paradas,(at,total)=>{
+      if(btn)btn.textContent='Localizando '+at+'/'+total+'...';
+    });
+    const rota=await chamarAPI_POST_({acao:'sugerirRota',pontos:pontos});
+    if(!rota||!rota.ok)throw new Error(rota&&(rota.erro||rota.error)?(rota.erro||rota.error):'O roteirizador não retornou uma rota.');
+    const distancia=Number(rota.distanciaKm),duracao=Number(rota.duracaoMin);
+    if(!Number.isFinite(distancia)||distancia<=0)throw new Error('A distância retornada pelo roteirizador é inválida.');
+    const pedagios=Number(viagem.pedagios||0),extras=Number(viagem.despesasExtras||0);
+    let custo=null;
+    if(String(viagem.propriedade||'').toUpperCase()==='TERCEIRIZADO'){
+      const negociado=Number(viagem.valorNegociado||0);
+      if(negociado>0)custo=negociado+pedagios+extras;
+    }else{
+      const custoKm=Number(viagem.custoKmEstimado);
+      if(viagem.custoKmEstimado!==null&&viagem.custoKmEstimado!==undefined&&viagem.custoKmEstimado!==''&&Number.isFinite(custoKm)&&custoKm>0)
+        custo=distancia*custoKm+pedagios+extras;
+    }
+    const salvo=await chamarAPI_POST_({acao:'salvarEstimativaRotaViagem',dados:{
+      viagemId:viagem.id,distanciaKm:distancia,duracaoMin:duracao,custoEstimado:custo
+    }});
+    if(!salvo||!salvo.ok)throw new Error(salvo&&(salvo.erro||salvo.error)?(salvo.erro||salvo.error):'Não foi possível guardar a estimativa no ambiente de homologação.');
+    await carregarViagens_();
+    mostrarToast('Rota atualizada: '+distancia.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' km'+(custo!==null?' · custo estimado '+moedaVeiculoUI_(custo):' · custo/km pendente no cadastro do veículo')+'.');
+  }catch(err){
+    mostrarToast('Não foi possível recalcular esta viagem: '+String(err&&err.message?err.message:err),true);
+  }finally{
+    const atual=document.getElementById('btnRecalcularRota-'+id);
+    if(atual){atual.disabled=false;atual.textContent='Recalcular rota e custos';}
+  }
 }
 async function alterarStatusViagemUI_(id,status){
   if(status==='EM_ANDAMENTO'&&!confirm('Registrar a saída desta viagem e iniciar o acompanhamento?'))return;
