@@ -5395,7 +5395,7 @@ function aplicarVisibilidadeModulosFrota_(){
   if(app){app.classList.toggle("modulo-viagens-desativado",!modulosFrota_.viagens);app.classList.toggle("modulo-veiculos-desativado",!modulosFrota_.veiculos||fat);}
   atualizarContextoSessaoUI_();
 }
-async async function alterarAmbienteAdmin_(ambiente){
+async function alterarAmbienteAdmin_(ambiente){
   if(usuarioSessao_.role!=="ADMIN")return;
   const novo=String(ambiente||"").toUpperCase()==="TESTE"?"TESTE":"PRODUCAO";if(novo===ambienteAtual_)return;
   ambienteAtual_=novo;atualizarContextoSessaoUI_();await carregarConfigModulosFrota_(false);await carregarConfigMotivoAtraso_();
@@ -5421,7 +5421,7 @@ async function carregarConfigModulosFrota_(silencioso){
     return false;
   }
 }
-async async function alternarModuloFrota_(nome,modo,toggle){
+async function alternarModuloFrota_(nome,modo,toggle){
   if(usuarioSessao_.role!=="ADMIN"||!["veiculos","viagens","motivosAtraso"].includes(nome)||!["teste","producao"].includes(modo)||modulosFrotaSalvando_)return;
   const anterior=JSON.parse(JSON.stringify(configModulosFrota_)),nova=JSON.parse(JSON.stringify(configModulosFrota_));
   nova[nome][modo]=toggle.checked===true;modulosFrotaSalvando_=true;renderizarControlesModulosFrota_();
