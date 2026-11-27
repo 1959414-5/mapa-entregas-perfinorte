@@ -3233,6 +3233,84 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trips-action-error[hidden]{display:none!important;}
 @media(max-width:600px){.trips-action-form-grid{grid-template-columns:1fr;}.trips-action-form-grid .span-2{grid-column:1;}.trips-action-modal .trips-modal-body{padding:16px;}}
 
+
+/* Programar viagem | interface operacional premium */
+#modalViagemOverlay{padding:22px;background:rgba(11,24,38,.66);backdrop-filter:blur(7px);}
+#modalViagemOverlay .trips-modal{width:min(1040px,calc(100vw - 36px));max-height:min(94dvh,980px);border:1px solid #d6e0e9;border-radius:19px;box-shadow:0 32px 90px rgba(9,25,42,.34);}
+#modalViagemOverlay .trips-modal-head{padding:22px 27px 21px;background:linear-gradient(112deg,#142b40 0%,#1b3a52 58%,#24485c 100%);border-bottom:0;color:#fff;}
+#modalViagemOverlay .trips-modal-head:before{height:3px;background:linear-gradient(90deg,#55a6b6,#8bbfbd 38%,rgba(139,191,189,0));}
+#modalViagemOverlay .trips-modal-kicker{color:#a8c2d2;font-size:8px;letter-spacing:.19em;}
+#modalViagemOverlay .trips-modal-kicker span{padding:0 5px;color:#6ea8b1;}
+#modalViagemOverlay .trips-modal-head h2{margin:7px 0 5px;color:#fff;font-size:25px;font-weight:800;letter-spacing:-.04em;}
+#modalViagemOverlay .trips-modal-head p{max-width:610px;color:#b7c8d4;font-size:11px;line-height:1.5;}
+#modalViagemOverlay .trips-modal-head-side{display:flex;align-items:center;gap:13px;}
+#modalViagemOverlay .trips-modal-context{padding:7px 10px;border:1px solid rgba(190,219,227,.25);border-radius:7px;background:rgba(255,255,255,.07);color:#c8d9e1;font-size:8px;font-weight:800;letter-spacing:.1em;white-space:nowrap;}
+#modalViagemOverlay .trips-modal-close{width:35px;height:35px;border:1px solid rgba(220,235,242,.28);border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:20px;transition:background .16s,border-color .16s;}
+#modalViagemOverlay .trips-modal-close:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.5);}
+#modalViagemOverlay .trips-modal-body{padding:20px 25px 24px;background:#f4f7fa;scrollbar-color:#c3d0da transparent;}
+#modalViagemOverlay .trips-form-section{margin:0 0 15px;padding:17px 19px 19px;border:1px solid #e0e7ee;border-radius:13px;background:#fff;box-shadow:0 3px 12px rgba(24,47,68,.035);}
+#modalViagemOverlay .trips-form-section-title{margin-bottom:15px;padding-bottom:12px;border-bottom:1px solid #edf1f5;}
+#modalViagemOverlay .trips-form-section-title>span{width:31px;height:31px;border:1px solid #d7e6eb;border-radius:9px;background:#edf4f6;color:#2a7181;font-size:9px;}
+#modalViagemOverlay .trips-form-section-title strong{color:#243d53;font-size:12px;font-weight:800;}
+#modalViagemOverlay .trips-form-section-title small{color:#8190a0;font-size:9.5px;line-height:1.45;}
+#modalViagemOverlay .trips-form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px 15px;}
+#modalViagemOverlay .trips-extra-grid{margin-top:13px;}
+#modalViagemOverlay .trips-field{gap:6px;color:#53677c;font-size:9px;font-weight:800;letter-spacing:.025em;}
+#modalViagemOverlay .trips-field input,#modalViagemOverlay .trips-field select,#modalViagemOverlay .trips-field textarea{min-height:41px;padding:9px 11px;border:1px solid #d8e1e9;border-radius:8px;background:#fbfcfd;color:#263d52;font:11px var(--font-ui);transition:border-color .15s,box-shadow .15s,background .15s;}
+#modalViagemOverlay .trips-field textarea{min-height:68px;background:#fbfcfd;}
+#modalViagemOverlay .trips-field input:focus,#modalViagemOverlay .trips-field select:focus,#modalViagemOverlay .trips-field textarea:focus{border-color:#5797a7;background:#fff;box-shadow:0 0 0 3px rgba(55,130,148,.11);}
+#modalViagemOverlay .trips-third-party-value{margin-top:14px;padding:13px 15px;border-color:#eadfcf;border-radius:10px;background:#fcfaf6;}
+#modalViagemOverlay .trips-third-party-value strong{color:#6e5835;font-size:10px;}
+#modalViagemOverlay .trips-third-party-value small{color:#8f8067;font-size:9px;}
+#modalViagemOverlay .trips-deliveries-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-3px 0 10px;color:#63768a;font-size:9px;font-weight:700;}
+#modalViagemOverlay .trips-selection-source{color:#8a9aaa;font-size:7px;font-weight:800;letter-spacing:.1em;}
+#modalViagemOverlay .trips-selected-stops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+#modalViagemOverlay .trips-selected-stop{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 11px;border:1px solid #e6ecf1;border-radius:9px;background:#fbfcfd;}
+#modalViagemOverlay .trips-selected-stop>span{min-width:0;display:flex;flex-direction:column;gap:4px;}
+#modalViagemOverlay .trips-selected-stop strong{color:#2e465d;font-size:10px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#modalViagemOverlay .trips-selected-stop small{color:#8492a1;font-size:8.5px;line-height:1.4;}
+#modalViagemOverlay .trips-nfe-section[hidden]{display:none!important;}
+#modalViagemOverlay .trips-upload-zone{position:relative;display:flex;align-items:center;gap:12px;min-height:76px;padding:13px 15px;border:1px dashed #b7c9d3;border-radius:10px;background:#f8fbfc;cursor:pointer;transition:border-color .15s,background .15s;}
+#modalViagemOverlay .trips-upload-zone:hover{border-color:#4e8d9d;background:#f1f8fa;}
+#modalViagemOverlay .trips-upload-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border:1px solid #dce9ed;border-radius:9px;background:#eaf3f5;color:#337b8b;font-size:20px;font-weight:600;}
+#modalViagemOverlay .trips-upload-zone>span:nth-child(2){display:flex;flex-direction:column;gap:4px;}
+#modalViagemOverlay .trips-upload-zone strong{color:#2d465c;font-size:10px;font-weight:800;}
+#modalViagemOverlay .trips-upload-zone small{color:#8795a4;font-size:9px;}
+#modalViagemOverlay .trips-upload-zone input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+#modalViagemOverlay .trips-nfe-summary{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+#modalViagemOverlay .trips-nfe-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #e4ebf0;border-radius:8px;background:#fbfcfd;color:#50667b;font-size:9px;}
+#modalViagemOverlay .trips-nfe-line small{color:#8896a4;font-size:8px;}
+#modalViagemOverlay .trips-route-note{margin:0;padding:11px 13px;border:1px solid #dce8ed;border-radius:9px;background:#eef5f7;color:#5f7e8a;font-size:9px;line-height:1.5;}
+#modalViagemOverlay .trips-modal-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 24px;border-top:1px solid #e3e9ef;background:#fff;}
+#modalViagemOverlay .trips-modal-footer-note{display:flex;align-items:center;gap:8px;color:#82909f;font-size:9px;}
+#modalViagemOverlay .trips-footer-dot{width:7px;height:7px;border-radius:50%;background:#4b9b87;box-shadow:0 0 0 3px #e9f4f0;}
+#modalViagemOverlay .trips-modal-footer-actions{display:flex;align-items:center;gap:8px;}
+#modalViagemOverlay .trips-cancel{min-height:39px;padding:0 15px;border:1px solid #dce4eb;border-radius:8px;background:#fff;color:#596d80;font-size:10px;font-weight:750;}
+#modalViagemOverlay .trips-save{min-height:40px;padding:0 18px;border:1px solid #18374f;border-radius:8px;background:linear-gradient(135deg,#1b3d56,#244d64);color:#fff;font-size:10px;font-weight:800;box-shadow:0 5px 12px rgba(26,59,83,.17);transition:transform .15s,box-shadow .15s;}
+#modalViagemOverlay .trips-save:hover{transform:translateY(-1px);box-shadow:0 7px 16px rgba(26,59,83,.22);}
+#modalViagemOverlay .trips-save:disabled{opacity:.55;transform:none;box-shadow:none;cursor:wait;}
+@media(max-width:760px){
+  #modalViagemOverlay{padding:8px;}
+  #modalViagemOverlay .trips-modal{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:13px;}
+  #modalViagemOverlay .trips-modal-head{padding:17px 16px 15px;}
+  #modalViagemOverlay .trips-modal-head h2{font-size:21px;}
+  #modalViagemOverlay .trips-modal-context{display:none;}
+  #modalViagemOverlay .trips-modal-body{padding:13px;}
+  #modalViagemOverlay .trips-form-section{padding:14px;}
+  #modalViagemOverlay .trips-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #modalViagemOverlay .trips-selected-stops{grid-template-columns:1fr;}
+  #modalViagemOverlay .trips-modal-actions{align-items:stretch;flex-direction:column;padding:12px 14px;}
+  #modalViagemOverlay .trips-modal-footer-note{display:none;}
+  #modalViagemOverlay .trips-modal-footer-actions{justify-content:flex-end;}
+}
+@media(max-width:460px){
+  #modalViagemOverlay .trips-form-grid{grid-template-columns:1fr;}
+  #modalViagemOverlay .trips-field.span-2{grid-column:1;}
+  #modalViagemOverlay .trips-third-party-value{align-items:stretch;flex-direction:column;}
+  #modalViagemOverlay .trips-slider-value{min-width:0;flex-wrap:wrap;}
+  .trips-available-list{grid-template-columns:1fr;}
+  .trips-available-item:nth-child(odd){border-right:0;}
+}
 </style>
 </head>
 <body>
