@@ -3077,6 +3077,49 @@ button,input,select,textarea{font-family:var(--font-ui);}
 .trip-card-actions button{min-height:30px;padding:6px 10px;border:1px solid #dce5ed;border-radius:7px;background:#fff;color:#55687d;font-size:9.5px;font-weight:750;cursor:pointer;}
 .trip-card-actions button.primary{border-color:#276f7f;background:#276f7f;color:#fff;}
 .trip-card-actions button.warning{border-color:#f0dfc7;background:#fff8ef;color:#9a672e;}
+.trip-card-actions button.trip-nfe-action{border-color:#b8d7df;background:#f0f8fa;color:#256f80;}
+.trips-selected-stop-readonly{grid-template-columns:minmax(0,1fr);}
+.trips-selected-stop-readonly em{display:inline-flex;margin-top:4px;color:#28798a;font-size:8px;font-style:normal;font-weight:800;}
+.trip-nfe-summary{margin:12px 0 0 51px;padding:11px 13px;border:1px solid #dce9ed;border-radius:9px;background:#f8fbfc;}
+.trip-nfe-summary-empty{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.trip-nfe-summary-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px;}
+.trip-nfe-summary-head>span:first-child,.trip-nfe-summary-empty>span:first-child{display:flex;flex-direction:column;gap:3px;}
+.trip-nfe-summary-head strong,.trip-nfe-summary-empty strong{color:#385267;font-size:9.5px;font-weight:850;}
+.trip-nfe-summary-head small,.trip-nfe-summary-empty small{color:#8696a5;font-size:8.5px;}
+.trip-nfe-count{padding:4px 7px;border-radius:5px;background:#e7f2f5;color:#28798a;font-size:8px;font-weight:850;white-space:nowrap;}
+.trip-nfe-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #e7eef1;}
+.trip-nfe-row-info{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.trip-nfe-row-info strong{color:#385267;font-size:9.5px;}
+.trip-nfe-row-info small{color:#8393a1;font-size:8px;overflow-wrap:anywhere;}
+.trip-nfe-row-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.trip-nfe-row-actions b{color:#344b61;font-size:9px;margin-right:4px;white-space:nowrap;}
+.trip-nfe-row-actions button{padding:5px 7px;border:1px solid #d9e4e9;border-radius:6px;background:#fff;color:#4d6d7c;font-size:8px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.trip-nfe-row-actions button.trip-nfe-remove{border-color:#ecdede;color:#a15b5b;}
+.trips-nfe-modal{width:min(760px,94vw);max-height:90vh;}
+.trips-nfe-body{gap:14px;}
+.trips-nfe-drop{display:flex;flex-direction:column;align-items:center;gap:7px;padding:22px 16px;border:1px dashed #b9ccd5;border-radius:11px;background:#f7fafb;text-align:center;}
+.trips-nfe-drop-icon{display:flex;align-items:center;justify-content:center;width:46px;height:38px;border-radius:9px;background:#e7f1f4;color:#27798a;font:800 10px var(--font-mono);letter-spacing:.08em;}
+.trips-nfe-drop strong{color:#344d62;font-size:11px;}
+.trips-nfe-drop small{max-width:480px;color:#8292a2;font-size:9px;line-height:1.5;}
+.trips-nfe-drop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+.trips-nfe-select-button{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 13px;border:1px solid #287f90;border-radius:7px;background:#287f90;color:#fff;font-size:9px;font-weight:850;cursor:pointer;}
+.trips-nfe-drop em{color:#9aa6b2;font-size:8px;font-style:normal;}
+.trips-nfe-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#40586d;}
+.trips-nfe-preview-head strong{font-size:10px;}
+.trips-nfe-preview-head span{color:#8c9aa8;font-size:8px;}
+.trips-nfe-preview{display:flex;flex-direction:column;gap:7px;max-height:260px;overflow:auto;}
+.trips-nfe-file{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #dfe8ed;border-radius:8px;background:#fff;}
+.trips-nfe-file>div{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.trips-nfe-file strong{color:#344b61;font-size:9.5px;}
+.trips-nfe-file small{color:#8493a2;font-size:8px;overflow-wrap:anywhere;}
+.trips-nfe-file>b{color:#344b61;font-size:9.5px;white-space:nowrap;}
+.trips-nfe-file>span{padding:4px 7px;border-radius:5px;background:#e7f3eb;color:#38744d;font-size:8px;font-weight:850;}
+.trips-nfe-file.is-error{border-color:#f0dddd;background:#fffafa;}
+.trips-nfe-file.is-error>span{background:#f8e9e9;color:#a34d4d;}
+.trips-nfe-empty{padding:23px 12px;border:1px solid #e7edf1;border-radius:8px;color:#8c9aa7;text-align:center;font-size:9px;}
+.trips-nfe-error{padding:9px 11px;border:1px solid #efdddd;border-radius:7px;background:#fff7f7;color:#9f4d4d;font-size:9px;}
+.trips-nfe-error[hidden]{display:none;}
+@media(max-width:650px){.trip-nfe-summary{margin-left:0;}.trip-nfe-row{align-items:flex-start;flex-direction:column;}.trip-nfe-row-actions{width:100%;justify-content:flex-start;}.trips-nfe-preview-head{align-items:flex-start;flex-direction:column;}}
 .trip-stops{margin:14px 0 0 51px;padding:12px 13px;border:1px solid #e5ebf1;border-radius:10px;background:#fbfcfd;}
 .trip-stops-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#8290a0;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
 .trip-stop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #edf1f4;}
@@ -3819,7 +3862,7 @@ button,input,select,textarea{font-family:var(--font-ui);}
         </section>
 
         <section class="trips-form-section">
-          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas selecionadas</strong><small>Origem: tabela de entregas. Confira as paradas e informe as notas fiscais, quando disponíveis.</small></div></div>
+          <div class="trips-form-section-title"><span>02</span><div><strong>Entregas selecionadas</strong><small>Origem: tabela de entregas. As notas fiscais XML serão vinculadas depois, diretamente à viagem criada.</small></div></div>
           <div class="trips-deliveries-toolbar">
             <span id="viagemEntregaContagem">0 entrega(s) recebida(s) da tabela</span>
           </div>
@@ -3830,6 +3873,38 @@ button,input,select,textarea{font-family:var(--font-ui);}
       <footer class="trips-modal-actions">
         <button type="button" class="trips-cancel" onclick="fecharModalViagem_()">Cancelar</button>
         <button type="submit" class="trips-save" id="btnSalvarViagem">Calcular rota e programar</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<div id="modalNFeViagemOverlay" class="modal-overlay" aria-hidden="true">
+  <div class="trips-modal trips-nfe-modal" role="dialog" aria-modal="true" aria-labelledby="tituloNFeViagem">
+    <header class="trips-modal-head">
+      <div>
+        <div class="trips-modal-kicker">PERFINORTE · DOCUMENTOS FISCAIS</div>
+        <h2 id="tituloNFeViagem">Vincular XMLs à viagem</h2>
+        <p id="subtituloNFeViagem">Importe as notas fiscais depois de criar a viagem.</p>
+      </div>
+      <button type="button" class="trips-modal-close" onclick="fecharModalNFeViagem_()" aria-label="Fechar">×</button>
+    </header>
+    <form id="formNFeViagem" onsubmit="salvarXmlNFeViagemUI_(event)">
+      <div class="trips-modal-body trips-nfe-body">
+        <div class="trips-nfe-drop">
+          <span class="trips-nfe-drop-icon">XML</span>
+          <strong>Selecione os arquivos XML das NF-e</strong>
+          <small>É possível importar vários arquivos na mesma operação. Os arquivos serão conferidos antes do vínculo.</small>
+          <label class="trips-nfe-select-button" for="nfeXmlArquivos">Selecionar arquivos XML</label>
+          <input id="nfeXmlArquivos" type="file" accept=".xml,text/xml,application/xml" multiple onchange="carregarArquivosNFeViagem_(this)">
+          <em>Limite de 1,5 MB por arquivo. Chave de acesso duplicada não será aceita.</em>
+        </div>
+        <div class="trips-nfe-preview-head"><strong>Conferência dos documentos</strong><span>Os XMLs serão vinculados à viagem selecionada.</span></div>
+        <div id="nfeXmlPreview" class="trips-nfe-preview"><div class="trips-nfe-empty">Selecione um ou mais arquivos XML.</div></div>
+        <div id="nfeXmlErro" class="trips-nfe-error" role="alert" hidden></div>
+      </div>
+      <footer class="trips-modal-actions">
+        <button type="button" class="trips-cancel" onclick="fecharModalNFeViagem_()">Cancelar</button>
+        <button type="submit" class="trips-save" id="nfeXmlSalvar" disabled>Vincular XMLs</button>
       </footer>
     </form>
   </div>
@@ -5699,6 +5774,9 @@ let viagemFormularioCarregado_ = false;
 let viagemFormularioPromise_ = null;
 let entregasSelecionadasViagem_ = new Set();
 let entregasParaNovaViagem_ = [];
+let viagemNFeAtual_ = null;
+let arquivosNFePendentes_ = [];
+
 
 function escaparViagem_(valor){
   return String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -5991,7 +6069,8 @@ function renderizarViagens_(){
     return '<article class="trip-card">'+
       '<div class="trip-card-head"><div class="trip-card-ident"><span class="trip-card-icon">↗</span><div class="trip-card-title"><strong>'+escaparViagem_(v.numero)+' · '+escaparViagem_(v.veiculoNome||'Veículo')+' ('+escaparViagem_(v.placa)+')</strong><small>'+dataViagemBR_(v.data)+' · '+escaparViagem_(v.periodo||'Período não definido')+' · '+escaparViagem_(v.motorista)+' · '+(v.propriedade==='TERCEIRIZADO'?'Terceirizado · '+escaparViagem_(v.transportador):'Frota própria')+'</small></div></div><span class="trip-status '+statusClass+'">'+statusViagemLabel_(v.status)+'</span></div>'+
       '<div class="trip-card-metrics"><span class="trip-metric">Paradas <strong>'+entregues+'/'+total+'</strong> entregues</span><span class="trip-metric">Distância <strong>'+(v.distanciaRealKm!==null&&v.distanciaRealKm!==undefined?v.distanciaRealKm+' km':v.distanciaPrevistaKm!==null&&v.distanciaPrevistaKm!==undefined?v.distanciaPrevistaKm+' km (prev.)':'Não calculada')+'</strong></span><span class="trip-metric">Custo <strong>'+escaparViagem_(custo)+'</strong></span></div>'+
-      '<div class="trip-card-actions">'+statusActions+'<button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
+      '<div class="trip-card-actions">'+statusActions+'<button type="button" class="trip-nfe-action" onclick="abrirModalNFeViagem_(\''+escaparViagem_(v.id)+'\')">Vincular XMLs ('+((v.notasFiscais||[]).length)+')</button><button type="button" onclick="toggleParadasViagem_(\''+escaparViagem_(v.id)+'\')">Ver paradas ('+total+')</button></div>'+
+      renderizarResumoNFeViagem_(v)+
       '<div id="paradas-'+escaparViagem_(v.id)+'" class="trip-stops" hidden><div class="trip-stops-heading"><span>Entregas vinculadas</span><span>'+entregues+' de '+total+' concluídas</span></div>'+paradas+(ocorrencias?'<div class="trip-occurrences"><div class="trip-stops-heading"><span>Ocorrências registradas</span></div>'+ocorrencias+'</div>':'')+'</div>'+
       '</article>';
   }).join('')+'</div>';
@@ -6081,8 +6160,171 @@ function renderizarResumoEntregasViagem_(){
   const area=document.getElementById('viagensEntregasResumo');
   if(!area)return;
   area.innerHTML=entregasParaNovaViagem_.map((d,i)=>
-    '<label class="trips-selected-stop"><span><strong>'+String(i+1).padStart(2,'0')+' · '+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.endereco||d.cidade||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small></span><input type="text" class="trips-delivery-nf" data-nf-entrega="'+escaparViagem_(d.idEntrega)+'" placeholder="NF(s), se disponível" aria-label="Nota fiscal de '+escaparViagem_(d.cliente)+'"></label>'
+    '<div class="trips-selected-stop trips-selected-stop-readonly"><span><strong>'+String(i+1).padStart(2,'0')+' · '+escaparViagem_(d.cliente)+'</strong><small>'+escaparViagem_(d.endereco||d.cidade||'Endereço não informado')+' · '+dataViagemBR_(d.data)+' · '+escaparViagem_(d.periodo||'Sem período')+'</small><em>XML será vinculado após criar a viagem</em></span></div>'
   ).join('');
+}
+function encontrarElementoXmlNFe_(raiz,nome){
+  return Array.from(raiz.getElementsByTagName('*')).find(el=>el.localName===nome)||null;
+}
+function textoElementoXmlNFe_(raiz,nome){
+  const el=encontrarElementoXmlNFe_(raiz,nome);
+  return el?String(el.textContent||'').trim():'';
+}
+function analisarXmlNFeArquivo_(xmlText,nomeArquivo){
+  const doc=new DOMParser().parseFromString(xmlText,'application/xml');
+  if(doc.getElementsByTagName('parsererror').length)throw new Error('O arquivo não contém um XML válido.');
+  const inf=encontrarElementoXmlNFe_(doc,'infNFe');
+  if(!inf)throw new Error('Não encontrei o bloco infNFe. Selecione um XML de NF-e autorizado.');
+  const ide=encontrarElementoXmlNFe_(inf,'ide')||inf;
+  const emit=encontrarElementoXmlNFe_(inf,'emit')||inf;
+  const dest=encontrarElementoXmlNFe_(inf,'dest')||inf;
+  const total=encontrarElementoXmlNFe_(inf,'ICMSTot')||inf;
+  const protocolo=encontrarElementoXmlNFe_(doc,'infProt');
+  const id=String(inf.getAttribute('Id')||'');
+  const chave=(id.replace(/^NFe/i,'')||textoElementoXmlNFe_(protocolo||doc,'chNFe')).replace(/\D/g,'');
+  if(!/^\d{44}$/.test(chave))throw new Error('A chave de acesso da NF-e não foi encontrada ou não possui 44 dígitos.');
+  const numero=textoElementoXmlNFe_(ide,'nNF');
+  if(!numero)throw new Error('O número da NF-e não foi encontrado no XML.');
+  const emitente=textoElementoXmlNFe_(emit,'xNome');
+  const destinatario=textoElementoXmlNFe_(dest,'xNome');
+  const emitenteCnpj=textoElementoXmlNFe_(emit,'CNPJ')||textoElementoXmlNFe_(emit,'CPF');
+  const destinatarioDocumento=textoElementoXmlNFe_(dest,'CNPJ')||textoElementoXmlNFe_(dest,'CPF');
+  const valorTexto=textoElementoXmlNFe_(total,'vNF').replace(',','.');
+  const valor=valorTexto?Number(valorTexto):0;
+  if(valorTexto&&!Number.isFinite(valor))throw new Error('O valor total da NF-e está inválido.');
+  return {
+    chave:chave,numero:numero,serie:textoElementoXmlNFe_(ide,'serie'),
+    emissao:textoElementoXmlNFe_(ide,'dhEmi')||textoElementoXmlNFe_(ide,'dEmi'),
+    emitente:emitente,emitenteCnpj:emitenteCnpj,destinatario:destinatario,
+    destinatarioDocumento:destinatarioDocumento,valorTotal:valor,
+    arquivoNome:nomeArquivo,xml:xmlText,status:'PRONTA'
+  };
+}
+function abrirModalNFeViagem_(viagemId){
+  const viagem=(viagensDados_.viagens||[]).find(v=>String(v.id)===String(viagemId));
+  if(!viagem){mostrarToast('Não localizei a viagem selecionada. Atualize a lista.',true);return;}
+  viagemNFeAtual_={id:viagem.id,numero:viagem.numero};
+  arquivosNFePendentes_=[];
+  const modal=document.getElementById('modalNFeViagemOverlay');
+  document.getElementById('tituloNFeViagem').textContent='Vincular XMLs à viagem '+(viagem.numero||'');
+  document.getElementById('subtituloNFeViagem').textContent='Os arquivos serão associados à viagem completa, não às paradas individuais.';
+  document.getElementById('nfeXmlArquivos').value='';
+  document.getElementById('nfeXmlPreview').innerHTML='<div class="trips-nfe-empty">Selecione um ou mais arquivos XML para conferir as notas fiscais antes de vincular.</div>';
+  document.getElementById('nfeXmlErro').hidden=true;
+  document.getElementById('nfeXmlSalvar').disabled=true;
+  document.getElementById('nfeXmlSalvar').textContent='Vincular XMLs';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+}
+function fecharModalNFeViagem_(){
+  const modal=document.getElementById('modalNFeViagemOverlay');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+  viagemNFeAtual_=null;
+  arquivosNFePendentes_=[];
+}
+async function carregarArquivosNFeViagem_(input){
+  const area=document.getElementById('nfeXmlPreview');
+  const erro=document.getElementById('nfeXmlErro');
+  const btn=document.getElementById('nfeXmlSalvar');
+  erro.hidden=true;erro.textContent='';
+  arquivosNFePendentes_=[];
+  const files=Array.from(input.files||[]);
+  if(!files.length){area.innerHTML='<div class="trips-nfe-empty">Nenhum XML selecionado.</div>';btn.disabled=true;return;}
+  for(const file of files){
+    if(!/\.xml$/i.test(file.name)){
+      arquivosNFePendentes_.push({arquivoNome:file.name,status:'ERRO',erro:'Extensão inválida. Selecione um arquivo .xml.'});
+      continue;
+    }
+    if(file.size>1500000){
+      arquivosNFePendentes_.push({arquivoNome:file.name,status:'ERRO',erro:'O arquivo ultrapassa o limite de 1,5 MB por XML.'});
+      continue;
+    }
+    try{
+      const xml=await file.text();
+      const dados=analisarXmlNFeArquivo_(xml,file.name);
+      const duplicado=arquivosNFePendentes_.some(x=>x.chave===dados.chave);
+      if(duplicado)throw new Error('Este mesmo XML já foi selecionado nesta importação.');
+      arquivosNFePendentes_.push(dados);
+    }catch(err){
+      arquivosNFePendentes_.push({arquivoNome:file.name,status:'ERRO',erro:String(err&&err.message?err.message:err)});
+    }
+  }
+  renderizarPreviewNFeViagem_();
+}
+function renderizarPreviewNFeViagem_(){
+  const area=document.getElementById('nfeXmlPreview');
+  const validos=arquivosNFePendentes_.filter(x=>x.status==='PRONTA');
+  const erros=arquivosNFePendentes_.filter(x=>x.status==='ERRO');
+  area.innerHTML=arquivosNFePendentes_.map(x=>{
+    if(x.status==='ERRO')return '<article class="trips-nfe-file is-error"><div><strong>'+escaparViagem_(x.arquivoNome)+'</strong><small>'+escaparViagem_(x.erro)+'</small></div><span>Inválido</span></article>';
+    return '<article class="trips-nfe-file"><div><strong>NF-e '+escaparViagem_(x.numero)+' · Série '+escaparViagem_(x.serie||'1')+'</strong><small>'+escaparViagem_(x.arquivoNome)+' · '+escaparViagem_(x.emitente||'Emitente não identificado')+' → '+escaparViagem_(x.destinatario||'Destinatário não identificado')+'</small><small>Chave: '+escaparViagem_(x.chave)+'</small></div><b>'+moedaVeiculoUI_(x.valorTotal)+'</b></article>';
+  }).join('')||'<div class="trips-nfe-empty">Nenhum XML selecionado.</div>';
+  document.getElementById('nfeXmlSalvar').disabled=!validos.length;
+  document.getElementById('nfeXmlSalvar').textContent=validos.length?'Vincular '+validos.length+' XML(s)':'Vincular XMLs';
+  if(erros.length){
+    const erro=document.getElementById('nfeXmlErro');
+    erro.textContent=erros.length+' arquivo(s) não puderam ser lidos. Corrija a seleção antes de continuar.';
+    erro.hidden=false;
+  }
+}
+async function salvarXmlNFeViagemUI_(event){
+  event.preventDefault();
+  if(!viagemNFeAtual_||!arquivosNFePendentes_.length)return;
+  const btn=document.getElementById('nfeXmlSalvar');
+  const validos=arquivosNFePendentes_.filter(x=>x.status==='PRONTA');
+  if(!validos.length)return;
+  btn.disabled=true;
+  let salvos=0, falhas=[];
+  try{
+    for(let i=0;i<validos.length;i++){
+      const nfe=validos[i];
+      btn.textContent='Vinculando '+(i+1)+' de '+validos.length+'...';
+      const res=await chamarAPI_POST_({acao:'salvarNFeViagem',dados:{
+        viagemId:viagemNFeAtual_.id,chave:nfe.chave,numero:nfe.numero,serie:nfe.serie,
+        emissao:nfe.emissao,emitente:nfe.emitente,emitenteCnpj:nfe.emitenteCnpj,
+        destinatario:nfe.destinatario,destinatarioDocumento:nfe.destinatarioDocumento,
+        valorTotal:nfe.valorTotal,arquivoNome:nfe.arquivoNome,xml:nfe.xml
+      }});
+      if(!res||!res.ok)throw new Error((nfe.arquivoNome||'XML')+': '+(res&&(res.erro||res.error)?(res.erro||res.error):'não foi possível salvar.'));
+      salvos++;
+    }
+    fecharModalNFeViagem_();
+    await carregarViagens_();
+    mostrarToast(salvos+' XML(s) vinculado(s) à viagem '+(viagemNFeAtual_&&viagemNFeAtual_.numero||'')+'.');
+  }catch(err){
+    falhas.push(String(err&&err.message?err.message:err));
+    const box=document.getElementById('nfeXmlErro');
+    box.textContent=salvos+' XML(s) vinculados. '+falhas.join(' ');
+    box.hidden=false;
+    btn.disabled=false;
+    renderizarPreviewNFeViagem_();
+  }
+}
+function renderizarResumoNFeViagem_(viagem){
+  const docs=Array.isArray(viagem.notasFiscais)?viagem.notasFiscais:[];
+  if(!docs.length)return '<div class="trip-nfe-summary trip-nfe-summary-empty"><span><strong>Notas fiscais XML</strong><small>Nenhum XML vinculado a esta viagem.</small></span><span class="trip-nfe-count">0 XML</span></div>';
+  return '<section class="trip-nfe-summary"><div class="trip-nfe-summary-head"><span><strong>Notas fiscais da viagem</strong><small>'+docs.length+' XML(s) vinculados à viagem completa</small></span><span class="trip-nfe-count">'+docs.length+' NF-e</span></div>'+
+    docs.map(n=>'<div class="trip-nfe-row"><div class="trip-nfe-row-info"><strong>NF-e '+escaparViagem_(n.numero)+' · Série '+escaparViagem_(n.serie||'1')+'</strong><small>'+escaparViagem_(n.emitente||'Emitente não identificado')+' → '+escaparViagem_(n.destinatario||'Destinatário não identificado')+'</small><small>Chave: '+escaparViagem_(n.chave)+'</small></div><div class="trip-nfe-row-actions"><b>'+moedaVeiculoUI_(Number(n.valor_total||n.valorTotal||0))+'</b><button type="button" onclick="baixarXmlNFeViagemUI_(\''+escaparViagem_(viagem.id)+'\',\''+escaparViagem_(n.chave)+'\',\''+escaparViagem_(n.arquivo_nome||n.arquivoNome||'nfe.xml')+'\')">Baixar XML</button><button type="button" class="trip-nfe-remove" onclick="removerNFeViagemUI_(\''+escaparViagem_(viagem.id)+'\',\''+escaparViagem_(n.chave)+'\')">Desvincular</button></div></div>').join('')+'</section>';
+}
+async function removerNFeViagemUI_(viagemId,chave){
+  if(!confirm('Desvincular esta NF-e da viagem? O arquivo XML será removido do ambiente de homologação.'))return;
+  try{
+    const res=await chamarAPI_POST_({acao:'removerNFeViagem',dados:{viagemId:viagemId,chave:chave}});
+    if(!res||!res.ok)throw new Error(res&&(res.erro||res.error)?(res.erro||res.error):'Não foi possível desvincular o XML.');
+    await carregarViagens_();
+    mostrarToast('NF-e desvinculada da viagem.');
+  }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
+}
+async function baixarXmlNFeViagemUI_(viagemId,chave,nomeArquivo){
+  try{
+    const qs=new URLSearchParams({viagemId:viagemId,chave:chave}).toString();
+    const resp=await fetch(API_BASE+'/api/nfe-xml?'+qs,{cache:'no-store',headers:{'Authorization':'Bearer '+TOKEN_SESSAO}});
+    if(!resp.ok){const msg=await resp.text();throw new Error(msg||'Não foi possível baixar o XML.');}
+    const blob=await resp.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=String(nomeArquivo||'nfe.xml').replace(/[\\/:*?"<>|]/g,'_');document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  }catch(err){mostrarToast(String(err&&err.message?err.message:err),true);}
 }
 async function salvarViagemUI_(event){
   event.preventDefault();
@@ -6092,10 +6334,9 @@ async function salvarViagemUI_(event){
   const veiculo=(viagensDados_.veiculos||[]).find(v=>String(v.id)===String(veiculoId));
   if(!veiculo){mostrarToast('Selecione um veículo ativo.',true);return;}
   if(!entregasParaNovaViagem_.length){mostrarToast('Nenhuma entrega foi recebida da tabela. Feche e faça a seleção novamente.',true);return;}
-  const escolhidas=entregasParaNovaViagem_.map((d,i)=>{
-    const nf=document.querySelector('[data-nf-entrega="'+CSS.escape(String(d.idEntrega))+'"]');
-    return {idEntrega:d.idEntrega,nfs:nf?nf.value.trim():'',ordem:i+1,d:d};
-  });
+  const escolhidas=entregasParaNovaViagem_.map((d,i)=>({
+    idEntrega:d.idEntrega,nfs:'',ordem:i+1,d:d
+  }));
   if(veiculo.propriedade==='TERCEIRIZADO'&&Number(document.getElementById('viagemValorNegociado').value)<=0){
     mostrarToast('Informe o valor negociado por esta viagem.',true);return;
   }
